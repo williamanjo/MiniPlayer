@@ -9,12 +9,16 @@ namespace MiniPlayer.Services;
 public sealed class SleepTimerService
 {
     static readonly TimeSpan FadeDuration = TimeSpan.FromSeconds(20);
+    /// <summary>"End of track" without fade: silence this long before the end, so even a late pause is inaudible.</summary>
+    static readonly TimeSpan EndOfTrackSilence = TimeSpan.FromSeconds(1.5);
+    /// <summary>Pause this long before the track's end (the position is an estimate).</summary>
+    static readonly TimeSpan EndOfTrackLead = TimeSpan.FromSeconds(0.3);
 
     readonly MediaService _media;
     readonly SettingsService _settings;
     readonly Func<TimeSpan?> _timeLeftInTrack;
     readonly Func<string> _trackKey;
-    readonly DispatcherTimer _tick = new() { Interval = TimeSpan.FromMilliseconds(500) };
+    readonly DispatcherTimer _tick = new() { Interval = TimeSpan.FromMilliseconds(200) };
 
     DateTime? _endsAt;
     bool _endOfTrack;
@@ -35,6 +39,9 @@ public sealed class SleepTimerService
     public event Action? Changed;
 
     public bool IsActive => _endsAt is not null || _endOfTrack;
+
+    /// <summary>True while this timer is lowering the app volume (other features keep off it).</summary>
+    public bool IsFading => _fadeProcess is not null;
 
     /// <summary>"23 min", "45 s", "fim da música" or null.</summary>
     public string? RemainingText
@@ -81,11 +88,18 @@ public sealed class SleepTimerService
         TimeSpan left;
         if (_endOfTrack)
         {
-            // Pause just before the end; if there is no timeline, when the next track starts.
-            var trackLeft = _timeLeftInTrack();
-            if (_trackKey() != _startTrack) left = TimeSpan.Zero;
-            else if (trackLeft is { } t) left = t - TimeSpan.FromSeconds(0.8);
-            else return;
+            if (_trackKey() != _startTrack)
+            {
+                // The next track already started (position estimate was late): stop it right
+                // away and rewind it, so it waits at 0:00 instead of having played a bit.
+                await _media.PauseAsync();
+                await _media.SeekAsync(TimeSpan.Zero);
+                await Task.Delay(400);
+                Cancel();
+                return;
+            }
+            if (_timeLeftInTrack() is not { } trackLeft) return; // no timeline: wait for the track change
+            left = trackLeft - EndOfTrackLead;
         }
         else
         {
@@ -100,7 +114,10 @@ public sealed class SleepTimerService
             return;
         }
 
-        if (_settings.Data.SleepFade && left < FadeDuration) Fade(left);
+        // Fade to silence: the long fade if enabled; at the end of a track always a short one,
+        // so a pause that lands a moment late is still inaudible.
+        var window = _settings.Data.SleepFade ? FadeDuration : _endOfTrack ? EndOfTrackSilence : TimeSpan.Zero;
+        if (left < window) Fade(left, window);
 
         var text = RemainingText;
         if (text != _lastText)
@@ -110,7 +127,7 @@ public sealed class SleepTimerService
         }
     }
 
-    void Fade(TimeSpan left)
+    void Fade(TimeSpan left, TimeSpan window)
     {
         var process = AudioService.ProcessNameFor(_media.CurrentAppId);
         if (process is null) return;
@@ -121,7 +138,7 @@ public sealed class SleepTimerService
             _fadeStartVolume = AudioService.Get(process)?.Volume;
         }
         if (_fadeStartVolume is { } start)
-            AudioService.SetVolume(process, start * (float)(left / FadeDuration));
+            AudioService.SetVolume(process, start * (float)Math.Clamp(left / window, 0, 1));
     }
 
     void RestoreVolume()
