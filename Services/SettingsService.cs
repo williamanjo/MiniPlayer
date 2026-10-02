@@ -7,6 +7,12 @@ namespace MiniPlayer.Services;
 
 public enum PlayerMode { Floating, Taskbar }
 
+/// <summary>What the mouse wheel does over the player.</summary>
+public enum WheelAction { Volume, Track }
+
+/// <summary>What the middle mouse button does over the player.</summary>
+public enum MiddleClickAction { Mute, PlayPause }
+
 public sealed class AppSettings
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
@@ -35,6 +41,30 @@ public sealed class AppSettings
     public bool AutoUpdate { get; set; }
     /// <summary>Version that ran last time; a change means an update was just applied.</summary>
     public string? LastVersion { get; set; }
+
+    /// <summary>Audio bars on the cover / taskbar.</summary>
+    public bool ShowVisualizer { get; set; } = true;
+
+    /// <summary>Global hotkeys: action name → "Ctrl+Alt+Right" ("" = off). Missing = default.</summary>
+    public Dictionary<string, string> Hotkeys { get; set; } = [];
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public WheelAction WheelAction { get; set; } = WheelAction.Volume;
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public WheelAction TaskbarWheelAction { get; set; } = WheelAction.Volume;
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public MiddleClickAction MiddleClickAction { get; set; } = MiddleClickAction.Mute;
+
+    /// <summary>Sleep timer lowers the volume during the last seconds before pausing.</summary>
+    public bool SleepFade { get; set; } = true;
+
+    /// <summary>Saved hotkeys merged over the defaults.</summary>
+    public Dictionary<string, string> HotkeyBindings()
+    {
+        var result = HotkeyService.Defaults.ToDictionary(d => d.Key.ToString(), d => d.Value);
+        foreach (var (action, combo) in Hotkeys) result[action] = combo;
+        return result;
+    }
 }
 
 public sealed class SettingsService

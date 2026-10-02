@@ -111,6 +111,66 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
         }
     }
 
+    public bool ShowVisualizer
+    {
+        get => _settings.Data.ShowVisualizer;
+        set
+        {
+            if (_settings.Data.ShowVisualizer == value) return;
+            _settings.Data.ShowVisualizer = value;
+            _settings.Save();
+            OnPropertyChanged();
+        }
+    }
+
+    public bool IsPlaying => _snap.IsPlaying;
+
+    /// <summary>Identifies the current track (sleep timer "end of track").</summary>
+    public string TrackKey => $"{_snap.Source}|{_snap.Title}|{_snap.Artist}";
+
+    TimeSpan _position;
+    /// <summary>Time until the current track ends; null without a timeline.</summary>
+    public TimeSpan? TimeLeftInTrack => HasTimeline ? _snap.Duration - _position : null;
+
+    string? _sleepText;
+    /// <summary>Sleep timer badge ("23 min"); null when no timer runs.</summary>
+    public string? SleepText
+    {
+        get => _sleepText;
+        set
+        {
+            if (_sleepText == value) return;
+            _sleepText = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(HasSleepTimer));
+        }
+    }
+    public bool HasSleepTimer => _sleepText is not null;
+
+    DateTime _lastWheelSkip;
+
+    /// <summary>Mouse wheel over the player: volume or previous/next, per settings.</summary>
+    public void Wheel(int delta, bool onTaskbar)
+    {
+        var action = onTaskbar ? _settings.Data.TaskbarWheelAction : _settings.Data.WheelAction;
+        if (action == WheelAction.Volume)
+        {
+            ChangeVolume(delta);
+            return;
+        }
+        // A wheel notch fires several events; one skip per gesture.
+        if (DateTime.Now - _lastWheelSkip < TimeSpan.FromMilliseconds(450)) return;
+        _lastWheelSkip = DateTime.Now;
+        if (delta > 0) PreviousCommand.Execute(null);
+        else NextCommand.Execute(null);
+    }
+
+    public void MiddleClick()
+    {
+        if (_settings.Data.MiddleClickAction == MiddleClickAction.PlayPause) PlayPauseCommand.Execute(null);
+        else ToggleMute();
+    }
+
     public bool ShowLyrics
     {
         get => _settings.Data.ShowLyrics;
@@ -277,6 +337,7 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
 
         OnPropertyChanged(nameof(FullText));
         OnPropertyChanged(nameof(IsPinned));
+        OnPropertyChanged(nameof(IsPlaying));
         TrackChanged?.Invoke();
         UpdateProgress();
         _ = UpdateCoverAsync(s);
@@ -428,6 +489,7 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
         if (pos < TimeSpan.Zero) pos = TimeSpan.Zero;
         if (pos > s.Duration) pos = s.Duration;
 
+        _position = pos;
         UpdateLyricLine(pos);
         Progress = pos.TotalSeconds / s.Duration.TotalSeconds;
         PositionText = Format(pos);

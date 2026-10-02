@@ -1,6 +1,7 @@
 <Window x:Class="MiniPlayer.Views.PlayerWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:MiniPlayer.Views"
         Title="MiniPlayer" SizeToContent="WidthAndHeight"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         ResizeMode="NoResize" ShowInTaskbar="False"
@@ -24,6 +25,10 @@
                         <ImageBrush ImageSource="{Binding Cover}" Stretch="UniformToFill" />
                     </Border.Background>
                 </Border>
+                <!-- Audio bars over the lower part of the cover -->
+                <local:VisualizerControl VerticalAlignment="Bottom" Height="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=Grid}, Converter={StaticResource FractionConverter}, ConverterParameter=0.32}"
+                                         Margin="6,0,6,5" BarCount="14" Opacity="0.9" Fill="{DynamicResource AccentBrush}"
+                                         Visibility="{Binding ShowVisualizer, Converter={StaticResource BoolToVis}}" />
             </Grid>
         </ControlTemplate>
 
@@ -44,6 +49,10 @@
         <!-- Pin / lyrics / taskbar / close. Tag = visibility of everything but close. -->
         <ControlTemplate x:Key="WindowButtonsTemplate" TargetType="ContentControl">
             <StackPanel Orientation="Horizontal">
+                <!-- Sleep timer badge -->
+                <TextBlock Text="{Binding SleepText, StringFormat='🌙 {0}'}" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"
+                           Foreground="{DynamicResource ThemeSecondary}" ToolTip="Timer para dormir (clique direito para cancelar)"
+                           Visibility="{Binding HasSleepTimer, Converter={StaticResource BoolToVis}}" />
                 <StackPanel Orientation="Horizontal" Visibility="{TemplateBinding Tag}">
                     <Button Style="{StaticResource PinButton}" FontSize="12" Width="26" Height="26" Click="OnTogglePin" />
                     <Button Style="{StaticResource LyricsButton}" Content="&#xE720;" FontSize="12" Width="26" Height="26"
@@ -118,6 +127,7 @@
                     <MenuItem Header="Mover para a barra de tarefas" Click="OnToTaskbar" />
                     <Separator />
                     <MenuItem x:Name="ThemesMenu" Header="Tema" />
+                    <MenuItem x:Name="SleepTimerMenu" Header="Timer para dormir" />
                     <MenuItem Header="Restaurar tamanho" Click="OnResetSize" />
                     <Separator />
                     <MenuItem Header="Configurações…" Click="OnOpenSettings" />

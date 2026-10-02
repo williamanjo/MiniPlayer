@@ -29,6 +29,12 @@ do Windows (SMTC), onde Chrome/Edge/Firefox/Brave/Opera publicam a Media Session
 - **Letras sincronizadas** (botão 🎤 / "Mostrar letra na barra"): via [LRCLIB](https://lrclib.net).
   Desligado por padrão; quando ligado envia título/artista ao lrclib.net
 
+- **Configurações** (⚙ no player): janela com abas Geral, Aparência (temas com prévia), Atalhos e controles, Barra de tarefas, Atualizações
+- **Visualizador**: barras de áudio sobre a capa e mini equalizador na barra de tarefas
+- **Atalhos globais** configuráveis (padrão: `Ctrl+Alt+Home` play/pause, `Ctrl+Alt+←/→` faixa, `Ctrl+Alt+↑/↓` volume, `Ctrl+Alt+M` mudo, `Ctrl+Alt+P` mostrar/ocultar)
+- **Timer para dormir**: minutos ou fim da música, com volume diminuindo aos poucos
+- **Gestos**: roda do mouse = volume ou trocar música; clique do meio = mudo ou play/pause
+
 ## Temas
 5 temas embutidos: **Escuro**, **Claro**, **Vidro (capa)** (capa desfocada no fundo), **Neon** e **Terminal**.
 Escolha em: bandeja → Temas, ou clique direito no player.

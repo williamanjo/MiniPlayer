@@ -43,6 +43,22 @@ public sealed class TrayIcon : IDisposable
             Font = new Font(SystemFonts.MenuFont ?? Control.DefaultFont, FontStyle.Bold),
         };
 
+        var sleepItem = new ToolStripMenuItem("Timer para dormir");
+        sleepItem.DropDownItems.Add("-"); // placeholder so the arrow shows
+        sleepItem.DropDownOpening += (_, _) =>
+        {
+            var timer = app.SleepTimer;
+            sleepItem.DropDownItems.Clear();
+            foreach (var minutes in new[] { 15, 30, 45, 60, 90 })
+                sleepItem.DropDownItems.Add($"{minutes} minutos", null, (_, _) => timer.Start(TimeSpan.FromMinutes(minutes)));
+            sleepItem.DropDownItems.Add("No fim desta música", null, (_, _) => timer.StartEndOfTrack());
+            if (timer.IsActive)
+            {
+                sleepItem.DropDownItems.Add(new ToolStripSeparator());
+                sleepItem.DropDownItems.Add($"Cancelar (faltam {timer.RemainingText})", null, (_, _) => timer.Cancel());
+            }
+        };
+
         var menu = new ContextMenuStrip();
         menu.Items.Add(new ToolStripMenuItem($"MiniPlayer v{app.Updates.CurrentVersion}") { Enabled = false });
         menu.Items.Add(_updateItem);
@@ -51,6 +67,7 @@ public sealed class TrayIcon : IDisposable
         menu.Items.Add(_taskbarItem);
         menu.Items.Add(themesItem);
         menu.Items.Add(_pinItem);
+        menu.Items.Add(sleepItem);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(new ToolStripMenuItem("Configurações…", null, (_, _) => app.ShowSettings())
         {
@@ -61,6 +78,7 @@ public sealed class TrayIcon : IDisposable
         {
             _taskbarItem.Checked = app.Settings.Data.Mode == PlayerMode.Taskbar;
             _pinItem.Checked = app.ViewModel.PinOnTop;
+            sleepItem.Text = app.SleepTimer.IsActive ? $"Timer para dormir (🌙 {app.SleepTimer.RemainingText})" : "Timer para dormir";
         };
 
         _icon = new NotifyIcon

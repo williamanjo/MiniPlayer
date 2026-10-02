@@ -52,6 +52,9 @@
             <ListBoxItem Tag="Appearance" Padding="8,10">
                 <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavIcon}" Text="&#xE790;" /><TextBlock Text="Aparência" /></StackPanel>
             </ListBoxItem>
+            <ListBoxItem Tag="Controls" Padding="8,10">
+                <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavIcon}" Text="&#xE765;" /><TextBlock Text="Atalhos e controles" /></StackPanel>
+            </ListBoxItem>
             <ListBoxItem Tag="Taskbar" Padding="8,10">
                 <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavIcon}" Text="&#xE90E;" /><TextBlock Text="Barra de tarefas" /></StackPanel>
             </ListBoxItem>
@@ -89,6 +92,20 @@
                             <CheckBox Content="Mostrar letra sincronizada" IsChecked="{Binding ShowLyrics}" />
                             <TextBlock Style="{StaticResource Hint}"
                                        Text="No player flutuante aparece embaixo; na barra, no lugar do artista. Envia título e artista para lrclib.net." />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Text="Timer para dormir" FontWeight="SemiBold" />
+                            <TextBlock Style="{StaticResource Hint}" Text="Pausa a música depois do tempo escolhido. Também no clique direito do player e na bandeja." />
+                            <WrapPanel x:Name="SleepButtons" Margin="0,10,0,0" />
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <TextBlock x:Name="SleepStatus" VerticalAlignment="Center" />
+                                <Button x:Name="SleepCancel" Content="Cancelar" Padding="10,3" Margin="12,0,0,0" Click="OnSleepCancel" />
+                            </StackPanel>
+                            <CheckBox x:Name="SleepFadeBox" Content="Diminuir o volume aos poucos antes de pausar" Margin="0,10,0,0"
+                                      Click="OnSleepFadeClick" />
                         </StackPanel>
                     </Border>
 
@@ -224,6 +241,15 @@
                         </StackPanel>
                     </Grid>
 
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="Visualizador" />
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <CheckBox Content="Mostrar barras de áudio" IsChecked="{Binding ShowVisualizer}" />
+                            <TextBlock Style="{StaticResource Hint}"
+                                       Text="Barras que pulsam com o som da aba tocando: sobre a capa no player e ao lado do título na barra de tarefas." />
+                        </StackPanel>
+                    </Border>
+
                     <TextBlock Style="{StaticResource SectionTitle}" Text="Tamanho do player flutuante" />
                     <Border Style="{StaticResource Card}">
                         <StackPanel>
@@ -239,6 +265,55 @@
                                     Click="OnResetSize" />
                         </StackPanel>
                     </Border>
+                </StackPanel>
+
+                <!-- ===================== ATALHOS E CONTROLES ===================== -->
+                <StackPanel x:Name="PageControls" Visibility="Collapsed">
+                    <TextBlock Style="{StaticResource PageTitle}" Text="Atalhos e controles" />
+
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="Atalhos globais" Margin="0,0,0,4" />
+                    <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,10"
+                               Text="Funcionam em qualquer janela. Clique no campo e pressione a combinação (com Ctrl, Alt, Shift ou Win). Backspace remove." />
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel x:Name="HotkeyRows" />
+                    </Border>
+                    <Button Content="Restaurar atalhos padrão" Padding="12,5" Margin="0,6,0,0" HorizontalAlignment="Left"
+                            Click="OnResetHotkeys" />
+
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="Mouse" />
+                    <Border Style="{StaticResource Card}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="260" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="Roda do mouse no player flutuante" VerticalAlignment="Center" />
+                            <ComboBox x:Name="WheelBox" Grid.Column="1" MinWidth="220" HorizontalAlignment="Left"
+                                      SelectionChanged="OnMouseOptionChanged">
+                                <ComboBoxItem Tag="Volume" Content="Volume do app" />
+                                <ComboBoxItem Tag="Track" Content="Trocar de música" />
+                            </ComboBox>
+                            <TextBlock Grid.Row="1" Text="Roda do mouse na barra de tarefas" VerticalAlignment="Center" Margin="0,10,0,0" />
+                            <ComboBox x:Name="TaskbarWheelBox" Grid.Row="1" Grid.Column="1" MinWidth="220" HorizontalAlignment="Left"
+                                      Margin="0,10,0,0" SelectionChanged="OnMouseOptionChanged">
+                                <ComboBoxItem Tag="Volume" Content="Volume do app" />
+                                <ComboBoxItem Tag="Track" Content="Trocar de música" />
+                            </ComboBox>
+                            <TextBlock Grid.Row="2" Text="Clique do botão do meio" VerticalAlignment="Center" Margin="0,10,0,0" />
+                            <ComboBox x:Name="MiddleClickBox" Grid.Row="2" Grid.Column="1" MinWidth="220" HorizontalAlignment="Left"
+                                      Margin="0,10,0,0" SelectionChanged="OnMouseOptionChanged">
+                                <ComboBoxItem Tag="Mute" Content="Mudo" />
+                                <ComboBoxItem Tag="PlayPause" Content="Play / Pause" />
+                            </ComboBox>
+                        </Grid>
+                    </Border>
+                    <TextBlock Style="{StaticResource Hint}" Margin="0,6,0,0"
+                               Text="Trocar de música: rolar para cima = anterior, para baixo = próxima. Ctrl + roda sempre muda o zoom do player." />
                 </StackPanel>
 
                 <!-- ===================== BARRA DE TAREFAS ===================== -->

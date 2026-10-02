@@ -71,14 +71,14 @@ public partial class TaskbarWindow : Window
 
     void OnWheel(object sender, MouseWheelEventArgs e)
     {
-        ViewModel.ChangeVolume(e.Delta);
+        ViewModel.Wheel(e.Delta, onTaskbar: true);
         e.Handled = true;
     }
 
     void OnMouseDown(object sender, MouseButtonEventArgs e)
     {
         if (e.ChangedButton != MouseButton.Middle) return;
-        ViewModel.ToggleMute();
+        ViewModel.MiddleClick();
         e.Handled = true;
     }
 
@@ -131,6 +131,7 @@ public partial class TaskbarWindow : Window
     {
         _ = SessionMenu.FillAsync(SourcesMenu, ViewModel);
         ThemeMenu.Fill(ThemesMenu);
+        SleepMenu.Fill(SleepTimerMenu);
 
         // A never-active window never gets deactivated, so the menu would never close on
         // outside clicks. Let the window activate while the menu is open.

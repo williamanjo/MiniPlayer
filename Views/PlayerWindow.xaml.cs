@@ -326,14 +326,14 @@ public partial class PlayerWindow : Window
             e.Handled = true;
             return;
         }
-        ViewModel.ChangeVolume(e.Delta);
+        ViewModel.Wheel(e.Delta, onTaskbar: false);
         e.Handled = true;
     }
 
     void OnMouseDown(object sender, MouseButtonEventArgs e)
     {
         if (e.ChangedButton != MouseButton.Middle) return;
-        ViewModel.ToggleMute();
+        ViewModel.MiddleClick();
         e.Handled = true;
     }
 
@@ -345,7 +345,11 @@ public partial class PlayerWindow : Window
         menu.IsOpen = true;
     }
 
-    void OnMenuOpened(object sender, RoutedEventArgs e) => ThemeMenu.Fill(ThemesMenu);
+    void OnMenuOpened(object sender, RoutedEventArgs e)
+    {
+        ThemeMenu.Fill(ThemesMenu);
+        SleepMenu.Fill(SleepTimerMenu);
+    }
 
     void OnOpenSettings(object sender, RoutedEventArgs e) => ((App)Application.Current).ShowSettings();
 

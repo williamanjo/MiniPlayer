@@ -18,6 +18,9 @@ public partial class App : Application
     public PlayerViewModel ViewModel { get; private set; } = null!;
     public ThemeService Themes { get; private set; } = null!;
     public UpdateService Updates { get; private set; } = null!;
+    public VisualizerService Visualizer { get; private set; } = null!;
+    public SleepTimerService SleepTimer { get; private set; } = null!;
+    public HotkeyService Hotkeys { get; private set; } = null!;
 
     protected override async void OnStartup(StartupEventArgs e)
     {
@@ -43,6 +46,22 @@ public partial class App : Application
         }
         var media = new MediaService();
         ViewModel = new PlayerViewModel(media, Settings);
+
+        Visualizer = new VisualizerService(() => media.CurrentAppId, () => ViewModel.IsPlaying)
+        {
+            Enabled = ViewModel.ShowVisualizer,
+        };
+        ViewModel.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(PlayerViewModel.ShowVisualizer)) Visualizer.Enabled = ViewModel.ShowVisualizer;
+        };
+
+        SleepTimer = new SleepTimerService(media, Settings, () => ViewModel.TimeLeftInTrack, () => ViewModel.TrackKey);
+        SleepTimer.Changed += () => ViewModel.SleepText = SleepTimer.RemainingText;
+
+        Hotkeys = new HotkeyService();
+        Hotkeys.Pressed += OnHotkey;
+        ApplyHotkeys();
         _tray = new TrayIcon(this);
         ViewModel.TrackChanged += () => _tray.SetText(ViewModel.FullText);
 
@@ -118,6 +137,34 @@ public partial class App : Application
         Settings.Save();
         if (switchMode) SetMode(PlayerMode.Taskbar);
         _overlay?.Reposition();
+    }
+
+    /// <summary>Registers the saved global hotkeys (call after changing them).</summary>
+    public void ApplyHotkeys() => Hotkeys.Apply(Settings.Data.HotkeyBindings());
+
+    /// <summary>While a hotkey box records a combination, the old ones must not fire.</summary>
+    public void SuspendHotkeys() => Hotkeys.Apply(new Dictionary<string, string>());
+
+    void OnHotkey(HotkeyAction action)
+    {
+        switch (action)
+        {
+            case HotkeyAction.PlayPause: ViewModel.PlayPauseCommand.Execute(null); break;
+            case HotkeyAction.Next: ViewModel.NextCommand.Execute(null); break;
+            case HotkeyAction.Previous: ViewModel.PreviousCommand.Execute(null); break;
+            case HotkeyAction.VolumeUp: ViewModel.ChangeVolume(120); break;
+            case HotkeyAction.VolumeDown: ViewModel.ChangeVolume(-120); break;
+            case HotkeyAction.Mute: ViewModel.ToggleMute(); break;
+            case HotkeyAction.TogglePlayer: TogglePlayerVisibility(); break;
+        }
+    }
+
+    /// <summary>Hotkey: hide/show whichever player the current mode uses.</summary>
+    void TogglePlayerVisibility()
+    {
+        if (Settings.Data.Mode == PlayerMode.Floating) TogglePlayer();
+        else if (_overlay is { IsVisible: true }) _overlay.Hide();
+        else SetMode(PlayerMode.Taskbar);
     }
 
     public void ShowSettings(string? page = null)
@@ -314,6 +361,8 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
         _tray?.Dispose();
+        Hotkeys?.Dispose();
+        SleepTimer?.Cancel(); // restores a faded volume
         _mutex?.Dispose();
         base.OnExit(e);
     }
