@@ -55,6 +55,39 @@ public static class AudioService
         return (target, false);
     }
 
+    /// <summary>Sets the app volume to an absolute level (0..1).</summary>
+    public static void SetVolume(string processName, float level)
+    {
+        level = Math.Clamp(level, 0f, 1f);
+        foreach (var s in Sessions(processName)) s.Volume = level;
+    }
+
+    /// <summary>
+    /// Peak meters of the app's audio sessions (what the Volume Mixer bars show). Cheap to poll;
+    /// resolve once and reuse, since matching sessions to processes is the expensive part.
+    /// </summary>
+    public static List<IAudioMeterInformation> Meters(string processName) =>
+        [.. SessionControls(processName).OfType<IAudioMeterInformation>()];
+
+    /// <summary>Highest current peak (0..1) of the given meters; null if they went away.</summary>
+    public static float? Peak(IReadOnlyList<IAudioMeterInformation> meters)
+    {
+        try
+        {
+            var peak = 0f;
+            foreach (var m in meters)
+            {
+                m.GetPeakValue(out var value);
+                peak = Math.Max(peak, value);
+            }
+            return peak;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     public static (float Volume, bool Muted)? ToggleMute(string processName)
     {
         var current = Get(processName);
@@ -131,6 +164,19 @@ public static class AudioService
     static List<SessionVolume> Sessions(string processName)
     {
         var result = new List<SessionVolume>();
+        foreach (var control in SessionControls(processName))
+        {
+            var simple = control as ISimpleAudioVolume;
+            var channels = simple is null ? control as IChannelAudioVolume : null;
+            if (simple is not null || channels is not null) result.Add(new SessionVolume(simple, channels));
+        }
+        return result;
+    }
+
+    /// <summary>Audio session objects (all render devices) owned by the process.</summary>
+    static List<object> SessionControls(string processName)
+    {
+        var result = new List<object>();
         try
         {
             var enumerator = (IMMDeviceEnumerator)new MMDeviceEnumerator();
@@ -150,9 +196,7 @@ public static class AudioService
                     if (control is not IAudioSessionControl2 control2) continue;
                     control2.GetProcessId(out var pid);
                     if (pid == 0 || !MatchesProcess(pid, processName)) continue;
-                    var simple = control as ISimpleAudioVolume;
-                    var channels = simple is null ? control as IChannelAudioVolume : null;
-                    if (simple is not null || channels is not null) result.Add(new SessionVolume(simple, channels));
+                    result.Add(control);
                 }
             }
         }
@@ -256,6 +300,12 @@ public static class AudioService
         [PreserveSig] int GetChannelCount(out uint count);
         [PreserveSig] int SetChannelVolume(uint index, float level, ref Guid ctx);
         [PreserveSig] int GetChannelVolume(uint index, out float level);
+    }
+
+    [ComImport, Guid("C02216F6-8C67-4B5B-9D00-D008E73E0064"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    public interface IAudioMeterInformation
+    {
+        [PreserveSig] int GetPeakValue(out float peak);
     }
 
     #endregion
