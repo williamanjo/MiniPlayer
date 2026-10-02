@@ -15,6 +15,7 @@ public partial class App : Application
     public SettingsService Settings { get; private set; } = null!;
     public PlayerViewModel ViewModel { get; private set; } = null!;
     public ThemeService Themes { get; private set; } = null!;
+    public UpdateService Updates { get; private set; } = null!;
 
     protected override async void OnStartup(StartupEventArgs e)
     {
@@ -30,12 +31,16 @@ public partial class App : Application
         Settings = SettingsService.Load();
         Themes = new ThemeService(Settings);
         Themes.Initialize();
+        Updates = new UpdateService();
         var media = new MediaService();
         ViewModel = new PlayerViewModel(media, Settings);
         _tray = new TrayIcon(this);
         ViewModel.TrackChanged += () => _tray.SetText(ViewModel.FullText);
 
         SetMode(Settings.Data.Mode);
+
+        Updates.UpdateAvailable += version => _tray.ShowUpdate(version);
+        Updates.Start();
 
         try
         {
@@ -83,6 +88,55 @@ public partial class App : Application
             _player.Hide();
         else
             SetMode(PlayerMode.Floating);
+    }
+
+    bool _updating;
+
+    /// <summary>Asks, downloads the pending version and restarts into it.</summary>
+    public async void InstallUpdate()
+    {
+        if (_updating || Updates.AvailableVersion is not { } version) return;
+        var answer = MessageBox.Show(
+            $"A versão {version} está disponível (você usa a {Updates.CurrentVersion}).\n\n" +
+            "Baixar e instalar agora? O MiniPlayer reinicia sozinho.",
+            "MiniPlayer — atualização", MessageBoxButton.YesNo, MessageBoxImage.Information);
+        if (answer != MessageBoxResult.Yes) return;
+
+        _updating = true;
+        try
+        {
+            await Updates.DownloadAndRestartAsync(
+                percent => _tray?.SetText($"Baixando atualização… {percent}%"),
+                () =>
+                {
+                    Settings.Save();
+                    _tray?.Dispose();
+                    _mutex?.ReleaseMutex();
+                });
+        }
+        catch (Exception ex)
+        {
+            _updating = false;
+            MessageBox.Show($"Não foi possível atualizar.\n\n{ex.Message}", "MiniPlayer",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    public async void CheckUpdatesManually()
+    {
+        try
+        {
+            if (await Updates.CheckAsync(manual: true) is null)
+                MessageBox.Show($"Você já está na versão mais recente ({Updates.CurrentVersion}).", "MiniPlayer",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+            else
+                InstallUpdate();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Não foi possível verificar atualizações.\n\n{ex.Message}", "MiniPlayer",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
     }
 
     public void ExitApp()

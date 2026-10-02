@@ -11,6 +11,7 @@ public sealed class TrayIcon : IDisposable
     readonly ToolStripMenuItem _pinItem;
     readonly ToolStripMenuItem _autoStartItem;
     readonly ToolStripMenuItem _autoHideItem;
+    readonly ToolStripMenuItem _updateItem;
 
     public TrayIcon(App app)
     {
@@ -59,7 +60,16 @@ public sealed class TrayIcon : IDisposable
             themesItem.DropDownItems.Add("Abrir pasta de temas", null, (_, _) => ThemeService.OpenFolder());
         };
 
+        _updateItem = new ToolStripMenuItem("Atualizar", null, (_, _) => app.InstallUpdate())
+        {
+            Visible = false,
+            Font = new Font(SystemFonts.MenuFont ?? Control.DefaultFont, FontStyle.Bold),
+        };
+
         var menu = new ContextMenuStrip();
+        menu.Items.Add(new ToolStripMenuItem($"MiniPlayer v{app.Updates.CurrentVersion}") { Enabled = false });
+        menu.Items.Add(_updateItem);
+        menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Mostrar player", null, (_, _) => app.SetMode(PlayerMode.Floating));
         menu.Items.Add(_taskbarItem);
         menu.Items.Add(screensItem);
@@ -68,6 +78,8 @@ public sealed class TrayIcon : IDisposable
         menu.Items.Add(_pinItem);
         menu.Items.Add(_autoStartItem);
         menu.Items.Add(new ToolStripSeparator());
+        if (app.Updates.IsInstalled)
+            menu.Items.Add("Verificar atualizações", null, (_, _) => app.CheckUpdatesManually());
         menu.Items.Add("Sair", null, (_, _) => app.ExitApp());
         menu.Opening += (_, _) =>
         {
@@ -84,10 +96,20 @@ public sealed class TrayIcon : IDisposable
             ContextMenuStrip = menu,
             Visible = true,
         };
+        _icon.BalloonTipClicked += (_, _) => app.InstallUpdate();
         _icon.MouseClick += (_, e) =>
         {
             if (e.Button == MouseButtons.Left) app.TogglePlayer();
         };
+    }
+
+    /// <summary>Shows the "update available" toast and menu entry.</summary>
+    public void ShowUpdate(string version)
+    {
+        _updateItem.Text = $"⬆ Atualizar para v{version}";
+        _updateItem.Visible = true;
+        _icon.ShowBalloonTip(10000, "Nova versão disponível",
+            $"Versão {version} pronta para instalar. Clique aqui para atualizar.", ToolTipIcon.Info);
     }
 
     public void SetText(string text) =>
