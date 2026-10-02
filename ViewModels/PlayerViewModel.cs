@@ -21,7 +21,14 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
     readonly Dispatcher _dispatcher;
     MediaSnapshot _snap = MediaSnapshot.Empty;
     bool _refreshing, _refreshPending;
-    string? _coverKey;
+    // Cover loading: track it belongs to, generation (bumped per track), hash of the shown image.
+    string? _coverTrack;
+    int _coverGeneration;
+    string? _coverHash;
+    DateTime _coverReadAt;
+    // After a track change, poll the artwork this often for this long (browsers send it ~1-4 s late).
+    static readonly TimeSpan CoverPollInterval = TimeSpan.FromMilliseconds(500);
+    static readonly TimeSpan CoverPollWindow = TimeSpan.FromSeconds(6);
     string? _lyricsKey;
     IReadOnlyList<LyricLine>? _lyrics;
     DateTime _statusUntil;
@@ -320,15 +327,60 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(TaskbarSubtitle));
     }
 
+    /// <summary>
+    /// Browsers often publish a new title before its artwork: the first read can return the
+    /// previous track's image, an empty stream or nothing. So on a track change we read now
+    /// and retry a few times, and any later update of the same track re-reads too. Images are
+    /// compared by content, so stale or identical art never flickers.
+    /// </summary>
     async Task UpdateCoverAsync(MediaSnapshot s)
     {
-        // Browsers often publish the title first and the artwork in a later update.
-        var key = s.HasSession ? $"{s.Source}|{s.Title}|{s.Artist}|{s.Thumbnail is not null}" : null;
-        if (key == _coverKey) return;
-        _coverKey = key;
+        var track = s.HasSession ? $"{s.Source}|{s.Title}|{s.Artist}" : null;
+        if (track == _coverTrack)
+        {
+            // Same track: artwork may have arrived late (throttled).
+            if (track is not null && DateTime.Now - _coverReadAt > TimeSpan.FromSeconds(2))
+                await LoadCoverAsync(_coverGeneration);
+            return;
+        }
 
-        var bytes = await MediaService.ReadThumbnailAsync(s.Thumbnail);
-        if (key != _coverKey) return; // track changed while loading
+        _coverTrack = track;
+        var generation = ++_coverGeneration;
+        if (track is null)
+        {
+            ShowCover(null, null);
+            return;
+        }
+
+        var found = false;
+        var until = DateTime.Now + CoverPollWindow;
+        while (true)
+        {
+            found |= await LoadCoverAsync(generation);
+            if (generation != _coverGeneration) return; // skipped again meanwhile
+            if (DateTime.Now >= until) break;
+            await Task.Delay(CoverPollInterval);
+        }
+        if (!found) ShowCover(null, null); // track has no art
+    }
+
+    /// <returns>True when the session returned an image (new or unchanged).</returns>
+    async Task<bool> LoadCoverAsync(int generation)
+    {
+        _coverReadAt = DateTime.Now;
+        // Fresh properties every time: an older thumbnail reference keeps returning the old image.
+        var fresh = await _media.GetSnapshotAsync();
+        if (fresh.Title != _snap.Title || fresh.Artist != _snap.Artist) return false; // track moved on
+        var bytes = await MediaService.ReadThumbnailAsync(fresh.Thumbnail);
+        if (generation != _coverGeneration || bytes is null) return false;
+        var hash = Convert.ToHexString(System.Security.Cryptography.SHA1.HashData(bytes));
+        if (hash != _coverHash) ShowCover(bytes, hash);
+        return true;
+    }
+
+    void ShowCover(byte[]? bytes, string? hash)
+    {
+        _coverHash = hash;
         Cover = bytes is null ? null : Decode(bytes, 320); // sharp up to 200% zoom
         CoverBackdrop = bytes is null ? null : Decode(bytes, 12);
     }
