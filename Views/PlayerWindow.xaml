@@ -5,17 +5,29 @@
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         ResizeMode="NoResize" ShowInTaskbar="False"
         Topmost="{Binding PinOnTop}"
-        Foreground="White" FontFamily="Segoe UI Variable Text, Segoe UI"
+        Foreground="{DynamicResource ThemeForeground}" FontFamily="{DynamicResource ThemeFont}"
         MouseWheel="OnWheel" MouseDown="OnMouseDown">
     <Grid Margin="8">
-        <!-- Shadow on its own layer so the text stays crisp -->
-        <Border CornerRadius="10" Background="#F21F1F1F" BorderBrush="#33FFFFFF" BorderThickness="1">
-            <Border.Effect>
-                <DropShadowEffect BlurRadius="14" ShadowDepth="2" Opacity="0.45" />
-            </Border.Effect>
+        <!-- Theme layers. Shadow on its own layer so the text stays crisp. -->
+        <Border CornerRadius="{DynamicResource ThemeCornerRadius}" Background="{DynamicResource ThemeBackground}"
+                Effect="{DynamicResource ThemeShadow}" />
+        <!-- Backdrop "cover": tiny album art upscaled = cheap blur -->
+        <Border CornerRadius="{DynamicResource ThemeCornerRadius}" Visibility="{DynamicResource ThemeCoverBackdropVisibility}"
+                RenderOptions.BitmapScalingMode="HighQuality">
+            <Border.Background>
+                <ImageBrush ImageSource="{Binding CoverBackdrop}" Stretch="UniformToFill" />
+            </Border.Background>
         </Border>
+        <Border CornerRadius="{DynamicResource ThemeCornerRadius}" Background="{DynamicResource ThemeImageBrush}" />
+        <Border CornerRadius="{DynamicResource ThemeCornerRadius}" Background="{DynamicResource ThemeOverlay}"
+                BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="{DynamicResource ThemeBorderThickness}" />
 
         <Grid Margin="14,10,10,10" Background="Transparent" MouseLeftButtonDown="OnDragArea">
+            <Grid.ContextMenu>
+                <ContextMenu x:Name="PlayerMenu" Opened="OnMenuOpened">
+                    <MenuItem x:Name="ThemesMenu" Header="Tema" />
+                </ContextMenu>
+            </Grid.ContextMenu>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -32,11 +44,11 @@
 
                 <!-- Album art (YouTube thumbnails are 16:9, so crop to square) -->
                 <Grid Width="84" Height="84" Margin="0,0,12,0" VerticalAlignment="Center" ToolTip="{Binding FullText}">
-                    <Border CornerRadius="6" Background="#33808080">
+                    <Border CornerRadius="{DynamicResource ThemeCoverRadius}" Background="{DynamicResource ThemeTrack}">
                         <TextBlock Text="&#xE8D6;" FontFamily="{StaticResource IconFont}" FontSize="28" Opacity="0.5"
                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
-                    <Border CornerRadius="6" Visibility="{Binding HasCover, Converter={StaticResource BoolToVis}}">
+                    <Border CornerRadius="{DynamicResource ThemeCoverRadius}" Visibility="{Binding HasCover, Converter={StaticResource BoolToVis}}">
                         <Border.Background>
                             <ImageBrush ImageSource="{Binding Cover}" Stretch="UniformToFill" />
                         </Border.Background>
@@ -61,8 +73,8 @@
                             <DockPanel x:Name="SourcePicker" Margin="0,1,0,0" Background="Transparent" Cursor="Hand" HorizontalAlignment="Left"
                                        MouseLeftButtonDown="OnPickSource" ToolTip="Escolher aba / app">
                                 <TextBlock DockPanel.Dock="Right" Text="&#xE70D;" FontFamily="{StaticResource IconFont}"
-                                           FontSize="9" Opacity="0.7" VerticalAlignment="Center" Margin="4,1,0,0" />
-                                <TextBlock Text="{Binding SubtitleDisplay}" FontSize="12" Opacity="0.7" TextTrimming="CharacterEllipsis" />
+                                           FontSize="9" Foreground="{DynamicResource ThemeSecondary}" VerticalAlignment="Center" Margin="4,1,0,0" />
+                                <TextBlock Text="{Binding SubtitleDisplay}" FontSize="12" Foreground="{DynamicResource ThemeSecondary}" TextTrimming="CharacterEllipsis" />
                             </DockPanel>
                         </StackPanel>
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top" Margin="4,0,0,0">
@@ -96,21 +108,21 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <TextBlock Text="{Binding PositionText}" FontSize="11" Opacity="0.7" MinWidth="34" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding PositionText}" FontSize="11" Foreground="{DynamicResource ThemeSecondary}" MinWidth="34" VerticalAlignment="Center" />
                 <Grid Grid.Column="1" Height="14" Background="Transparent" Cursor="Hand" Margin="6,0"
                       MouseLeftButtonDown="OnSeek" ToolTip="Clique para avançar/voltar">
                     <ProgressBar Style="{StaticResource ThinProgress}" Height="4" Value="{Binding Progress, Mode=OneWay}" />
                 </Grid>
-                <TextBlock Grid.Column="2" Text="{Binding DurationText}" FontSize="11" Opacity="0.7" MinWidth="34"
+                <TextBlock Grid.Column="2" Text="{Binding DurationText}" FontSize="11" Foreground="{DynamicResource ThemeSecondary}" MinWidth="34"
                            TextAlignment="Right" VerticalAlignment="Center" />
             </Grid>
 
             <!-- Synced lyrics -->
             <StackPanel Grid.Row="2" Margin="4,10,4,0" Visibility="{Binding ShowLyrics, Converter={StaticResource BoolToVis}}">
-                <TextBlock Text="{Binding LyricPrevious}" FontSize="12" Opacity="0.45" TextAlignment="Center" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding LyricPrevious}" FontSize="12" Foreground="{DynamicResource ThemeSecondary}" Opacity="0.75" TextAlignment="Center" TextWrapping="Wrap" />
                 <TextBlock Text="{Binding LyricCurrent}" FontSize="15" FontWeight="SemiBold" TextAlignment="Center"
                            TextWrapping="Wrap" Margin="0,3" />
-                <TextBlock Text="{Binding LyricNext}" FontSize="12" Opacity="0.45" TextAlignment="Center" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding LyricNext}" FontSize="12" Foreground="{DynamicResource ThemeSecondary}" Opacity="0.75" TextAlignment="Center" TextWrapping="Wrap" />
             </StackPanel>
         </Grid>
     </Grid>

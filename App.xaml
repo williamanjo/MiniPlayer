@@ -5,7 +5,22 @@
     <Application.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
         <FontFamily x:Key="IconFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
+        <!-- Theme tokens: defaults here, replaced at runtime by ThemeService -->
         <SolidColorBrush x:Key="AccentBrush" Color="#60CDFF" />
+        <SolidColorBrush x:Key="ThemeBackground" Color="#F21F1F1F" />
+        <SolidColorBrush x:Key="ThemeBorder" Color="#33FFFFFF" />
+        <Thickness x:Key="ThemeBorderThickness">1</Thickness>
+        <CornerRadius x:Key="ThemeCornerRadius">10</CornerRadius>
+        <CornerRadius x:Key="ThemeCoverRadius">6</CornerRadius>
+        <SolidColorBrush x:Key="ThemeForeground" Color="White" />
+        <SolidColorBrush x:Key="ThemeSecondary" Color="#B3FFFFFF" />
+        <SolidColorBrush x:Key="ThemeTrack" Color="#40808080" />
+        <SolidColorBrush x:Key="ThemeHover" Color="#33808080" />
+        <FontFamily x:Key="ThemeFont">Segoe UI Variable Text, Segoe UI</FontFamily>
+        <DropShadowEffect x:Key="ThemeShadow" BlurRadius="14" ShadowDepth="2" Opacity="0.45" />
+        <Visibility x:Key="ThemeCoverBackdropVisibility">Collapsed</Visibility>
+        <SolidColorBrush x:Key="ThemeImageBrush" Color="Transparent" />
+        <SolidColorBrush x:Key="ThemeOverlay" Color="Transparent" />
 
         <Style x:Key="IconButton" TargetType="Button">
             <Setter Property="FontFamily" Value="{StaticResource IconFont}" />
@@ -24,7 +39,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bg" Property="Background" Value="#33808080" />
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource ThemeHover}" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="Bg" Property="Background" Value="#55808080" />
@@ -42,7 +57,7 @@
             <Setter Property="ToolTip" Value="Aleatório" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding ShuffleOn}" Value="True">
-                    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -51,7 +66,7 @@
             <Setter Property="ToolTip" Value="Repetir" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding RepeatOn}" Value="True">
-                    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -60,7 +75,7 @@
             <Setter Property="ToolTip" Value="Letra sincronizada (lrclib.net)" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding ShowLyrics}" Value="True">
-                    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -71,7 +86,7 @@
             <Style.Triggers>
                 <DataTrigger Binding="{Binding PinOnTop}" Value="True">
                     <Setter Property="Content" Value="&#xE840;" />
-                    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
                     <Setter Property="ToolTip" Value="Fixado no topo (clique para soltar)" />
                 </DataTrigger>
             </Style.Triggers>
@@ -80,12 +95,12 @@
         <Style x:Key="ThinProgress" TargetType="ProgressBar">
             <Setter Property="Minimum" Value="0" />
             <Setter Property="Maximum" Value="1" />
-            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ProgressBar">
                         <Grid>
-                            <Border x:Name="PART_Track" Background="#40808080" CornerRadius="2" />
+                            <Border x:Name="PART_Track" Background="{DynamicResource ThemeTrack}" CornerRadius="2" />
                             <Border x:Name="PART_Indicator" Background="{TemplateBinding Foreground}"
                                     CornerRadius="2" HorizontalAlignment="Left" />
                         </Grid>

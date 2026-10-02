@@ -142,6 +142,10 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
     public ImageSource? Cover { get => _cover; private set { Set(ref _cover, value); OnPropertyChanged(nameof(HasCover)); } }
     public bool HasCover => _cover is not null;
 
+    ImageSource? _coverBackdrop;
+    /// <summary>Tiny copy of the cover; stretched over the panel it reads as a blur (theme backdrop "cover").</summary>
+    public ImageSource? CoverBackdrop { get => _coverBackdrop; private set => Set(ref _coverBackdrop, value); }
+
     bool _shuffleOn;
     public bool ShuffleOn { get => _shuffleOn; private set => Set(ref _shuffleOn, value); }
 
@@ -325,17 +329,18 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
 
         var bytes = await MediaService.ReadThumbnailAsync(s.Thumbnail);
         if (key != _coverKey) return; // track changed while loading
-        Cover = bytes is null ? null : Decode(bytes);
+        Cover = bytes is null ? null : Decode(bytes, 160);
+        CoverBackdrop = bytes is null ? null : Decode(bytes, 12);
     }
 
-    static BitmapImage? Decode(byte[] bytes)
+    static BitmapImage? Decode(byte[] bytes, int height)
     {
         try
         {
             var image = new BitmapImage();
             image.BeginInit();
             image.CacheOption = BitmapCacheOption.OnLoad;
-            image.DecodePixelHeight = 160;
+            image.DecodePixelHeight = height;
             image.StreamSource = new MemoryStream(bytes);
             image.EndInit();
             image.Freeze();
