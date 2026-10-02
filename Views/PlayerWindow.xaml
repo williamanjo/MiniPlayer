@@ -7,11 +7,93 @@
         Topmost="{Binding PinOnTop}"
         Foreground="{DynamicResource ThemeForeground}" FontFamily="{DynamicResource ThemeFont}"
         MouseWheel="OnWheel" MouseDown="OnMouseDown">
-    <!-- Fixed design width; the whole player is scaled (crisp vector) instead of re-laid out -->
-    <Grid x:Name="Root" Margin="8" Width="384">
+    <Window.Resources>
+        <!-- Parts shared by the three layouts. "Tag" carries a Visibility for optional bits,
+             set from code-behind depending on the available space. -->
+
+        <!-- Album art (YouTube thumbnails are 16:9, so crop to square) -->
+        <ControlTemplate x:Key="CoverTemplate" TargetType="ContentControl">
+            <Grid ToolTip="{Binding FullText}">
+                <Border CornerRadius="{DynamicResource ThemeCoverRadius}" Background="{DynamicResource ThemeTrack}">
+                    <Viewbox Margin="22" MaxWidth="48">
+                        <TextBlock Text="&#xE8D6;" FontFamily="{StaticResource IconFont}" Opacity="0.5" />
+                    </Viewbox>
+                </Border>
+                <Border CornerRadius="{DynamicResource ThemeCoverRadius}" Visibility="{Binding HasCover, Converter={StaticResource BoolToVis}}">
+                    <Border.Background>
+                        <ImageBrush ImageSource="{Binding Cover}" Stretch="UniformToFill" />
+                    </Border.Background>
+                </Border>
+            </Grid>
+        </ControlTemplate>
+
+        <!-- Shuffle / prev / play / next / repeat. Tag = visibility of shuffle + repeat. -->
+        <ControlTemplate x:Key="TransportTemplate" TargetType="ContentControl">
+            <StackPanel Orientation="Horizontal">
+                <Button Style="{StaticResource ShuffleButton}" Content="&#xE8B1;" Command="{Binding ShuffleCommand}"
+                        Margin="0,0,2,0" Visibility="{TemplateBinding Tag}" />
+                <Button Style="{StaticResource IconButton}" Content="&#xE892;" Command="{Binding PreviousCommand}" ToolTip="Anterior" />
+                <Button Style="{StaticResource IconButton}" Content="{Binding PlayGlyph}" Command="{Binding PlayPauseCommand}"
+                        FontSize="20" Width="44" Height="40" Margin="2,0" ToolTip="Play / Pause" />
+                <Button Style="{StaticResource IconButton}" Content="&#xE893;" Command="{Binding NextCommand}" ToolTip="Próxima" />
+                <Button Style="{StaticResource RepeatButton}" Content="{Binding RepeatGlyph}" Command="{Binding RepeatCommand}"
+                        Margin="2,0,0,0" Visibility="{TemplateBinding Tag}" />
+            </StackPanel>
+        </ControlTemplate>
+
+        <!-- Pin / lyrics / taskbar / close. Tag = visibility of everything but close. -->
+        <ControlTemplate x:Key="WindowButtonsTemplate" TargetType="ContentControl">
+            <StackPanel Orientation="Horizontal">
+                <StackPanel Orientation="Horizontal" Visibility="{TemplateBinding Tag}">
+                    <Button Style="{StaticResource PinButton}" FontSize="12" Width="26" Height="26" Click="OnTogglePin" />
+                    <Button Style="{StaticResource LyricsButton}" Content="&#xE720;" FontSize="12" Width="26" Height="26"
+                            Click="OnToggleLyrics" />
+                    <Button Style="{StaticResource IconButton}" Content="&#xE90E;" FontSize="12" Width="26" Height="26"
+                            ToolTip="Mover para a barra de tarefas" Click="OnToTaskbar" />
+                </StackPanel>
+                <Button Style="{StaticResource IconButton}" Content="&#xE8BB;" FontSize="10" Width="26" Height="26"
+                        ToolTip="Ocultar (continua na bandeja)" Click="OnClose" />
+            </StackPanel>
+        </ControlTemplate>
+
+        <!-- Time + seekable bar + duration -->
+        <ControlTemplate x:Key="ProgressTemplate" TargetType="ContentControl">
+            <Grid Visibility="{Binding HasTimeline, Converter={StaticResource BoolToVis}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding PositionText}" FontSize="11" Foreground="{DynamicResource ThemeSecondary}"
+                           MinWidth="34" VerticalAlignment="Center" />
+                <Grid Grid.Column="1" Height="14" Background="Transparent" Cursor="Hand" Margin="6,0"
+                      MouseLeftButtonDown="OnSeek" ToolTip="Clique para avançar/voltar">
+                    <ProgressBar Style="{StaticResource ThinProgress}" Height="4" Value="{Binding Progress, Mode=OneWay}" />
+                </Grid>
+                <TextBlock Grid.Column="2" Text="{Binding DurationText}" FontSize="11" Foreground="{DynamicResource ThemeSecondary}"
+                           MinWidth="34" TextAlignment="Right" VerticalAlignment="Center" />
+            </Grid>
+        </ControlTemplate>
+
+        <!-- Synced lyrics. Tag = visibility of the previous/next lines (hidden when space is short). -->
+        <ControlTemplate x:Key="LyricsTemplate" TargetType="ContentControl">
+            <StackPanel VerticalAlignment="Center" Visibility="{Binding ShowLyrics, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="{Binding LyricPrevious}" FontSize="12" Foreground="{DynamicResource ThemeSecondary}" Opacity="0.75"
+                           TextAlignment="Center" TextWrapping="Wrap" Visibility="{TemplateBinding Tag}" />
+                <TextBlock Text="{Binding LyricCurrent}" FontSize="15" FontWeight="SemiBold" TextAlignment="Center"
+                           TextWrapping="Wrap" Margin="0,3" />
+                <TextBlock Text="{Binding LyricNext}" FontSize="12" Foreground="{DynamicResource ThemeSecondary}" Opacity="0.75"
+                           TextAlignment="Center" TextWrapping="Wrap" Visibility="{TemplateBinding Tag}" />
+            </StackPanel>
+        </ControlTemplate>
+    </Window.Resources>
+
+    <!-- Root has an explicit content size (user-resizable); zoom is a LayoutTransform on top of it. -->
+    <Grid x:Name="Root" Margin="8" Width="384" Height="129">
         <Grid.LayoutTransform>
             <ScaleTransform x:Name="RootScale" ScaleX="1" ScaleY="1" />
         </Grid.LayoutTransform>
+
         <!-- Theme layers. Shadow on its own layer so the text stays crisp. -->
         <Border CornerRadius="{DynamicResource ThemeCornerRadius}" Background="{DynamicResource ThemeBackground}"
                 Effect="{DynamicResource ThemeShadow}" />
@@ -26,122 +108,139 @@
         <Border CornerRadius="{DynamicResource ThemeCornerRadius}" Background="{DynamicResource ThemeOverlay}"
                 BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="{DynamicResource ThemeBorderThickness}" />
 
-        <Grid Margin="14,10,10,10" Background="Transparent" MouseLeftButtonDown="OnDragArea">
+        <Grid x:Name="Body" Margin="14,10,10,10" Background="Transparent" MouseLeftButtonDown="OnDragArea">
             <Grid.ContextMenu>
-                <ContextMenu x:Name="PlayerMenu" Opened="OnMenuOpened">
+                <ContextMenu Opened="OnMenuOpened">
+                    <MenuItem Header="Fixar no topo" IsCheckable="True" IsChecked="{Binding PinOnTop}" />
+                    <MenuItem Header="Mostrar letra" IsCheckable="True" IsChecked="{Binding ShowLyrics}" />
+                    <MenuItem Header="Mover para a barra de tarefas" Click="OnToTaskbar" />
+                    <Separator />
                     <MenuItem x:Name="ThemesMenu" Header="Tema" />
-                    <MenuItem x:Name="SizeMenu" Header="Tamanho" />
+                    <MenuItem x:Name="ZoomMenu" Header="Zoom" />
+                    <MenuItem Header="Restaurar tamanho" Click="OnResetSize" />
+                    <Separator />
+                    <MenuItem Header="Ocultar" Click="OnClose" />
                 </ContextMenu>
             </Grid.ContextMenu>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
 
-            <!-- Cover + track info + controls -->
-            <Grid>
+            <!-- ========== MINI: squashed, everything on one row ========== -->
+            <Grid x:Name="MiniLayout" Visibility="Collapsed">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-
-                <!-- Album art (YouTube thumbnails are 16:9, so crop to square) -->
-                <Grid Width="84" Height="84" Margin="0,0,12,0" VerticalAlignment="Center" ToolTip="{Binding FullText}">
-                    <Border CornerRadius="{DynamicResource ThemeCoverRadius}" Background="{DynamicResource ThemeTrack}">
-                        <TextBlock Text="&#xE8D6;" FontFamily="{StaticResource IconFont}" FontSize="28" Opacity="0.5"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Border>
-                    <Border CornerRadius="{DynamicResource ThemeCoverRadius}" Visibility="{Binding HasCover, Converter={StaticResource BoolToVis}}">
-                        <Border.Background>
-                            <ImageBrush ImageSource="{Binding Cover}" Stretch="UniformToFill" />
-                        </Border.Background>
-                    </Border>
+                <ContentControl x:Name="MiniCover" Template="{StaticResource CoverTemplate}" Margin="0,0,10,0" />
+                <StackPanel x:Name="MiniText" Grid.Column="1" VerticalAlignment="Center" ToolTip="{Binding FullText}">
+                    <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Text="{Binding TaskbarSubtitle}" FontSize="11" Foreground="{DynamicResource ThemeSecondary}"
+                               TextTrimming="CharacterEllipsis" Background="Transparent" Cursor="Hand"
+                               MouseLeftButtonDown="OnPickSource" />
+                </StackPanel>
+                <ContentControl x:Name="MiniTransport" Grid.Column="2" Template="{StaticResource TransportTemplate}"
+                                VerticalAlignment="Center" Margin="6,0,0,0" />
+                <Button Grid.Column="3" Style="{StaticResource IconButton}" Content="&#xE8BB;" FontSize="10" Width="24" Height="24"
+                        VerticalAlignment="Center" ToolTip="Ocultar (continua na bandeja)" Click="OnClose" />
+                <Grid Grid.ColumnSpan="4" Height="8" Margin="0,0,0,-9" VerticalAlignment="Bottom" Background="Transparent"
+                      Cursor="Hand" MouseLeftButtonDown="OnSeek"
+                      Visibility="{Binding HasTimeline, Converter={StaticResource BoolToVis}}">
+                    <ProgressBar Style="{StaticResource ThinProgress}" Height="2" VerticalAlignment="Center"
+                                 Value="{Binding Progress, Mode=OneWay}" />
                 </Grid>
+            </Grid>
 
-                <Grid Grid.Column="1">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-
-                    <!-- Track info + window buttons -->
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel VerticalAlignment="Center" ToolTip="{Binding FullText}">
-                            <TextBlock Text="{Binding Title}" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                            <!-- Click: choose which tab/app to control -->
-                            <DockPanel x:Name="SourcePicker" Margin="0,1,0,0" Background="Transparent" Cursor="Hand" HorizontalAlignment="Left"
-                                       MouseLeftButtonDown="OnPickSource" ToolTip="Escolher aba / app">
-                                <TextBlock DockPanel.Dock="Right" Text="&#xE70D;" FontFamily="{StaticResource IconFont}"
-                                           FontSize="9" Foreground="{DynamicResource ThemeSecondary}" VerticalAlignment="Center" Margin="4,1,0,0" />
-                                <TextBlock Text="{Binding SubtitleDisplay}" FontSize="12" Foreground="{DynamicResource ThemeSecondary}" TextTrimming="CharacterEllipsis" />
-                            </DockPanel>
-                        </StackPanel>
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top" Margin="4,0,0,0">
-                            <Button Style="{StaticResource PinButton}" FontSize="12" Width="26" Height="26"
-                                    Click="OnTogglePin" />
-                            <Button Style="{StaticResource LyricsButton}" Content="&#xE720;" FontSize="12" Width="26" Height="26"
-                                    Click="OnToggleLyrics" />
-                            <Button Style="{StaticResource IconButton}" Content="&#xE90E;" FontSize="12" Width="26" Height="26"
-                                    ToolTip="Mover para a barra de tarefas" Click="OnToTaskbar" />
-                            <Button Style="{StaticResource IconButton}" Content="&#xE8BB;" FontSize="10" Width="26" Height="26"
-                                    ToolTip="Ocultar (continua na bandeja)" Click="OnClose" />
-                        </StackPanel>
+            <!-- ========== STANDARD: cover left, info + controls right ========== -->
+            <Grid x:Name="StandardLayout">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <ContentControl x:Name="StdCover" Template="{StaticResource CoverTemplate}" Width="84" Height="84"
+                                    Margin="0,0,12,0" VerticalAlignment="Center" />
+                    <Grid Grid.Column="1" VerticalAlignment="Center">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center" ToolTip="{Binding FullText}">
+                                <TextBlock Text="{Binding Title}" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                <!-- Click: choose which tab/app to control -->
+                                <DockPanel Margin="0,1,0,0" Background="Transparent" Cursor="Hand" HorizontalAlignment="Left"
+                                           MouseLeftButtonDown="OnPickSource" ToolTip="Escolher aba / app">
+                                    <TextBlock DockPanel.Dock="Right" Text="&#xE70D;" FontFamily="{StaticResource IconFont}"
+                                               FontSize="9" Foreground="{DynamicResource ThemeSecondary}" VerticalAlignment="Center" Margin="4,1,0,0" />
+                                    <TextBlock Text="{Binding SubtitleDisplay}" FontSize="12" Foreground="{DynamicResource ThemeSecondary}"
+                                               TextTrimming="CharacterEllipsis" />
+                                </DockPanel>
+                            </StackPanel>
+                            <ContentControl x:Name="StdWindowButtons" Grid.Column="1" Template="{StaticResource WindowButtonsTemplate}"
+                                            VerticalAlignment="Top" Margin="4,0,0,0" />
+                        </Grid>
+                        <ContentControl x:Name="StdTransport" Grid.Row="1" Template="{StaticResource TransportTemplate}"
+                                        HorizontalAlignment="Left" Margin="-6,6,0,0" />
                     </Grid>
-
-                    <!-- Transport controls -->
-                    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left" Margin="-6,6,0,0">
-                        <Button Style="{StaticResource ShuffleButton}" Content="&#xE8B1;" Command="{Binding ShuffleCommand}" Margin="0,0,2,0" />
-                        <Button Style="{StaticResource IconButton}" Content="&#xE892;" Command="{Binding PreviousCommand}" ToolTip="Anterior" />
-                        <Button Style="{StaticResource IconButton}" Content="{Binding PlayGlyph}" Command="{Binding PlayPauseCommand}"
-                                FontSize="20" Width="44" Height="40" Margin="2,0" ToolTip="Play / Pause" />
-                        <Button Style="{StaticResource IconButton}" Content="&#xE893;" Command="{Binding NextCommand}" ToolTip="Próxima" />
-                        <Button Style="{StaticResource RepeatButton}" Content="{Binding RepeatGlyph}" Command="{Binding RepeatCommand}" Margin="2,0,0,0" />
-                    </StackPanel>
                 </Grid>
+                <ContentControl Grid.Row="1" Template="{StaticResource ProgressTemplate}" Margin="0,10,4,0" />
+                <ContentControl x:Name="StdLyrics" Grid.Row="2" Template="{StaticResource LyricsTemplate}" Margin="4,6,4,0"
+                                ClipToBounds="True" SizeChanged="OnLyricsSizeChanged" />
             </Grid>
 
-            <!-- Progress -->
-            <Grid Grid.Row="1" Visibility="{Binding HasTimeline, Converter={StaticResource BoolToVis}}" Margin="0,10,4,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <TextBlock Text="{Binding PositionText}" FontSize="11" Foreground="{DynamicResource ThemeSecondary}" MinWidth="34" VerticalAlignment="Center" />
-                <Grid Grid.Column="1" Height="14" Background="Transparent" Cursor="Hand" Margin="6,0"
-                      MouseLeftButtonDown="OnSeek" ToolTip="Clique para avançar/voltar">
-                    <ProgressBar Style="{StaticResource ThinProgress}" Height="4" Value="{Binding Progress, Mode=OneWay}" />
-                </Grid>
-                <TextBlock Grid.Column="2" Text="{Binding DurationText}" FontSize="11" Foreground="{DynamicResource ThemeSecondary}" MinWidth="34"
-                           TextAlignment="Right" VerticalAlignment="Center" />
+            <!-- ========== TALL: portrait card, big cover on top ========== -->
+            <Grid x:Name="TallLayout" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <ContentControl x:Name="TallWindowButtons" Template="{StaticResource WindowButtonsTemplate}"
+                                HorizontalAlignment="Right" Margin="0,0,0,4" />
+                <ContentControl x:Name="TallCover" Grid.Row="1" Template="{StaticResource CoverTemplate}" HorizontalAlignment="Center" />
+                <StackPanel Grid.Row="2" Margin="0,10,4,0" ToolTip="{Binding FullText}">
+                    <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="SemiBold" TextAlignment="Center"
+                               TextTrimming="CharacterEllipsis" />
+                    <TextBlock Text="{Binding SubtitleDisplay}" FontSize="12" Foreground="{DynamicResource ThemeSecondary}"
+                               TextAlignment="Center" TextTrimming="CharacterEllipsis" Background="Transparent" Cursor="Hand"
+                               MouseLeftButtonDown="OnPickSource" Margin="0,2,0,0" />
+                </StackPanel>
+                <ContentControl Grid.Row="3" Template="{StaticResource ProgressTemplate}" Margin="0,8,4,0" />
+                <ContentControl x:Name="TallTransport" Grid.Row="4" Template="{StaticResource TransportTemplate}"
+                                HorizontalAlignment="Center" Margin="0,2,0,0" />
+                <ContentControl x:Name="TallLyrics" Grid.Row="5" Template="{StaticResource LyricsTemplate}" Margin="4,6,4,0"
+                                ClipToBounds="True" SizeChanged="OnLyricsSizeChanged" />
             </Grid>
-
-            <!-- Synced lyrics -->
-            <StackPanel Grid.Row="2" Margin="4,10,4,0" Visibility="{Binding ShowLyrics, Converter={StaticResource BoolToVis}}">
-                <TextBlock Text="{Binding LyricPrevious}" FontSize="12" Foreground="{DynamicResource ThemeSecondary}" Opacity="0.75" TextAlignment="Center" TextWrapping="Wrap" />
-                <TextBlock Text="{Binding LyricCurrent}" FontSize="15" FontWeight="SemiBold" TextAlignment="Center"
-                           TextWrapping="Wrap" Margin="0,3" />
-                <TextBlock Text="{Binding LyricNext}" FontSize="12" Foreground="{DynamicResource ThemeSecondary}" Opacity="0.75" TextAlignment="Center" TextWrapping="Wrap" />
-            </StackPanel>
         </Grid>
-        <!-- Resize grips (sides + corners); drag scales the player -->
-        <Border Width="6" HorizontalAlignment="Left" Background="Transparent" Cursor="SizeWE" Tag="L"
+
+        <!-- Resize grips: edges + corners -->
+        <Border Width="5" HorizontalAlignment="Left" Background="Transparent" Cursor="SizeWE" Tag="L"
                 MouseLeftButtonDown="OnGripDown" MouseMove="OnGripMove" MouseLeftButtonUp="OnGripUp" />
-        <Border Width="6" HorizontalAlignment="Right" Background="Transparent" Cursor="SizeWE" Tag="R"
+        <Border Width="5" HorizontalAlignment="Right" Background="Transparent" Cursor="SizeWE" Tag="R"
+                MouseLeftButtonDown="OnGripDown" MouseMove="OnGripMove" MouseLeftButtonUp="OnGripUp" />
+        <Border Height="5" VerticalAlignment="Top" Background="Transparent" Cursor="SizeNS" Tag="T"
+                MouseLeftButtonDown="OnGripDown" MouseMove="OnGripMove" MouseLeftButtonUp="OnGripUp" />
+        <Border Height="5" VerticalAlignment="Bottom" Background="Transparent" Cursor="SizeNS" Tag="B"
                 MouseLeftButtonDown="OnGripDown" MouseMove="OnGripMove" MouseLeftButtonUp="OnGripUp" />
         <Border Width="12" Height="12" HorizontalAlignment="Left" VerticalAlignment="Top" Background="Transparent"
-                Cursor="SizeNWSE" Tag="L" MouseLeftButtonDown="OnGripDown" MouseMove="OnGripMove" MouseLeftButtonUp="OnGripUp" />
+                Cursor="SizeNWSE" Tag="TL" MouseLeftButtonDown="OnGripDown" MouseMove="OnGripMove" MouseLeftButtonUp="OnGripUp" />
         <Border Width="12" Height="12" HorizontalAlignment="Right" VerticalAlignment="Top" Background="Transparent"
-                Cursor="SizeNESW" Tag="R" MouseLeftButtonDown="OnGripDown" MouseMove="OnGripMove" MouseLeftButtonUp="OnGripUp" />
+                Cursor="SizeNESW" Tag="TR" MouseLeftButtonDown="OnGripDown" MouseMove="OnGripMove" MouseLeftButtonUp="OnGripUp" />
         <Border Width="12" Height="12" HorizontalAlignment="Left" VerticalAlignment="Bottom" Background="Transparent"
-                Cursor="SizeNESW" Tag="L" MouseLeftButtonDown="OnGripDown" MouseMove="OnGripMove" MouseLeftButtonUp="OnGripUp" />
+                Cursor="SizeNESW" Tag="BL" MouseLeftButtonDown="OnGripDown" MouseMove="OnGripMove" MouseLeftButtonUp="OnGripUp" />
         <Border Width="12" Height="12" HorizontalAlignment="Right" VerticalAlignment="Bottom" Background="Transparent"
-                Cursor="SizeNWSE" Tag="R" MouseLeftButtonDown="OnGripDown" MouseMove="OnGripMove" MouseLeftButtonUp="OnGripUp" />
+                Cursor="SizeNWSE" Tag="BR" MouseLeftButtonDown="OnGripDown" MouseMove="OnGripMove" MouseLeftButtonUp="OnGripUp" />
     </Grid>
 </Window>

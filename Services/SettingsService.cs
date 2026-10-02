@@ -18,6 +18,9 @@ public sealed class AppSettings
     public double? Bottom { get; set; }
     /// <summary>Floating player zoom (1 = 100%).</summary>
     public double FloatingScale { get; set; } = 1;
+    /// <summary>Floating player content size (before zoom); null = default.</summary>
+    public double? FloatingWidth { get; set; }
+    public double? FloatingHeight { get; set; }
     /// <summary>Distance (DIP) between the overlay and the notification area.</summary>
     public double TaskbarOffset { get; set; }
     /// <summary>Monitor whose taskbar hosts the overlay (e.g. \\.\DISPLAY2); null = primary.</summary>

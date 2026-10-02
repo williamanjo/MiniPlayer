@@ -14,17 +14,39 @@ public partial class PlayerWindow : Window
 {
     /// <summary>Distance (DIP) from a screen edge at which the player snaps to it.</summary>
     const double SnapDistance = 24;
-    const double MinScale = 0.7, MaxScale = 2.0;
-    static readonly double[] ScalePresets = [0.75, 1, 1.25, 1.5, 2];
+    const double MinZoom = 0.7, MaxZoom = 2.0;
+    static readonly double[] ZoomPresets = [0.75, 1, 1.25, 1.5, 2];
+
+    // Content size (before zoom), Root grid units.
+    const double DefaultWidth = 384, DefaultHeight = 129, LyricsHeight = 200;
+    const double MinContentWidth = 200, MinContentHeight = 56, MaxContentSize = 900;
+    // Body padding inside Root (14 + 10 horizontally, 10 + 10 vertically).
+    const double PadX = 24, PadY = 20;
+
+    enum LayoutMode { Mini, Standard, Tall }
 
     readonly SettingsService _settings;
+    LayoutMode _mode = LayoutMode.Standard;
+    double? _heightBeforeLyrics;
 
     public PlayerWindow(PlayerViewModel viewModel, SettingsService settings)
     {
         InitializeComponent();
         DataContext = viewModel;
         _settings = settings;
-        ApplyScale(settings.Data.FloatingScale);
+
+        foreach (var part in new FrameworkElement[] { MiniTransport, StdTransport, TallTransport, StdWindowButtons, TallWindowButtons, StdLyrics, TallLyrics })
+            part.Tag = Visibility.Visible;
+
+        ApplyZoom(settings.Data.FloatingScale);
+        SetContentSize(
+            settings.Data.FloatingWidth ?? DefaultWidth,
+            settings.Data.FloatingHeight ?? (viewModel.ShowLyrics ? LyricsHeight : DefaultHeight));
+
+        viewModel.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(PlayerViewModel.ShowLyrics)) OnLyricsToggled();
+        };
         Loaded += (_, _) => RestorePosition();
         SizeChanged += OnSizeChanged;
     }
@@ -53,74 +75,189 @@ public partial class PlayerWindow : Window
     }
 
     /// <summary>
-    /// Height changes (lyrics on/off, wrapped lines) keep the bottom edge fixed, so a player
-    /// docked above the taskbar grows upward and drops back down when it shrinks.
+    /// Size changes not driven by a grip (lyrics on/off, zoom) keep the bottom edge fixed, so a
+    /// player docked above the taskbar grows upward and drops back down when it shrinks.
     /// </summary>
     void OnSizeChanged(object sender, SizeChangedEventArgs e)
     {
-        if (!IsLoaded || e.PreviousSize.Height <= 0) return;
+        if (!IsLoaded || _grip is not null || e.PreviousSize.Height <= 0) return;
         if (e.HeightChanged) Top += e.PreviousSize.Height - e.NewSize.Height;
         KeepInsideWorkArea();
     }
 
-    double Scale => RootScale.ScaleX;
+    #region Responsive layout
 
-    void ApplyScale(double scale)
+    void SetContentSize(double width, double height)
     {
-        scale = Math.Round(Math.Clamp(scale, MinScale, MaxScale), 2);
-        RootScale.ScaleX = RootScale.ScaleY = scale;
+        Root.Width = Math.Round(Math.Clamp(width, MinContentWidth, MaxContentSize));
+        Root.Height = Math.Round(Math.Clamp(height, MinContentHeight, MaxContentSize));
+        ApplyResponsiveLayout();
+    }
+
+    /// <summary>
+    /// Picks a layout for the available space: squashed = one-row mini, tall and narrow =
+    /// portrait card, otherwise the standard layout. Optional parts drop out as width shrinks.
+    /// </summary>
+    void ApplyResponsiveLayout()
+    {
+        var w = Root.Width - PadX;
+        var h = Root.Height - PadY;
+        var lyrics = ViewModel.ShowLyrics;
+
+        _mode = h < 108 ? LayoutMode.Mini
+              : h >= 290 && h >= w * 0.9 ? LayoutMode.Tall
+              : LayoutMode.Standard;
+
+        MiniLayout.Visibility = Vis(_mode == LayoutMode.Mini);
+        StandardLayout.Visibility = Vis(_mode == LayoutMode.Standard);
+        TallLayout.Visibility = Vis(_mode == LayoutMode.Tall);
+
+        switch (_mode)
+        {
+            case LayoutMode.Mini:
+                MiniCover.Width = MiniCover.Height = Math.Max(24, h);
+                MiniCover.Visibility = Vis(w >= 300);
+                MiniText.Visibility = Vis(w >= 230);
+                MiniTransport.Tag = Vis(w >= 470);
+                break;
+
+            case LayoutMode.Standard:
+                StdTransport.Tag = Vis(w >= 300);
+                StdWindowButtons.Tag = Vis(w >= 310);
+                StdCover.Visibility = Vis(w >= 270);
+                // Without lyrics the spare height goes to the cover.
+                StdCover.Width = StdCover.Height = lyrics ? 84 : Math.Clamp(h - 34, 84, Math.Max(84, Math.Min(w * 0.42, 260)));
+                break;
+
+            case LayoutMode.Tall:
+                TallTransport.Tag = Vis(w >= 250);
+                TallWindowButtons.Tag = Vis(w >= 150);
+                // ~146 for buttons, title, progress and controls; ~70 for lyrics.
+                TallCover.Width = TallCover.Height = Math.Clamp(Math.Min(w, h - 146 - (lyrics ? 70 : 0)), 60, Math.Max(60, w));
+                break;
+        }
+    }
+
+    /// <summary>Previous/next lyric lines only when there is room for them.</summary>
+    void OnLyricsSizeChanged(object sender, SizeChangedEventArgs e) =>
+        ((FrameworkElement)sender).Tag = Vis(e.NewSize.Height >= 68);
+
+    /// <summary>Lyrics on: grow (upward) if there is no room; off: give that height back.</summary>
+    void OnLyricsToggled()
+    {
+        if (ViewModel.ShowLyrics)
+        {
+            if (_mode == LayoutMode.Standard && Root.Height < LyricsHeight)
+            {
+                _heightBeforeLyrics = Root.Height;
+                Root.Height = LyricsHeight;
+            }
+        }
+        else
+        {
+            if (_heightBeforeLyrics is double previous && Math.Abs(Root.Height - LyricsHeight) < 1)
+                Root.Height = previous;
+            _heightBeforeLyrics = null;
+        }
+        ApplyResponsiveLayout();
+        SaveState();
+    }
+
+    static Visibility Vis(bool visible) => visible ? Visibility.Visible : Visibility.Collapsed;
+
+    #endregion
+
+    #region Zoom
+
+    double Zoom => RootScale.ScaleX;
+
+    void ApplyZoom(double zoom)
+    {
+        zoom = Math.Round(Math.Clamp(zoom, MinZoom, MaxZoom), 2);
+        RootScale.ScaleX = RootScale.ScaleY = zoom;
     }
 
     /// <summary>Zoom keeping the right edge in place (the player usually sits bottom-right).</summary>
-    void ZoomTo(double scale)
+    void ZoomTo(double zoom)
     {
         var right = Left + ActualWidth;
-        ApplyScale(scale);
+        ApplyZoom(zoom);
         UpdateLayout();
         Left = right - ActualWidth;
         KeepInsideWorkArea();
-        SaveScaleAndPosition();
+        SaveState();
     }
 
-    void SaveScaleAndPosition()
+    void OnResetSize(object sender, RoutedEventArgs e)
     {
-        _settings.Data.FloatingScale = Scale;
-        _settings.Data.Left = Left;
-        _settings.Data.Top = Top;
-        _settings.Data.Bottom = Top + ActualHeight;
+        var right = Left + ActualWidth;
+        _heightBeforeLyrics = null;
+        ApplyZoom(1);
+        SetContentSize(DefaultWidth, ViewModel.ShowLyrics ? LyricsHeight : DefaultHeight);
+        UpdateLayout();
+        Left = right - ActualWidth;
+        KeepInsideWorkArea();
+        SaveState();
+    }
+
+    #endregion
+
+    void SaveState()
+    {
+        _settings.Data.FloatingScale = Zoom;
+        _settings.Data.FloatingWidth = Root.Width;
+        _settings.Data.FloatingHeight = Root.Height;
+        if (IsLoaded)
+        {
+            _settings.Data.Left = Left;
+            _settings.Data.Top = Top;
+            _settings.Data.Bottom = Top + ActualHeight;
+        }
         _settings.Save();
     }
 
-    // Resize grips. Cursor tracked in screen space: the window itself moves while dragging the left side.
-    string? _gripSide;
-    double _gripStartX, _gripStartWidth, _gripStartRight, _gripBaseWidth;
+    #region Resize grips
 
-    double CursorX()
+    // Cursor tracked in screen space: the window itself moves while dragging the left/top sides.
+    string? _grip;
+    Point _gripStart;
+    double _gripWidth, _gripHeight, _gripRight, _gripBottom;
+
+    Point CursorDip()
     {
         TaskbarHelper.GetCursorPos(out var p);
-        return p.X / VisualTreeHelper.GetDpi(this).DpiScaleX;
+        var dpi = VisualTreeHelper.GetDpi(this);
+        return new Point(p.X / dpi.DpiScaleX, p.Y / dpi.DpiScaleY);
     }
 
     void OnGripDown(object sender, MouseButtonEventArgs e)
     {
         var grip = (FrameworkElement)sender;
-        _gripSide = (string)grip.Tag;
-        _gripStartX = CursorX();
-        _gripStartWidth = ActualWidth;
-        _gripStartRight = Left + ActualWidth;
-        _gripBaseWidth = ActualWidth / Scale; // width at 100%
+        _grip = (string)grip.Tag;
+        _gripStart = CursorDip();
+        _gripWidth = Root.Width;
+        _gripHeight = Root.Height;
+        _gripRight = Left + ActualWidth;
+        _gripBottom = Top + ActualHeight;
         grip.CaptureMouse();
         e.Handled = true; // no window drag
     }
 
     void OnGripMove(object sender, MouseEventArgs e)
     {
-        if (_gripSide is null || !((UIElement)sender).IsMouseCaptured) return;
-        var dx = CursorX() - _gripStartX;
-        var width = _gripStartWidth + (_gripSide == "L" ? -dx : dx);
-        ApplyScale(width / _gripBaseWidth);
+        if (_grip is null || !((UIElement)sender).IsMouseCaptured) return;
+        var cursor = CursorDip();
+        var dx = (cursor.X - _gripStart.X) / Zoom;
+        var dy = (cursor.Y - _gripStart.Y) / Zoom;
+
+        var width = _grip.Contains('L') ? _gripWidth - dx : _grip.Contains('R') ? _gripWidth + dx : _gripWidth;
+        var height = _grip.Contains('T') ? _gripHeight - dy : _grip.Contains('B') ? _gripHeight + dy : _gripHeight;
+        SetContentSize(width, height);
         UpdateLayout();
-        if (_gripSide == "L") Left = _gripStartRight - ActualWidth;
+
+        // Opposite edge stays put.
+        if (_grip.Contains('L')) Left = _gripRight - ActualWidth;
+        if (_grip.Contains('T')) Top = _gripBottom - ActualHeight;
     }
 
     void OnGripUp(object sender, MouseButtonEventArgs e)
@@ -128,10 +265,13 @@ public partial class PlayerWindow : Window
         var grip = (UIElement)sender;
         if (!grip.IsMouseCaptured) return;
         grip.ReleaseMouseCapture();
-        _gripSide = null;
+        _grip = null;
+        _heightBeforeLyrics = null; // the user picked this size
         KeepInsideWorkArea();
-        SaveScaleAndPosition();
+        SaveState();
     }
+
+    #endregion
 
     Rect WorkArea()
     {
@@ -165,10 +305,7 @@ public partial class PlayerWindow : Window
         if (e.ButtonState != MouseButtonState.Pressed) return;
         DragMove();
         SnapToEdges();
-        _settings.Data.Left = Left;
-        _settings.Data.Top = Top;
-        _settings.Data.Bottom = Top + ActualHeight;
-        _settings.Save();
+        SaveState();
     }
 
     void OnSeek(object sender, MouseButtonEventArgs e)
@@ -184,7 +321,7 @@ public partial class PlayerWindow : Window
     {
         if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
         {
-            ZoomTo(Scale + (e.Delta > 0 ? 0.1 : -0.1));
+            ZoomTo(Zoom + (e.Delta > 0 ? 0.1 : -0.1));
             e.Handled = true;
             return;
         }
@@ -202,7 +339,7 @@ public partial class PlayerWindow : Window
     void OnPickSource(object sender, MouseButtonEventArgs e)
     {
         e.Handled = true; // no window drag
-        var menu = new ContextMenu { PlacementTarget = SourcePicker, Placement = PlacementMode.Bottom };
+        var menu = new ContextMenu { PlacementTarget = (UIElement)sender, Placement = PlacementMode.Bottom };
         _ = SessionMenu.FillAsync(menu, ViewModel);
         menu.IsOpen = true;
     }
@@ -211,20 +348,20 @@ public partial class PlayerWindow : Window
     {
         ThemeMenu.Fill(ThemesMenu);
 
-        SizeMenu.Items.Clear();
-        foreach (var preset in ScalePresets)
+        ZoomMenu.Items.Clear();
+        foreach (var preset in ZoomPresets)
         {
             var item = new MenuItem
             {
                 Header = $"{preset * 100:0}%",
                 IsCheckable = true,
-                IsChecked = Math.Abs(Scale - preset) < 0.01,
+                IsChecked = Math.Abs(Zoom - preset) < 0.01,
             };
             item.Click += (_, _) => ZoomTo(preset);
-            SizeMenu.Items.Add(item);
+            ZoomMenu.Items.Add(item);
         }
-        SizeMenu.Items.Add(new Separator());
-        SizeMenu.Items.Add(new MenuItem { Header = "Arraste as bordas ou use Ctrl + roda do mouse", IsEnabled = false });
+        ZoomMenu.Items.Add(new Separator());
+        ZoomMenu.Items.Add(new MenuItem { Header = "Ctrl + roda do mouse também muda o zoom", IsEnabled = false });
     }
 
     void OnTogglePin(object sender, RoutedEventArgs e) => ViewModel.PinOnTop = !ViewModel.PinOnTop;
