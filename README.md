@@ -51,15 +51,32 @@ A pasta já vem com `exemplo-oceano.json` comentado. Copie, mude `name` e as cor
 Temas são só dados (JSON, não XAML), então um tema de terceiros não executa código.
 Arquivos inválidos aparecem com ⚠ no menu de temas.
 
+## Instalação
+Baixe `MiniPlayer-win-Setup.exe` no [último release](https://github.com/williamanjo/MiniPlayer/releases/latest)
+e execute. Instala na pasta do usuário (sem administrador), cria atalhos no Iniciar e na Área de Trabalho
+e aparece em "Aplicativos instalados" para desinstalar. Não precisa de .NET instalado.
+
+Prefere sem instalar? Use `MiniPlayer-win-Portable.zip` (sem atualização automática).
+
+### Atualizações
+O app instalado verifica novas versões ao abrir e a cada 6 h. Quando há uma, mostra uma notificação e o
+item **⬆ Atualizar para vX** na bandeja; ao confirmar, baixa só o que mudou, instala e reinicia.
+Também dá para checar em bandeja → "Verificar atualizações".
+
 ## Build
-Requer .NET 10 SDK.
+Requer .NET 10 SDK e, para empacotar, `vpk` (`dotnet tool install -g vpk`).
 
 ```bash
 dotnet build
-dotnet publish -c Release
 ```
 
-Exe único: `bin/Release/net10.0-windows10.0.22621.0/win-x64/publish/MiniPlayer.exe` (self-contained, não precisa de .NET instalado).
+```powershell
+./release.ps1 -Version 1.2.0                          # gera instalador em ./releases
+./release.ps1 -Version 1.2.0 -Notes notas.md -Upload  # publica release v1.2.0 no GitHub
+```
+
+Testar atualização sem publicar: gere duas versões numa pasta e rode o app instalado com
+`MINIPLAYER_UPDATE_SOURCE=<pasta>`.
 
 Configurações: `%APPDATA%\MiniPlayer\settings.json`.
 
