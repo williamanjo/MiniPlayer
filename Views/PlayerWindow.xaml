@@ -25,10 +25,10 @@
                         <ImageBrush ImageSource="{Binding Cover}" Stretch="UniformToFill" />
                     </Border.Background>
                 </Border>
-                <!-- Audio bars over the lower part of the cover -->
-                <local:VisualizerControl VerticalAlignment="Bottom" Height="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=Grid}, Converter={StaticResource FractionConverter}, ConverterParameter=0.32}"
-                                         Margin="6,0,6,5" BarCount="14" Opacity="0.9" Fill="{DynamicResource AccentBrush}"
-                                         Visibility="{Binding ShowVisualizer, Converter={StaticResource BoolToVis}}" />
+                <local:VisualizerControl VerticalAlignment="Bottom" Margin="6,0,6,5" BarCount="14" Opacity="0.9"
+                                         Height="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=Grid}, Converter={StaticResource FractionConverter}, ConverterParameter=0.32}"
+                                         Fill="{DynamicResource AccentBrush}"
+                                         Visibility="{Binding VisualizerOnCover, Converter={StaticResource BoolToVis}}" />
             </Grid>
         </ControlTemplate>
 
@@ -119,6 +119,11 @@
         <Border CornerRadius="{DynamicResource ThemeCornerRadius}" Background="{DynamicResource ThemeOverlay}"
                 BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="{DynamicResource ThemeBorderThickness}" />
 
+        <!-- Visualizer option "rodapé": soft wave along the bottom, behind the content -->
+        <local:VisualizerControl VerticalAlignment="Bottom" Height="26" Margin="12,0,12,4" BarCount="0" Opacity="0.35"
+                                 Fill="{DynamicResource AccentBrush}"
+                                 Visibility="{Binding VisualizerAtBottom, Converter={StaticResource BoolToVis}}" />
+
         <Grid x:Name="Body" Margin="14,10,10,10" Background="Transparent" MouseLeftButtonDown="OnDragArea">
             <Grid.ContextMenu>
                 <ContextMenu Opened="OnMenuOpened">
@@ -144,12 +149,17 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <ContentControl x:Name="MiniCover" Template="{StaticResource CoverTemplate}" Margin="0,0,10,0" />
-                <StackPanel x:Name="MiniText" Grid.Column="1" VerticalAlignment="Center" ToolTip="{Binding FullText}">
+                <DockPanel x:Name="MiniText" Grid.Column="1" VerticalAlignment="Center" ToolTip="{Binding FullText}">
+                    <local:VisualizerControl DockPanel.Dock="Left" Width="14" Height="16" Margin="0,0,8,0" BarCount="4"
+                                             StyleKind="Equalizer" Fill="{DynamicResource AccentBrush}"
+                                             Visibility="{Binding VisualizerAtControls, Converter={StaticResource BoolToVis}}" />
+                    <StackPanel>
                     <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
                     <TextBlock Text="{Binding TaskbarSubtitle}" FontSize="11" Foreground="{DynamicResource ThemeSecondary}"
                                TextTrimming="CharacterEllipsis" Background="Transparent" Cursor="Hand"
                                MouseLeftButtonDown="OnPickSource" />
-                </StackPanel>
+                    </StackPanel>
+                </DockPanel>
                 <ContentControl x:Name="MiniTransport" Grid.Column="2" Template="{StaticResource TransportTemplate}"
                                 VerticalAlignment="Center" Margin="6,0,0,0" />
                 <Button Grid.Column="3" Style="{StaticResource IconButton}" Content="&#xE8BB;" FontSize="10" Width="24" Height="24"
@@ -200,8 +210,13 @@
                             <ContentControl x:Name="StdWindowButtons" Grid.Column="1" Template="{StaticResource WindowButtonsTemplate}"
                                             VerticalAlignment="Top" Margin="4,0,0,0" />
                         </Grid>
-                        <ContentControl x:Name="StdTransport" Grid.Row="1" Template="{StaticResource TransportTemplate}"
-                                        HorizontalAlignment="Left" Margin="-6,6,0,0" />
+                        <DockPanel Grid.Row="1" Margin="-6,6,0,0">
+                            <ContentControl x:Name="StdTransport" DockPanel.Dock="Left" Template="{StaticResource TransportTemplate}" />
+                            <!-- Audio bars fill the space right of the buttons -->
+                            <local:VisualizerControl Height="22" Margin="10,0,4,0" VerticalAlignment="Center" BarCount="0"
+                                                     Opacity="0.85" Fill="{DynamicResource AccentBrush}"
+                                                     Visibility="{Binding VisualizerAtControls, Converter={StaticResource BoolToVis}}" />
+                        </DockPanel>
                     </Grid>
                 </Grid>
                 <ContentControl Grid.Row="1" Template="{StaticResource ProgressTemplate}" Margin="0,10,4,0" />
@@ -212,6 +227,7 @@
             <!-- ========== TALL: portrait card, big cover on top ========== -->
             <Grid x:Name="TallLayout" Visibility="Collapsed">
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -232,7 +248,10 @@
                 <ContentControl Grid.Row="3" Template="{StaticResource ProgressTemplate}" Margin="0,8,4,0" />
                 <ContentControl x:Name="TallTransport" Grid.Row="4" Template="{StaticResource TransportTemplate}"
                                 HorizontalAlignment="Center" Margin="0,2,0,0" />
-                <ContentControl x:Name="TallLyrics" Grid.Row="5" Template="{StaticResource LyricsTemplate}" Margin="4,6,4,0"
+                <local:VisualizerControl Grid.Row="5" Height="18" Width="160" Margin="0,6,0,0" BarCount="0"
+                                         HorizontalAlignment="Center" Opacity="0.85" Fill="{DynamicResource AccentBrush}"
+                                         Visibility="{Binding VisualizerAtControls, Converter={StaticResource BoolToVis}}" />
+                <ContentControl x:Name="TallLyrics" Grid.Row="6" Template="{StaticResource LyricsTemplate}" Margin="4,6,4,0"
                                 ClipToBounds="True" SizeChanged="OnLyricsSizeChanged" />
             </Grid>
         </Grid>

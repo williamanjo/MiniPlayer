@@ -28,6 +28,7 @@ public sealed class VisualizerControl : FrameworkElement
         new FrameworkPropertyMetadata(VisualizerStyle.Wave, FrameworkPropertyMetadataOptions.AffectsRender));
 
     public Brush Fill { get => (Brush)GetValue(FillProperty); set => SetValue(FillProperty, value); }
+    /// <summary>Number of bars; 0 = as many as fit (about one per 7 px).</summary>
     public int BarCount { get => (int)GetValue(BarCountProperty); set => SetValue(BarCountProperty, value); }
     public VisualizerStyle StyleKind { get => (VisualizerStyle)GetValue(StyleKindProperty); set => SetValue(StyleKindProperty, value); }
 
@@ -60,9 +61,9 @@ public sealed class VisualizerControl : FrameworkElement
     protected override void OnRender(DrawingContext dc)
     {
         var service = _service;
-        var count = Math.Max(1, BarCount);
         var w = ActualWidth;
         var h = ActualHeight;
+        var count = BarCount > 0 ? BarCount : Math.Clamp((int)(w / 7), 3, 48);
         if (service is null || w <= 0 || h <= 0) return;
 
         var gap = Math.Max(1, w / count * 0.25);
@@ -74,7 +75,7 @@ public sealed class VisualizerControl : FrameworkElement
         {
             double value = StyleKind == VisualizerStyle.Wave
                 // newest sample on the right, older ones scroll left
-                ? service.History((count - 1 - i) * 2)
+                ? service.History((count - 1 - i) * Math.Max(1, (VisualizerService.HistoryLength - 1) / count))
                 : service.Level * (0.45 + 0.55 * (0.5 + 0.5 * Math.Sin(t * Speeds[i % Speeds.Length] + Phases[i % Phases.Length])));
 
             var barHeight = Math.Max(1.5, value * h);

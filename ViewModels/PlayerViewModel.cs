@@ -120,7 +120,39 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
             _settings.Data.ShowVisualizer = value;
             _settings.Save();
             OnPropertyChanged();
+            RaiseVisualizerPlacement();
         }
+    }
+
+    public VisualizerPosition VisualizerPosition
+    {
+        get => _settings.Data.VisualizerPosition;
+        set
+        {
+            if (_settings.Data.VisualizerPosition == value) return;
+            _settings.Data.VisualizerPosition = value;
+            _settings.Save();
+            RaiseVisualizerPlacement();
+        }
+    }
+
+    // Where the floating player shows the bars (each false when the visualizer is off).
+    public bool VisualizerAtControls => ShowVisualizer && VisualizerPosition == VisualizerPosition.Controls;
+    public bool VisualizerOnCover => ShowVisualizer && VisualizerPosition == VisualizerPosition.Cover;
+    public bool VisualizerAtBottom => ShowVisualizer && VisualizerPosition == VisualizerPosition.Bottom;
+
+    void RaiseVisualizerPlacement()
+    {
+        OnPropertyChanged(nameof(VisualizerAtControls));
+        OnPropertyChanged(nameof(VisualizerOnCover));
+        OnPropertyChanged(nameof(VisualizerAtBottom));
+    }
+
+    /// <summary>Shows a short message in place of the subtitle (e.g. "call: music paused").</summary>
+    public void ShowStatus(string text, double seconds = 4)
+    {
+        Status = text;
+        _statusUntil = DateTime.Now.AddSeconds(seconds);
     }
 
     public bool IsPlaying => _snap.IsPlaying;
