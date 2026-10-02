@@ -1,0 +1,406 @@
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Windows;
+using System.IO;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Threading;
+using Microsoft.Win32;
+using MiniPlayer.Services;
+using Windows.Media;
+
+namespace MiniPlayer.ViewModels;
+
+public sealed class PlayerViewModel : INotifyPropertyChanged
+{
+    // Segoe Fluent Icons / Segoe MDL2 Assets glyphs
+    const string GlyphPlay = "", GlyphPause = "", GlyphRepeatAll = "", GlyphRepeatOne = "";
+
+    readonly MediaService _media;
+    readonly SettingsService _settings;
+    readonly Dispatcher _dispatcher;
+    MediaSnapshot _snap = MediaSnapshot.Empty;
+    bool _refreshing, _refreshPending;
+    string? _coverKey;
+    string? _lyricsKey;
+    IReadOnlyList<LyricLine>? _lyrics;
+    DateTime _statusUntil;
+    DateTime _activeAt = DateTime.Now;
+
+    public PlayerViewModel(MediaService media, SettingsService settings)
+    {
+        _media = media;
+        _settings = settings;
+        _dispatcher = Application.Current.Dispatcher;
+
+        PlayPauseCommand = new RelayCommand(() => _ = _media.TogglePlayPauseAsync(), () => _snap.CanPlayPause);
+        NextCommand = new RelayCommand(() => _ = _media.NextAsync(), () => _snap.CanNext);
+        PreviousCommand = new RelayCommand(() => _ = _media.PreviousAsync(), () => _snap.CanPrevious);
+        ShuffleCommand = new RelayCommand(() => _ = _media.SetShuffleAsync(!_snap.Shuffle), () => _snap.CanShuffle);
+        RepeatCommand = new RelayCommand(() => _ = _media.SetRepeatAsync(NextRepeat(_snap.Repeat)), () => _snap.CanRepeat);
+
+        _media.Changed += () => _dispatcher.InvokeAsync(RefreshAsync);
+
+        var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
+        timer.Tick += (_, _) => UpdateProgress();
+        timer.Start();
+
+        UpdateOverlayTheme();
+        SystemEvents.UserPreferenceChanged += (_, _) => _dispatcher.BeginInvoke(UpdateOverlayTheme);
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    /// <summary>Raised when the displayed track text changes (used for the tray tooltip).</summary>
+    public event Action? TrackChanged;
+
+    public RelayCommand PlayPauseCommand { get; }
+    public RelayCommand NextCommand { get; }
+    public RelayCommand PreviousCommand { get; }
+    public RelayCommand ShuffleCommand { get; }
+    public RelayCommand RepeatCommand { get; }
+
+    string _title = "Nada tocando";
+    public string Title { get => _title; private set => Set(ref _title, value); }
+
+    string _subtitle = "Abra uma música no navegador";
+    public string Subtitle { get => _subtitle; private set { Set(ref _subtitle, value); RaiseSubtitles(); } }
+
+    public string FullText => _snap.HasSession ? $"{Title} — {Subtitle}" : Title;
+
+    string? _status;
+    /// <summary>Short-lived message (volume, mute) shown in place of the subtitle.</summary>
+    string? Status { get => _status; set { _status = value; RaiseSubtitles(); } }
+
+    /// <summary>Second line of the floating player.</summary>
+    public string SubtitleDisplay => _status ?? Subtitle;
+
+    /// <summary>Second line of the taskbar overlay: status, else current lyric line, else artist.</summary>
+    public string TaskbarSubtitle =>
+        _status ?? (ShowLyrics && !string.IsNullOrEmpty(LyricCurrent) ? LyricCurrent : Subtitle);
+
+    /// <summary>True while the user picked the source by hand.</summary>
+    public bool IsPinned => _media.IsPinned;
+
+    /// <summary>Taskbar overlay should get out of the way (nothing playing for a while).</summary>
+    public bool ShouldAutoHide
+    {
+        get
+        {
+            if (!_settings.Data.AutoHideWhenIdle || _snap.IsPlaying) return false;
+            var idle = DateTime.Now - _activeAt;
+            return idle > (_snap.HasSession ? TimeSpan.FromSeconds(30) : TimeSpan.FromSeconds(3));
+        }
+    }
+
+    public bool AutoHideWhenIdle
+    {
+        get => _settings.Data.AutoHideWhenIdle;
+        set
+        {
+            if (_settings.Data.AutoHideWhenIdle == value) return;
+            _settings.Data.AutoHideWhenIdle = value;
+            _settings.Save();
+            OnPropertyChanged();
+        }
+    }
+
+    public bool ShowLyrics
+    {
+        get => _settings.Data.ShowLyrics;
+        set
+        {
+            if (_settings.Data.ShowLyrics == value) return;
+            _settings.Data.ShowLyrics = value;
+            _settings.Save();
+            OnPropertyChanged();
+            RaiseSubtitles();
+            _lyricsKey = null;
+            _ = UpdateLyricsAsync(_snap);
+        }
+    }
+
+    string _lyricPrevious = "", _lyricCurrent = "", _lyricNext = "";
+    public string LyricPrevious { get => _lyricPrevious; private set => Set(ref _lyricPrevious, value); }
+    public string LyricCurrent
+    {
+        get => _lyricCurrent;
+        private set
+        {
+            if (_lyricCurrent == value) return;
+            _lyricCurrent = value;
+            OnPropertyChanged();
+            RaiseSubtitles();
+        }
+    }
+    public string LyricNext { get => _lyricNext; private set => Set(ref _lyricNext, value); }
+
+    string _playGlyph = GlyphPlay;
+    public string PlayGlyph { get => _playGlyph; private set => Set(ref _playGlyph, value); }
+
+    ImageSource? _cover;
+    /// <summary>Album art / video thumbnail of the current track.</summary>
+    public ImageSource? Cover { get => _cover; private set { Set(ref _cover, value); OnPropertyChanged(nameof(HasCover)); } }
+    public bool HasCover => _cover is not null;
+
+    bool _shuffleOn;
+    public bool ShuffleOn { get => _shuffleOn; private set => Set(ref _shuffleOn, value); }
+
+    bool _repeatOn;
+    public bool RepeatOn { get => _repeatOn; private set => Set(ref _repeatOn, value); }
+
+    string _repeatGlyph = GlyphRepeatAll;
+    public string RepeatGlyph { get => _repeatGlyph; private set => Set(ref _repeatGlyph, value); }
+
+    bool _hasTimeline;
+    public bool HasTimeline { get => _hasTimeline; private set => Set(ref _hasTimeline, value); }
+
+    double _progress;
+    public double Progress { get => _progress; private set => Set(ref _progress, value); }
+
+    string _positionText = "";
+    public string PositionText { get => _positionText; private set => Set(ref _positionText, value); }
+
+    string _durationText = "";
+    public string DurationText { get => _durationText; private set => Set(ref _durationText, value); }
+
+    Brush _overlayForeground = Brushes.White;
+    /// <summary>Text color for the taskbar overlay, following the Windows light/dark theme.</summary>
+    public Brush OverlayForeground { get => _overlayForeground; private set => Set(ref _overlayForeground, value); }
+
+    public bool PinOnTop
+    {
+        get => _settings.Data.PinOnTop;
+        set
+        {
+            if (_settings.Data.PinOnTop == value) return;
+            _settings.Data.PinOnTop = value;
+            _settings.Save();
+            OnPropertyChanged();
+        }
+    }
+
+    /// <summary>Mouse wheel over the player: volume of the app that is playing (not the system volume).</summary>
+    public void ChangeVolume(int wheelDelta)
+    {
+        var process = AudioService.ProcessNameFor(_media.CurrentAppId);
+        ShowVolume(process is null ? null : AudioService.Change(process, wheelDelta / 120f * 0.05f));
+    }
+
+    public void ToggleMute()
+    {
+        var process = AudioService.ProcessNameFor(_media.CurrentAppId);
+        ShowVolume(process is null ? null : AudioService.ToggleMute(process));
+    }
+
+    void ShowVolume((float Volume, bool Muted)? state)
+    {
+        Status = state switch
+        {
+            null => "Volume indisponível",
+            { Muted: true } => "🔇 Mudo",
+            var (v, _) => $"🔊 Volume {Math.Round(v * 100)}%",
+        };
+        _statusUntil = DateTime.Now.AddSeconds(1.5);
+    }
+
+    public Task<List<MediaSessionInfo>> GetSessionsAsync() => _media.GetSessionsAsync();
+
+    /// <summary>Control a specific tab/app; null returns to automatic choice.</summary>
+    public void PinSession(object? key) => _media.Pin(key);
+
+    public void SeekTo(double fraction)
+    {
+        if (!_snap.CanSeek || _snap.Duration <= TimeSpan.Zero) return;
+        var target = TimeSpan.FromTicks((long)(_snap.Duration.Ticks * Math.Clamp(fraction, 0, 1)));
+        _snap = _snap with { Position = target, LastUpdated = DateTimeOffset.Now };
+        UpdateProgress();
+        _ = _media.SeekAsync(target);
+    }
+
+    async Task RefreshAsync()
+    {
+        if (_refreshing)
+        {
+            _refreshPending = true;
+            return;
+        }
+        _refreshing = true;
+        try
+        {
+            do
+            {
+                _refreshPending = false;
+                Apply(await _media.GetSnapshotAsync());
+            } while (_refreshPending);
+        }
+        finally
+        {
+            _refreshing = false;
+        }
+    }
+
+    void Apply(MediaSnapshot s)
+    {
+        if (s.IsPlaying || _snap.IsPlaying || s.HasSession != _snap.HasSession) _activeAt = DateTime.Now;
+        _snap = s;
+        if (s.HasSession)
+        {
+            Title = string.IsNullOrWhiteSpace(s.Title) ? "Sem título" : s.Title;
+            Subtitle = string.Join(" · ", new[] { s.Artist, s.Source }.Where(x => !string.IsNullOrWhiteSpace(x)));
+        }
+        else
+        {
+            Title = "Nada tocando";
+            Subtitle = "Abra uma música no navegador";
+        }
+        PlayGlyph = s.IsPlaying ? GlyphPause : GlyphPlay;
+        ShuffleOn = s.Shuffle;
+        RepeatOn = s.Repeat != MediaPlaybackAutoRepeatMode.None;
+        RepeatGlyph = s.Repeat == MediaPlaybackAutoRepeatMode.Track ? GlyphRepeatOne : GlyphRepeatAll;
+
+        PlayPauseCommand.RaiseCanExecuteChanged();
+        NextCommand.RaiseCanExecuteChanged();
+        PreviousCommand.RaiseCanExecuteChanged();
+        ShuffleCommand.RaiseCanExecuteChanged();
+        RepeatCommand.RaiseCanExecuteChanged();
+
+        OnPropertyChanged(nameof(FullText));
+        OnPropertyChanged(nameof(IsPinned));
+        TrackChanged?.Invoke();
+        UpdateProgress();
+        _ = UpdateCoverAsync(s);
+        _ = UpdateLyricsAsync(s);
+    }
+
+    async Task UpdateLyricsAsync(MediaSnapshot s)
+    {
+        var key = ShowLyrics && s.HasSession && !string.IsNullOrWhiteSpace(s.Title)
+            ? $"{s.Title}|{s.Artist}|{(int)s.Duration.TotalSeconds}"
+            : null;
+        if (key == _lyricsKey) return;
+        _lyricsKey = key;
+        _lyrics = null;
+        SetLyricLines("", key is null ? "" : "Buscando letra…", "");
+        if (key is null) return;
+
+        var result = await LyricsService.GetAsync(s.Title, s.Artist, s.Duration);
+        if (key != _lyricsKey) return; // track changed while loading
+        _lyrics = result.Lines;
+        SetLyricLines("", _lyrics is not null ? "♪" : result.Found ? "Letra sem sincronização" : "Letra não encontrada", "");
+        UpdateProgress();
+    }
+
+    void UpdateLyricLine(TimeSpan position)
+    {
+        if (_lyrics is not { Count: > 0 } lines) return;
+        // Small lead so the line appears as it is sung, not after.
+        var t = position + TimeSpan.FromMilliseconds(300);
+        var i = -1;
+        while (i + 1 < lines.Count && lines[i + 1].Time <= t) i++;
+        SetLyricLines(
+            i > 0 ? lines[i - 1].Text : "",
+            i >= 0 ? lines[i].Text : "♪",
+            i + 1 < lines.Count ? lines[i + 1].Text : "");
+    }
+
+    void SetLyricLines(string previous, string current, string next)
+    {
+        LyricPrevious = previous;
+        LyricCurrent = current;
+        LyricNext = next;
+    }
+
+    void RaiseSubtitles()
+    {
+        OnPropertyChanged(nameof(SubtitleDisplay));
+        OnPropertyChanged(nameof(TaskbarSubtitle));
+    }
+
+    async Task UpdateCoverAsync(MediaSnapshot s)
+    {
+        // Browsers often publish the title first and the artwork in a later update.
+        var key = s.HasSession ? $"{s.Source}|{s.Title}|{s.Artist}|{s.Thumbnail is not null}" : null;
+        if (key == _coverKey) return;
+        _coverKey = key;
+
+        var bytes = await MediaService.ReadThumbnailAsync(s.Thumbnail);
+        if (key != _coverKey) return; // track changed while loading
+        Cover = bytes is null ? null : Decode(bytes);
+    }
+
+    static BitmapImage? Decode(byte[] bytes)
+    {
+        try
+        {
+            var image = new BitmapImage();
+            image.BeginInit();
+            image.CacheOption = BitmapCacheOption.OnLoad;
+            image.DecodePixelHeight = 160;
+            image.StreamSource = new MemoryStream(bytes);
+            image.EndInit();
+            image.Freeze();
+            return image;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    void UpdateProgress()
+    {
+        if (_status is not null && DateTime.Now > _statusUntil) Status = null;
+        if (_snap.IsPlaying) _activeAt = DateTime.Now;
+
+        var s = _snap;
+        HasTimeline = s.HasSession && s.Duration > TimeSpan.Zero;
+        if (!HasTimeline)
+        {
+            Progress = 0;
+            PositionText = DurationText = "";
+            return;
+        }
+
+        var pos = s.Position;
+        if (s.IsPlaying)
+        {
+            // SMTC only pushes the position on events; extrapolate between them.
+            var elapsed = DateTimeOffset.Now - s.LastUpdated;
+            if (elapsed > TimeSpan.Zero && elapsed < TimeSpan.FromHours(12)) pos += elapsed;
+        }
+        if (pos < TimeSpan.Zero) pos = TimeSpan.Zero;
+        if (pos > s.Duration) pos = s.Duration;
+
+        UpdateLyricLine(pos);
+        Progress = pos.TotalSeconds / s.Duration.TotalSeconds;
+        PositionText = Format(pos);
+        DurationText = Format(s.Duration);
+    }
+
+    void UpdateOverlayTheme()
+    {
+        using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+        var light = key?.GetValue("SystemUsesLightTheme") is int v && v == 1;
+        OverlayForeground = light ? Brushes.Black : Brushes.White;
+    }
+
+    static MediaPlaybackAutoRepeatMode NextRepeat(MediaPlaybackAutoRepeatMode m) => m switch
+    {
+        MediaPlaybackAutoRepeatMode.None => MediaPlaybackAutoRepeatMode.List,
+        MediaPlaybackAutoRepeatMode.List => MediaPlaybackAutoRepeatMode.Track,
+        _ => MediaPlaybackAutoRepeatMode.None,
+    };
+
+    static string Format(TimeSpan t) =>
+        t.TotalHours >= 1 ? t.ToString(@"h\:mm\:ss") : t.ToString(@"m\:ss");
+
+    void Set<T>(ref T field, T value, [CallerMemberName] string? name = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value)) return;
+        field = value;
+        OnPropertyChanged(name);
+    }
+
+    void OnPropertyChanged([CallerMemberName] string? name = null) =>
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+}
