@@ -173,6 +173,56 @@ public static class AudioService
         return result;
     }
 
+    /// <summary>An app producing sound (for "lower the music when another app plays").</summary>
+    public sealed record AudioApp(string ProcessName, uint ProcessId, IAudioMeterInformation Meter);
+
+    /// <summary>Every audio session on all output devices, with its process ("system" for Windows sounds).</summary>
+    public static List<AudioApp> AllSessions()
+    {
+        var result = new List<AudioApp>();
+        try
+        {
+            var enumerator = (IMMDeviceEnumerator)new MMDeviceEnumerator();
+            enumerator.EnumAudioEndpoints(EDataFlow.Render, DEVICE_STATE_ACTIVE, out var devices);
+            devices.GetCount(out var deviceCount);
+            for (var d = 0; d < deviceCount; d++)
+            {
+                devices.Item(d, out var device);
+                var iid = typeof(IAudioSessionManager2).GUID;
+                device.Activate(ref iid, CLSCTX_ALL, IntPtr.Zero, out var managerObj);
+                ((IAudioSessionManager2)managerObj).GetSessionEnumerator(out var sessions);
+                sessions.GetCount(out var count);
+                for (var i = 0; i < count; i++)
+                {
+                    sessions.GetSession(i, out var control);
+                    if (control is not IAudioSessionControl2 control2 || control is not IAudioMeterInformation meter) continue;
+                    control2.GetProcessId(out var pid);
+                    var name = control2.IsSystemSoundsSession() == 0 ? "system" : ProcessName(pid);
+                    if (name is not null) result.Add(new AudioApp(name, pid, meter));
+                }
+            }
+        }
+        catch
+        {
+            // Devices changed mid-enumeration; the caller refreshes again soon.
+        }
+        return result;
+    }
+
+    static string? ProcessName(uint pid)
+    {
+        if (pid == 0) return null;
+        try
+        {
+            using var p = Process.GetProcessById((int)pid);
+            return p.ProcessName.ToLowerInvariant();
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     /// <summary>Audio session objects (all render devices) owned by the process.</summary>
     static List<object> SessionControls(string processName)
     {
@@ -283,6 +333,8 @@ public static class AudioService
         [PreserveSig] int GetSessionIdentifier(out IntPtr id);
         [PreserveSig] int GetSessionInstanceIdentifier(out IntPtr id);
         [PreserveSig] int GetProcessId(out uint pid);
+        /// <summary>S_OK (0) for the "System sounds" session, S_FALSE (1) otherwise.</summary>
+        [PreserveSig] int IsSystemSoundsSession();
     }
 
     [ComImport, Guid("87CE5498-68D6-44E5-9215-6F7AFB1A3DD9"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]

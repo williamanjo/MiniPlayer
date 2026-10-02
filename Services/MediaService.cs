@@ -251,6 +251,7 @@ public sealed class MediaService
 
     public Task TogglePlayPauseAsync() => Run(s => s.TryTogglePlayPauseAsync());
     public Task PauseAsync() => Run(s => s.TryPauseAsync());
+    public Task PlayAsync() => Run(s => s.TryPlayAsync());
     public Task NextAsync() => Run(s => s.TrySkipNextAsync());
     public Task PreviousAsync() => Run(s => s.TrySkipPreviousAsync());
     public Task SetShuffleAsync(bool on) => Run(s => s.TryChangeShuffleActiveAsync(on));
