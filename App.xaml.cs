@@ -12,6 +12,7 @@ public partial class App : Application
     TrayIcon? _tray;
     PlayerWindow? _player;
     TaskbarWindow? _overlay;
+    SettingsWindow? _settingsWindow;
 
     public SettingsService Settings { get; private set; } = null!;
     public PlayerViewModel ViewModel { get; private set; } = null!;
@@ -110,11 +111,59 @@ public partial class App : Application
         }
     }
 
-    /// <summary>Move the overlay to the taskbar of another monitor (switches to taskbar mode).</summary>
-    public void SetTaskbarMonitor(string device)
+    /// <summary>Move the overlay to the taskbar of another monitor (by default also switches to taskbar mode).</summary>
+    public void SetTaskbarMonitor(string device, bool switchMode = true)
     {
         Settings.Data.TaskbarMonitor = device;
-        SetMode(PlayerMode.Taskbar);
+        Settings.Save();
+        if (switchMode) SetMode(PlayerMode.Taskbar);
+        _overlay?.Reposition();
+    }
+
+    public void ShowSettings(string? page = null)
+    {
+        if (_settingsWindow is null)
+        {
+            _settingsWindow = new SettingsWindow();
+            _settingsWindow.Closed += (_, _) => _settingsWindow = null;
+        }
+        if (page is not null) _settingsWindow.ShowPage(page);
+        _settingsWindow.Show();
+        if (_settingsWindow.WindowState == WindowState.Minimized) _settingsWindow.WindowState = WindowState.Normal;
+        _settingsWindow.Activate();
+    }
+
+    public double PlayerZoom => _player?.Zoom ?? Settings.Data.FloatingScale;
+
+    public void SetPlayerZoom(double zoom)
+    {
+        if (_player is not null)
+        {
+            _player.ZoomTo(zoom);
+        }
+        else
+        {
+            Settings.Data.FloatingScale = zoom;
+            Settings.Save();
+        }
+    }
+
+    public void ResetPlayerSize()
+    {
+        if (_player is not null)
+        {
+            _player.ResetSize();
+            return;
+        }
+        Settings.Data.FloatingScale = 1;
+        Settings.Data.FloatingWidth = Settings.Data.FloatingHeight = null;
+        Settings.Save();
+    }
+
+    public void ResetOverlayPosition()
+    {
+        Settings.Data.TaskbarOffset = 0;
+        Settings.Save();
         _overlay?.Reposition();
     }
 

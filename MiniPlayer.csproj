@@ -16,7 +16,7 @@
     <!-- Custom Main: Velopack must run before WPF starts -->
     <StartupObject>MiniPlayer.Program</StartupObject>
     <!-- DPI comes from app.manifest (WPF app; WinForms only used for the tray icon) -->
-    <NoWarn>$(NoWarn);WFO0003</NoWarn>
+    <NoWarn>$(NoWarn);WFO0003;WPF0001</NoWarn>
   </PropertyGroup>
 
   <!-- Self-contained publish, packed into an installer by release.ps1 (Velopack) -->
