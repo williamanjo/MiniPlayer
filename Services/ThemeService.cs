@@ -121,13 +121,38 @@ public sealed class ThemeService
         }
         Themes = themes;
         Errors = errors;
+        ThemesChanged?.Invoke();
     }
+
+    /// <summary>Raised after the theme list is (re)loaded, e.g. a file changed in the folder.</summary>
+    public event Action? ThemesChanged;
+
+    public ThemeDefinition Find(string? id) =>
+        Themes.FirstOrDefault(t => t.Id == id) ?? Themes.First(t => t.Id == DefaultId);
 
     public void Apply(string? id)
     {
-        var theme = Themes.FirstOrDefault(t => t.Id == id) ?? Themes.First(t => t.Id == DefaultId);
+        var theme = Find(id);
+        var resources = BuildResources(theme);
+        var app = Application.Current.Resources;
+        foreach (var key in resources.Keys) app[key] = resources[key];
+
+        CurrentId = theme.Id;
+        if (_settings.Data.Theme != theme.Id)
+        {
+            _settings.Data.Theme = theme.Id;
+            _settings.Save();
+        }
+    }
+
+    /// <summary>
+    /// The theme tokens as resources. Applied app-wide by <see cref="Apply"/>, or set on a single
+    /// element (settings preview) so only that element is restyled.
+    /// </summary>
+    public static ResourceDictionary BuildResources(ThemeDefinition theme)
+    {
         var fallback = new ThemeDefinition();
-        var r = Application.Current.Resources;
+        var r = new ResourceDictionary();
 
         r["ThemeBackground"] = theme.BackgroundGradient is { Length: >= 2 } stops
             ? Gradient(stops, Color(theme.Background, fallback.Background))
@@ -150,13 +175,7 @@ public sealed class ThemeService
         r["ThemeCoverBackdropVisibility"] = backdrop == "cover" ? Visibility.Visible : Visibility.Collapsed;
         r["ThemeImageBrush"] = backdrop == "image" ? (object?)LoadImage(theme) ?? Brushes.Transparent : Brushes.Transparent;
         r["ThemeOverlay"] = Brush(theme.Overlay, fallback.Overlay);
-
-        CurrentId = theme.Id;
-        if (_settings.Data.Theme != theme.Id)
-        {
-            _settings.Data.Theme = theme.Id;
-            _settings.Save();
-        }
+        return r;
     }
 
     public static void OpenFolder()
