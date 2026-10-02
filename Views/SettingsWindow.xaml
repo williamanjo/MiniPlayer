@@ -58,6 +58,12 @@
             <ListBoxItem Tag="Automation" Padding="8,10">
                 <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavIcon}" Text="&#xE945;" /><TextBlock Text="Automação" /></StackPanel>
             </ListBoxItem>
+            <ListBoxItem Tag="History" Padding="8,10">
+                <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavIcon}" Text="&#xE81C;" /><TextBlock Text="Histórico" /></StackPanel>
+            </ListBoxItem>
+            <ListBoxItem Tag="Stream" Padding="8,10">
+                <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavIcon}" Text="&#xE93E;" /><TextBlock Text="Transmissão (OBS)" /></StackPanel>
+            </ListBoxItem>
             <ListBoxItem Tag="Taskbar" Padding="8,10">
                 <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavIcon}" Text="&#xE90E;" /><TextBlock Text="Barra de tarefas" /></StackPanel>
             </ListBoxItem>
@@ -363,6 +369,61 @@
                                 <Slider x:Name="DuckLevelSlider" Minimum="0" Maximum="80" TickFrequency="5" IsSnapToTickEnabled="True"
                                         VerticalAlignment="Center" ValueChanged="OnDuckLevelChanged" />
                             </DockPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- ===================== HISTÓRICO ===================== -->
+                <StackPanel x:Name="PageHistory" Visibility="Collapsed">
+                    <TextBlock Style="{StaticResource PageTitle}" Text="Histórico" />
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <CheckBox x:Name="RecordHistoryBox" Content="Registrar as músicas que eu ouço" Click="OnRecordHistoryClick" />
+                            <TextBlock Style="{StaticResource Hint}"
+                                       Text="Fica só neste computador (%APPDATA%\MiniPlayer\history.jsonl). Uma música entra no histórico depois de 30 s ouvindo." />
+                        </StackPanel>
+                    </Border>
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <Button Content="Abrir histórico" Padding="14,6" Style="{DynamicResource AccentButtonStyle}" Click="OnOpenHistory" />
+                        <Button Content="Ver estatísticas" Padding="12,6" Margin="8,0,0,0" Click="OnOpenStatistics" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- ===================== TRANSMISSÃO (OBS) ===================== -->
+                <StackPanel x:Name="PageStream" Visibility="Collapsed">
+                    <TextBlock Style="{StaticResource PageTitle}" Text="Transmissão (OBS)" />
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <CheckBox x:Name="NowPlayingBox" Content="Gerar arquivos &quot;tocando agora&quot;" Click="OnNowPlayingChanged" />
+                            <TextBlock Style="{StaticResource Hint}"
+                                       Text="Para mostrar a música na live ou na gravação (OBS, Streamlabs…). Os arquivos se atualizam sozinhos a cada troca." />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Text="Pasta" FontWeight="SemiBold" />
+                            <DockPanel Margin="0,8,0,0">
+                                <Button DockPanel.Dock="Right" Content="Abrir" Padding="12,4" Margin="6,0,0,0" Click="OnOpenNowPlayingFolder" />
+                                <Button DockPanel.Dock="Right" Content="Escolher…" Padding="12,4" Margin="6,0,0,0" Click="OnChooseNowPlayingFolder" />
+                                <TextBox x:Name="NowPlayingFolderBox" IsReadOnly="True" VerticalContentAlignment="Center" />
+                            </DockPanel>
+
+                            <TextBlock Text="Texto do nowplaying.txt" FontWeight="SemiBold" Margin="0,14,0,0" />
+                            <TextBox x:Name="TemplateBox" Margin="0,8,0,0" TextChanged="OnTemplateChanged" />
+                            <TextBlock x:Name="TemplatePreview" Style="{StaticResource Hint}" Margin="0,6,0,0" />
+                            <TextBlock Style="{StaticResource Hint}" Text="Use {artist}, {title} e {source}." />
+
+                            <CheckBox x:Name="ClearWhenPausedBox" Content="Deixar vazio quando a música estiver pausada" Margin="0,12,0,0"
+                                      Click="OnNowPlayingChanged" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Text="Como usar no OBS" FontWeight="SemiBold" />
+                            <TextBlock Style="{StaticResource Hint}" TextWrapping="Wrap" Margin="0,6,0,0"
+                                       Text="• Texto: adicione uma fonte &quot;Texto&quot;, marque &quot;Ler a partir de arquivo&quot; e escolha nowplaying.txt (ou title.txt / artist.txt).&#x0a;• Capa: fonte &quot;Imagem&quot; com cover.png.&#x0a;• Cartão pronto: fonte &quot;Navegador&quot;, marque &quot;Arquivo local&quot; e escolha overlay.html (fundo transparente, 600×120)." />
                         </StackPanel>
                     </Border>
                 </StackPanel>

@@ -59,6 +59,15 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
     /// <summary>Raised when the displayed track text changes (used for the tray tooltip).</summary>
     public event Action? TrackChanged;
+    /// <summary>Raised with every progress update (~4×/s), for history and "now playing".</summary>
+    public event Action? Ticked;
+    /// <summary>Raised when the shown artwork changes (<see cref="CoverBytes"/>, <see cref="CoverHash"/>).</summary>
+    public event Action? CoverUpdated;
+
+    /// <summary>Raw state of the current session.</summary>
+    public MediaSnapshot Current => _snap;
+    public byte[]? CoverBytes { get; private set; }
+    public string? CoverHash => _coverHash;
 
     public RelayCommand PlayPauseCommand { get; }
     public RelayCommand NextCommand { get; }
@@ -474,6 +483,8 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
     void ShowCover(byte[]? bytes, string? hash)
     {
         _coverHash = hash;
+        CoverBytes = bytes;
+        CoverUpdated?.Invoke();
         Cover = bytes is null ? null : Decode(bytes, 320); // sharp up to 200% zoom
         CoverBackdrop = bytes is null ? null : Decode(bytes, 12);
     }
@@ -499,6 +510,7 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
 
     void UpdateProgress()
     {
+        Ticked?.Invoke();
         if (_status is not null && DateTime.Now > _statusUntil) Status = null;
         if (_snap.IsPlaying) _activeAt = DateTime.Now;
 

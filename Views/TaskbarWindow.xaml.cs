@@ -151,5 +151,7 @@ public partial class TaskbarWindow : Window
 
     void OnOpenSettings(object sender, RoutedEventArgs e) => ((App)Application.Current).ShowSettings("Taskbar");
 
+    void OnOpenHistory(object sender, RoutedEventArgs e) => ((App)Application.Current).ShowHistory();
+
     void OnExit(object sender, RoutedEventArgs e) => ((App)Application.Current).ExitApp();
 }

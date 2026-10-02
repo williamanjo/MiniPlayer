@@ -353,6 +353,8 @@ public partial class PlayerWindow : Window
 
     void OnOpenSettings(object sender, RoutedEventArgs e) => ((App)Application.Current).ShowSettings();
 
+    void OnOpenHistory(object sender, RoutedEventArgs e) => ((App)Application.Current).ShowHistory();
+
     void OnTogglePin(object sender, RoutedEventArgs e) => ViewModel.PinOnTop = !ViewModel.PinOnTop;
 
     void OnToggleLyrics(object sender, RoutedEventArgs e) => ViewModel.ShowLyrics = !ViewModel.ShowLyrics;

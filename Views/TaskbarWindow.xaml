@@ -29,6 +29,7 @@
                 <Separator />
                 <MenuItem Header="Mostrar letra na barra" IsCheckable="True" IsChecked="{Binding ShowLyrics}" />
                 <Separator />
+                <MenuItem Header="Histórico…" Click="OnOpenHistory" />
                 <MenuItem Header="Configurações…" Click="OnOpenSettings" />
                 <MenuItem Header="Sair" Click="OnExit" />
             </ContextMenu>

@@ -135,6 +135,7 @@
                     <MenuItem x:Name="SleepTimerMenu" Header="Timer para dormir" />
                     <MenuItem Header="Restaurar tamanho" Click="OnResetSize" />
                     <Separator />
+                    <MenuItem Header="Histórico…" Click="OnOpenHistory" />
                     <MenuItem Header="Configurações…" Click="OnOpenSettings" />
                     <MenuItem Header="Ocultar" Click="OnClose" />
                 </ContextMenu>

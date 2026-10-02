@@ -69,6 +69,7 @@ public sealed class TrayIcon : IDisposable
         menu.Items.Add(_pinItem);
         menu.Items.Add(sleepItem);
         menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add("Histórico…", null, (_, _) => app.ShowHistory());
         menu.Items.Add(new ToolStripMenuItem("Configurações…", null, (_, _) => app.ShowSettings())
         {
             Font = new Font(SystemFonts.MenuFont ?? Control.DefaultFont, FontStyle.Bold),

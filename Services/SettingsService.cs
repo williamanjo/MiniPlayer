@@ -72,6 +72,15 @@ public sealed class AppSettings
     /// <summary>Music volume while ducked, as a fraction of the normal volume.</summary>
     public double DuckLevel { get; set; } = 0.3;
 
+    /// <summary>Keep a history of listened tracks (local file only).</summary>
+    public bool RecordHistory { get; set; } = true;
+
+    /// <summary>Write "now playing" files for OBS.</summary>
+    public bool NowPlayingEnabled { get; set; }
+    public string? NowPlayingFolder { get; set; }
+    public string? NowPlayingTemplate { get; set; } = NowPlayingService.DefaultTemplate;
+    public bool NowPlayingClearWhenPaused { get; set; } = true;
+
     /// <summary>Sleep timer lowers the volume during the last seconds before pausing.</summary>
     public bool SleepFade { get; set; } = true;
 

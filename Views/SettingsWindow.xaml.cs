@@ -38,6 +38,7 @@ public partial class SettingsWindow : Window
         SelectByTag(MiddleClickBox, _app.Settings.Data.MiddleClickAction.ToString());
         SelectByTag(VisualizerPositionBox, _app.Settings.Data.VisualizerPosition.ToString());
         LoadAutomation();
+        LoadHistoryAndStream();
 
         var version = _app.Updates.CurrentVersion;
         VersionText.Text = $"Versão instalada: {version}";
@@ -71,6 +72,8 @@ public partial class SettingsWindow : Window
         PageGeneral.Visibility = Vis(tag == "General");
         PageControls.Visibility = Vis(tag == "Controls");
         PageAutomation.Visibility = Vis(tag == "Automation");
+        PageHistory.Visibility = Vis(tag == "History");
+        PageStream.Visibility = Vis(tag == "Stream");
         PageAppearance.Visibility = Vis(tag == "Appearance");
         PageTaskbar.Visibility = Vis(tag == "Taskbar");
         PageUpdates.Visibility = Vis(tag == "Updates");
@@ -280,6 +283,75 @@ public partial class SettingsWindow : Window
         if (_loading) return;
         _app.Settings.Data.DuckLevel = e.NewValue / 100;
         _app.Settings.Save();
+    }
+
+    #endregion
+
+    #region Histórico e transmissão
+
+    void LoadHistoryAndStream()
+    {
+        var data = _app.Settings.Data;
+        RecordHistoryBox.IsChecked = data.RecordHistory;
+        NowPlayingBox.IsChecked = data.NowPlayingEnabled;
+        NowPlayingFolderBox.Text = _app.NowPlaying.Folder;
+        TemplateBox.Text = data.NowPlayingTemplate ?? NowPlayingService.DefaultTemplate;
+        ClearWhenPausedBox.IsChecked = data.NowPlayingClearWhenPaused;
+        UpdateTemplatePreview();
+    }
+
+    void OnRecordHistoryClick(object sender, RoutedEventArgs e)
+    {
+        _app.Settings.Data.RecordHistory = RecordHistoryBox.IsChecked == true;
+        _app.Settings.Save();
+    }
+
+    void OnOpenHistory(object sender, RoutedEventArgs e) => _app.ShowHistory();
+
+    void OnOpenStatistics(object sender, RoutedEventArgs e) => _app.ShowHistory(statistics: true);
+
+    void OnNowPlayingChanged(object sender, RoutedEventArgs e)
+    {
+        if (_loading || TemplatePreview is null) return;
+        var data = _app.Settings.Data;
+        data.NowPlayingEnabled = NowPlayingBox.IsChecked == true;
+        data.NowPlayingTemplate = string.IsNullOrWhiteSpace(TemplateBox.Text) ? NowPlayingService.DefaultTemplate : TemplateBox.Text;
+        data.NowPlayingClearWhenPaused = ClearWhenPausedBox.IsChecked == true;
+        _app.Settings.Save();
+        _app.NowPlaying.Invalidate();
+        UpdateTemplatePreview();
+    }
+
+    void OnTemplateChanged(object sender, TextChangedEventArgs e) => OnNowPlayingChanged(sender, e);
+
+    void UpdateTemplatePreview()
+    {
+        var s = _app.ViewModel.Current;
+        var example = s.HasSession
+            ? NowPlayingService.Format(TemplateBox.Text, s.Title, s.Artist, s.Source)
+            : NowPlayingService.Format(TemplateBox.Text, "Nome da música", "Artista", "Chrome");
+        TemplatePreview.Text = $"Exemplo: {example}";
+    }
+
+    void OnChooseNowPlayingFolder(object sender, RoutedEventArgs e)
+    {
+        using var dialog = new System.Windows.Forms.FolderBrowserDialog
+        {
+            Description = "Pasta dos arquivos \"tocando agora\"",
+            UseDescriptionForTitle = true,
+            SelectedPath = _app.NowPlaying.Folder,
+        };
+        if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
+        _app.Settings.Data.NowPlayingFolder = dialog.SelectedPath;
+        _app.Settings.Save();
+        _app.NowPlaying.Invalidate();
+        NowPlayingFolderBox.Text = _app.NowPlaying.Folder;
+    }
+
+    void OnOpenNowPlayingFolder(object sender, RoutedEventArgs e)
+    {
+        Directory.CreateDirectory(_app.NowPlaying.Folder);
+        Process.Start("explorer.exe", _app.NowPlaying.Folder);
     }
 
     static void SelectByTag(ComboBox box, string tag) =>

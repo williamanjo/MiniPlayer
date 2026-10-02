@@ -37,6 +37,9 @@ do Windows (SMTC), onde Chrome/Edge/Firefox/Brave/Opera publicam a Media Session
 
 - **Automação**: pausa a música em ligações (microfone em uso) e abaixa quando outro app toca som
 
+- **Histórico e estatísticas**: músicas ouvidas por dia (busca, copiar, buscar no YouTube/Spotify/Deezer) e mais ouvidos por período
+- **Transmissão (OBS)**: arquivos "tocando agora" (texto, capa e overlay.html) atualizados a cada troca
+
 ## Temas
 5 temas embutidos: **Escuro**, **Claro**, **Vidro (capa)** (capa desfocada no fundo), **Neon** e **Terminal**.
 Escolha em: bandeja → Temas, ou clique direito no player.

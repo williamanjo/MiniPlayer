@@ -23,6 +23,9 @@ public partial class App : Application
     public HotkeyService Hotkeys { get; private set; } = null!;
     public CallMonitorService Calls { get; private set; } = null!;
     public DuckingService Ducking { get; private set; } = null!;
+    public HistoryService History { get; private set; } = null!;
+    public NowPlayingService NowPlaying { get; private set; } = null!;
+    HistoryWindow? _historyWindow;
 
     protected override async void OnStartup(StartupEventArgs e)
     {
@@ -66,6 +69,19 @@ public partial class App : Application
             ? "📞 Ligação encerrada"
             : $"📞 Ligação ({caller}) — música pausada");
         Ducking = new DuckingService(media, Settings, () => ViewModel.IsPlaying, () => SleepTimer.IsFading);
+
+        History = new HistoryService(Settings);
+        NowPlaying = new NowPlayingService(Settings);
+        ViewModel.Ticked += () =>
+        {
+            History.Tick(ViewModel.Current);
+            NowPlaying.Update(ViewModel.Current);
+        };
+        ViewModel.CoverUpdated += () =>
+        {
+            History.SetCover(ViewModel.CoverBytes, ViewModel.CoverHash);
+            NowPlaying.SetCover(ViewModel.CoverBytes, ViewModel.CoverHash);
+        };
 
         Hotkeys = new HotkeyService();
         Hotkeys.Pressed += OnHotkey;
@@ -173,6 +189,19 @@ public partial class App : Application
         if (Settings.Data.Mode == PlayerMode.Floating) TogglePlayer();
         else if (_overlay is { IsVisible: true }) _overlay.Hide();
         else SetMode(PlayerMode.Taskbar);
+    }
+
+    public void ShowHistory(bool statistics = false)
+    {
+        if (_historyWindow is null)
+        {
+            _historyWindow = new HistoryWindow();
+            _historyWindow.Closed += (_, _) => _historyWindow = null;
+        }
+        _historyWindow.ShowTab(statistics);
+        _historyWindow.Show();
+        if (_historyWindow.WindowState == WindowState.Minimized) _historyWindow.WindowState = WindowState.Normal;
+        _historyWindow.Activate();
     }
 
     public void ShowSettings(string? page = null)
@@ -372,6 +401,7 @@ public partial class App : Application
         Hotkeys?.Dispose();
         SleepTimer?.Cancel(); // restores a faded volume
         Ducking?.Restore();
+        History?.Finish(); // keep the track that was playing
         _mutex?.Dispose();
         base.OnExit(e);
     }
