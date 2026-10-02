@@ -35,6 +35,8 @@ do Windows (SMTC), onde Chrome/Edge/Firefox/Brave/Opera publicam a Media Session
 - **Timer para dormir**: minutos ou fim da música, com volume diminuindo aos poucos
 - **Gestos**: roda do mouse = volume ou trocar música; clique do meio = mudo ou play/pause
 
+- **Automação**: pausa a música em ligações (microfone em uso) e abaixa quando outro app toca som
+
 ## Temas
 5 temas embutidos: **Escuro**, **Claro**, **Vidro (capa)** (capa desfocada no fundo), **Neon** e **Terminal**.
 Escolha em: bandeja → Temas, ou clique direito no player.

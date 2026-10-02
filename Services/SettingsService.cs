@@ -10,6 +10,9 @@ public enum PlayerMode { Floating, Taskbar }
 /// <summary>What the mouse wheel does over the player.</summary>
 public enum WheelAction { Volume, Track }
 
+/// <summary>Where the audio bars go in the floating player.</summary>
+public enum VisualizerPosition { Controls, Cover, Bottom }
+
 /// <summary>What the middle mouse button does over the player.</summary>
 public enum MiddleClickAction { Mute, PlayPause }
 
@@ -54,6 +57,20 @@ public sealed class AppSettings
     public WheelAction TaskbarWheelAction { get; set; } = WheelAction.Volume;
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public MiddleClickAction MiddleClickAction { get; set; } = MiddleClickAction.Mute;
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public VisualizerPosition VisualizerPosition { get; set; } = VisualizerPosition.Controls;
+
+    /// <summary>Pause while an app uses the microphone (calls).</summary>
+    public bool PauseOnCall { get; set; }
+    public bool ResumeAfterCall { get; set; } = true;
+    /// <summary>Microphone apps (registry key names) that do not count as a call.</summary>
+    public List<string> CallIgnore { get; set; } = [];
+
+    /// <summary>Lower the music while another app makes sound.</summary>
+    public bool DuckOtherAudio { get; set; }
+    /// <summary>Music volume while ducked, as a fraction of the normal volume.</summary>
+    public double DuckLevel { get; set; } = 0.3;
 
     /// <summary>Sleep timer lowers the volume during the last seconds before pausing.</summary>
     public bool SleepFade { get; set; } = true;

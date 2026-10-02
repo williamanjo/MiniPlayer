@@ -21,6 +21,8 @@ public partial class App : Application
     public VisualizerService Visualizer { get; private set; } = null!;
     public SleepTimerService SleepTimer { get; private set; } = null!;
     public HotkeyService Hotkeys { get; private set; } = null!;
+    public CallMonitorService Calls { get; private set; } = null!;
+    public DuckingService Ducking { get; private set; } = null!;
 
     protected override async void OnStartup(StartupEventArgs e)
     {
@@ -58,6 +60,12 @@ public partial class App : Application
 
         SleepTimer = new SleepTimerService(media, Settings, () => ViewModel.TimeLeftInTrack, () => ViewModel.TrackKey);
         SleepTimer.Changed += () => ViewModel.SleepText = SleepTimer.RemainingText;
+
+        Calls = new CallMonitorService(media, Settings, () => ViewModel.IsPlaying);
+        Calls.CallChanged += caller => ViewModel.ShowStatus(caller is null
+            ? "📞 Ligação encerrada"
+            : $"📞 Ligação ({caller}) — música pausada");
+        Ducking = new DuckingService(media, Settings, () => ViewModel.IsPlaying, () => SleepTimer.IsFading);
 
         Hotkeys = new HotkeyService();
         Hotkeys.Pressed += OnHotkey;
@@ -363,6 +371,7 @@ public partial class App : Application
         _tray?.Dispose();
         Hotkeys?.Dispose();
         SleepTimer?.Cancel(); // restores a faded volume
+        Ducking?.Restore();
         _mutex?.Dispose();
         base.OnExit(e);
     }

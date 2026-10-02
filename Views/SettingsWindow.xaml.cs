@@ -36,6 +36,8 @@ public partial class SettingsWindow : Window
         SelectByTag(WheelBox, _app.Settings.Data.WheelAction.ToString());
         SelectByTag(TaskbarWheelBox, _app.Settings.Data.TaskbarWheelAction.ToString());
         SelectByTag(MiddleClickBox, _app.Settings.Data.MiddleClickAction.ToString());
+        SelectByTag(VisualizerPositionBox, _app.Settings.Data.VisualizerPosition.ToString());
+        LoadAutomation();
 
         var version = _app.Updates.CurrentVersion;
         VersionText.Text = $"Versão instalada: {version}";
@@ -68,6 +70,7 @@ public partial class SettingsWindow : Window
         var tag = (Nav.SelectedItem as ListBoxItem)?.Tag as string ?? "General";
         PageGeneral.Visibility = Vis(tag == "General");
         PageControls.Visibility = Vis(tag == "Controls");
+        PageAutomation.Visibility = Vis(tag == "Automation");
         PageAppearance.Visibility = Vis(tag == "Appearance");
         PageTaskbar.Visibility = Vis(tag == "Taskbar");
         PageUpdates.Visibility = Vis(tag == "Updates");
@@ -205,6 +208,78 @@ public partial class SettingsWindow : Window
         _app.Settings.Save();
         _app.ApplyHotkeys();
         LoadHotkeys();
+    }
+
+    void OnVisualizerPositionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_loading && Enum.TryParse<VisualizerPosition>(TagOf(VisualizerPositionBox), out var position))
+            _app.ViewModel.VisualizerPosition = position;
+    }
+
+    #endregion
+
+    #region Automação
+
+    void LoadAutomation()
+    {
+        var data = _app.Settings.Data;
+        PauseOnCallBox.IsChecked = data.PauseOnCall;
+        ResumeAfterCallBox.IsChecked = data.ResumeAfterCall;
+        DuckBox.IsChecked = data.DuckOtherAudio;
+        DuckLevelSlider.Value = Math.Round(data.DuckLevel * 100);
+        DuckLevelText.Text = $"{DuckLevelSlider.Value:0}%";
+        LoadMicApps();
+    }
+
+    void LoadMicApps()
+    {
+        MicAppsPanel.Children.Clear();
+        var apps = CallMonitorService.MicApps();
+        if (apps.Count == 0)
+        {
+            MicAppsPanel.Children.Add(new TextBlock { Text = "Nenhum app usou o microfone ainda.", Opacity = 0.7 });
+            return;
+        }
+        foreach (var app in apps.Take(12))
+        {
+            var when = app.InUse ? "usando agora" : app.LastUsed is { } t ? $"usado em {t:dd/MM HH:mm}" : "";
+            var box = new CheckBox
+            {
+                Content = $"{app.Name}   ·   {when}",
+                IsChecked = !_app.Settings.Data.CallIgnore.Contains(app.Key),
+                Tag = app.Key,
+                Margin = new Thickness(0, 2, 0, 2),
+            };
+            box.Click += (_, _) =>
+            {
+                var ignore = _app.Settings.Data.CallIgnore;
+                ignore.Remove(app.Key);
+                if (box.IsChecked != true) ignore.Add(app.Key);
+                _app.Settings.Save();
+            };
+            MicAppsPanel.Children.Add(box);
+        }
+    }
+
+    void OnRefreshMicApps(object sender, RoutedEventArgs e) => LoadMicApps();
+
+    void OnAutomationClick(object sender, RoutedEventArgs e)
+    {
+        var data = _app.Settings.Data;
+        data.PauseOnCall = PauseOnCallBox.IsChecked == true;
+        data.ResumeAfterCall = ResumeAfterCallBox.IsChecked == true;
+        data.DuckOtherAudio = DuckBox.IsChecked == true;
+        _app.Settings.Save();
+        _app.Ducking.Apply();
+    }
+
+    void OnDuckLevelChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (DuckLevelText is null) return; // during InitializeComponent
+        DuckLevelText.Text = $"{e.NewValue:0}%";
+        if (_loading) return;
+        _app.Settings.Data.DuckLevel = e.NewValue / 100;
+        _app.Settings.Save();
     }
 
     static void SelectByTag(ComboBox box, string tag) =>

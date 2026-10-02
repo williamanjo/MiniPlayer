@@ -55,6 +55,9 @@
             <ListBoxItem Tag="Controls" Padding="8,10">
                 <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavIcon}" Text="&#xE765;" /><TextBlock Text="Atalhos e controles" /></StackPanel>
             </ListBoxItem>
+            <ListBoxItem Tag="Automation" Padding="8,10">
+                <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavIcon}" Text="&#xE945;" /><TextBlock Text="Automação" /></StackPanel>
+            </ListBoxItem>
             <ListBoxItem Tag="Taskbar" Padding="8,10">
                 <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource NavIcon}" Text="&#xE90E;" /><TextBlock Text="Barra de tarefas" /></StackPanel>
             </ListBoxItem>
@@ -245,6 +248,14 @@
                     <Border Style="{StaticResource Card}">
                         <StackPanel>
                             <CheckBox Content="Mostrar barras de áudio" IsChecked="{Binding ShowVisualizer}" />
+                            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                <TextBlock Text="Posição no player" VerticalAlignment="Center" Width="130" />
+                                <ComboBox x:Name="VisualizerPositionBox" MinWidth="240" SelectionChanged="OnVisualizerPositionChanged">
+                                    <ComboBoxItem Tag="Controls" Content="Ao lado dos controles" />
+                                    <ComboBoxItem Tag="Cover" Content="Sobre a capa" />
+                                    <ComboBoxItem Tag="Bottom" Content="Faixa no rodapé do player" />
+                                </ComboBox>
+                            </StackPanel>
                             <TextBlock Style="{StaticResource Hint}"
                                        Text="Barras que pulsam com o som da aba tocando: sobre a capa no player e ao lado do título na barra de tarefas." />
                         </StackPanel>
@@ -314,6 +325,46 @@
                     </Border>
                     <TextBlock Style="{StaticResource Hint}" Margin="0,6,0,0"
                                Text="Trocar de música: rolar para cima = anterior, para baixo = próxima. Ctrl + roda sempre muda o zoom do player." />
+                </StackPanel>
+
+                <!-- ===================== AUTOMAÇÃO ===================== -->
+                <StackPanel x:Name="PageAutomation" Visibility="Collapsed">
+                    <TextBlock Style="{StaticResource PageTitle}" Text="Automação" />
+
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="Ligações" Margin="0,0,0,8" />
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <CheckBox x:Name="PauseOnCallBox" Content="Pausar a música quando o microfone estiver em uso" Click="OnAutomationClick" />
+                            <TextBlock Style="{StaticResource Hint}"
+                                       Text="Detecta ligações e reuniões em qualquer app (Teams, Meet, Discord, Zoom, WhatsApp…) pelo uso do microfone." />
+                            <CheckBox x:Name="ResumeAfterCallBox" Content="Voltar a tocar quando a ligação terminar" Margin="0,10,0,0"
+                                      Click="OnAutomationClick" />
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Text="Apps que contam como ligação" FontWeight="SemiBold" />
+                            <TextBlock Style="{StaticResource Hint}"
+                                       Text="Apps que já usaram o microfone. Desmarque os que não são ligações (ex.: gravadores, drivers de áudio)." />
+                            <StackPanel x:Name="MicAppsPanel" Margin="0,8,0,0" />
+                            <Button Content="Atualizar lista" Padding="12,4" Margin="0,8,0,0" HorizontalAlignment="Left" Click="OnRefreshMicApps" />
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="Outros sons" />
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <CheckBox x:Name="DuckBox" Content="Abaixar a música quando outro app tocar som" Click="OnAutomationClick" />
+                            <TextBlock Style="{StaticResource Hint}"
+                                       Text="Vídeos, notificações, áudios de mensagem… A música volta 1,5 s depois que o outro som acaba. Abas do mesmo navegador da música contam como a música." />
+                            <DockPanel Margin="0,10,0,0">
+                                <TextBlock x:Name="DuckLevelText" DockPanel.Dock="Right" Width="48" TextAlignment="Right" VerticalAlignment="Center" />
+                                <TextBlock Text="Abaixar para" VerticalAlignment="Center" Width="100" />
+                                <Slider x:Name="DuckLevelSlider" Minimum="0" Maximum="80" TickFrequency="5" IsSnapToTickEnabled="True"
+                                        VerticalAlignment="Center" ValueChanged="OnDuckLevelChanged" />
+                            </DockPanel>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
 
                 <!-- ===================== BARRA DE TAREFAS ===================== -->
