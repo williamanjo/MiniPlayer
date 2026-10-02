@@ -1,4 +1,5 @@
 using System.Windows;
+using Microsoft.Toolkit.Uwp.Notifications;
 using MiniPlayer.Services;
 using MiniPlayer.ViewModels;
 using MiniPlayer.Views;
@@ -32,6 +33,13 @@ public partial class App : Application
         Themes = new ThemeService(Settings);
         Themes.Initialize();
         Updates = new UpdateService();
+        if (Updates.IsInstalled)
+        {
+            // Toast buttons: fires in this process, or starts the app when it is closed.
+            ToastNotificationManagerCompat.OnActivated += args =>
+                Dispatcher.BeginInvoke(() => OnToastActivated(args.Argument));
+            AnnounceIfJustUpdated();
+        }
         var media = new MediaService();
         ViewModel = new PlayerViewModel(media, Settings);
         _tray = new TrayIcon(this);
@@ -39,7 +47,7 @@ public partial class App : Application
 
         SetMode(Settings.Data.Mode);
 
-        Updates.UpdateAvailable += version => _tray.ShowUpdate(version);
+        Updates.UpdateAvailable += OnUpdateAvailable;
         Updates.Start();
 
         try
@@ -48,8 +56,36 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Não foi possível acessar os controles de mídia do Windows.\n\n{ex.Message}",
+            ShowMessage($"Não foi possível acessar os controles de mídia do Windows.\n\n{ex.Message}",
                 "MiniPlayer", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    /// <summary>
+    /// MessageBox in front of everything. The app usually has no active window (tray / toast
+    /// click), and an ownerless MessageBox then opens behind other apps.
+    /// </summary>
+    static MessageBoxResult ShowMessage(string text, string caption, MessageBoxButton buttons, MessageBoxImage icon)
+    {
+        var owner = new Window
+        {
+            Width = 0,
+            Height = 0,
+            WindowStyle = WindowStyle.None,
+            ResizeMode = ResizeMode.NoResize,
+            ShowInTaskbar = false,
+            Topmost = true,
+            WindowStartupLocation = WindowStartupLocation.CenterScreen,
+        };
+        owner.Show();
+        owner.Activate();
+        try
+        {
+            return MessageBox.Show(owner, text, caption, buttons, icon);
+        }
+        finally
+        {
+            owner.Close();
         }
     }
 
@@ -92,19 +128,97 @@ public partial class App : Application
 
     bool _updating;
 
-    /// <summary>Asks, downloads the pending version and restarts into it.</summary>
+    async void OnUpdateAvailable(string version, bool atStartup)
+    {
+        _tray?.ShowUpdateMenu(version);
+
+        if (Settings.Data.AutoUpdate)
+        {
+            // "Manter atualizado": install right away when just opened; while running, only
+            // download (no restart mid-song) and let Velopack apply it on the next start.
+            if (atStartup)
+            {
+                await UpdateNowAsync();
+                return;
+            }
+            try
+            {
+                await Updates.DownloadAsync();
+                Notify(() => NotificationService.ShowUpdateDownloaded(version),
+                    "Atualização baixada", $"A versão {version} será instalada na próxima abertura.");
+            }
+            catch
+            {
+                // Offline: the next check retries.
+            }
+            return;
+        }
+
+        Notify(() => NotificationService.ShowUpdateAvailable(version, Updates.CurrentVersion),
+            "Nova versão disponível", $"Versão {version} pronta para instalar. Clique aqui para atualizar.");
+    }
+
+    /// <summary>Toast first; tray balloon if toasts are unavailable.</summary>
+    void Notify(Action toast, string title, string text)
+    {
+        try { toast(); }
+        catch { _tray?.ShowBalloon(title, text); }
+    }
+
+    void OnToastActivated(string argument)
+    {
+        ToastArguments.Parse(argument).TryGetValue(NotificationService.ActionKey, out var action);
+        switch (action)
+        {
+            case NotificationService.ActionUpdate:
+            case NotificationService.ActionRestart:
+                _ = UpdateNowAsync();
+                break;
+            default:
+                if (Updates.AvailableVersion is not null) InstallUpdate();
+                else SetMode(Settings.Data.Mode);
+                break;
+        }
+    }
+
+    /// <summary>First run after an update: say so and drop the old "new version" toast.</summary>
+    void AnnounceIfJustUpdated()
+    {
+        var current = Updates.CurrentVersion;
+        if (Settings.Data.LastVersion is { } last && last != current)
+        {
+            NotificationService.ClearUpdate();
+            try { NotificationService.ShowUpdated(current); }
+            catch { /* notifications unavailable */ }
+        }
+        Settings.Data.LastVersion = current;
+        Settings.Save();
+    }
+
+    /// <summary>Asks, then updates (tray item / balloon / toast body).</summary>
     public async void InstallUpdate()
     {
         if (_updating || Updates.AvailableVersion is not { } version) return;
-        var answer = MessageBox.Show(
+        var answer = ShowMessage(
             $"A versão {version} está disponível (você usa a {Updates.CurrentVersion}).\n\n" +
             "Baixar e instalar agora? O MiniPlayer reinicia sozinho.",
             "MiniPlayer — atualização", MessageBoxButton.YesNo, MessageBoxImage.Information);
-        if (answer != MessageBoxResult.Yes) return;
+        if (answer == MessageBoxResult.Yes) await UpdateNowAsync();
+    }
 
+    /// <summary>Downloads (checking first if needed) and restarts into the new version, no questions.</summary>
+    public async Task UpdateNowAsync()
+    {
+        if (_updating) return;
         _updating = true;
         try
         {
+            if (Updates.AvailableVersion is null && await Updates.CheckAsync(manual: true) is null)
+            {
+                _updating = false;
+                return; // already up to date
+            }
+            NotificationService.ClearUpdate();
             await Updates.DownloadAndRestartAsync(
                 percent => _tray?.SetText($"Baixando atualização… {percent}%"),
                 () =>
@@ -117,7 +231,7 @@ public partial class App : Application
         catch (Exception ex)
         {
             _updating = false;
-            MessageBox.Show($"Não foi possível atualizar.\n\n{ex.Message}", "MiniPlayer",
+            ShowMessage($"Não foi possível atualizar.\n\n{ex.Message}", "MiniPlayer",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
@@ -127,14 +241,14 @@ public partial class App : Application
         try
         {
             if (await Updates.CheckAsync(manual: true) is null)
-                MessageBox.Show($"Você já está na versão mais recente ({Updates.CurrentVersion}).", "MiniPlayer",
+                ShowMessage($"Você já está na versão mais recente ({Updates.CurrentVersion}).", "MiniPlayer",
                     MessageBoxButton.OK, MessageBoxImage.Information);
             else
                 InstallUpdate();
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Não foi possível verificar atualizações.\n\n{ex.Message}", "MiniPlayer",
+            ShowMessage($"Não foi possível verificar atualizações.\n\n{ex.Message}", "MiniPlayer",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }

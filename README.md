@@ -63,9 +63,12 @@ e aparece em "Aplicativos instalados" para desinstalar. Não precisa de .NET ins
 Prefere sem instalar? Use `MiniPlayer-win-Portable.zip` (sem atualização automática).
 
 ### Atualizações
-O app instalado verifica novas versões ao abrir e a cada 6 h. Quando há uma, mostra uma notificação e o
-item **⬆ Atualizar para vX** na bandeja; ao confirmar, baixa só o que mudou, instala e reinicia.
-Também dá para checar em bandeja → "Verificar atualizações".
+O app instalado verifica novas versões ao abrir e a cada 6 h. Quando há uma, mostra uma notificação do
+Windows com **Atualizar agora** / **Depois** — ela fica na central de notificações mesmo com o app fechado,
+e o botão abre o MiniPlayer e atualiza. Também há o item **⬆ Atualizar para vX** na bandeja.
+
+**Manter atualizado** (bandeja): ao abrir, instala a nova versão sozinho; com o app aberto, só baixa
+em segundo plano (sem reiniciar no meio da música) e instala na próxima abertura.
 
 ## Build
 Requer .NET 10 SDK e, para empacotar, `vpk` (`dotnet tool install -g vpk`).

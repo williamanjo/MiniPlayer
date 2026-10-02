@@ -26,11 +26,11 @@ public sealed class UpdateService
         _manager = string.IsNullOrWhiteSpace(source)
             ? new UpdateManager(new GithubSource(RepoUrl, null, false))
             : new UpdateManager(source);
-        _timer.Tick += async (_, _) => await CheckAsync(manual: false);
+        _timer.Tick += async (_, _) => await CheckAsync(manual: false, atStartup: false);
     }
 
-    /// <summary>Raised on the UI thread when a new version is found.</summary>
-    public event Action<string>? UpdateAvailable;
+    /// <summary>Raised on the UI thread when a new version is found (version, found at startup).</summary>
+    public event Action<string, bool>? UpdateAvailable;
 
     public bool IsInstalled => _manager.IsInstalled;
 
@@ -42,15 +42,18 @@ public sealed class UpdateService
     /// <summary>Version waiting to be installed, if any.</summary>
     public string? AvailableVersion => _pending?.TargetFullRelease.Version.ToString();
 
+    /// <summary>Version already downloaded; Velopack applies it on the next start.</summary>
+    public string? DownloadedVersion { get; private set; }
+
     public void Start()
     {
         if (!IsInstalled) return;
-        _ = CheckAsync(manual: false);
+        _ = CheckAsync(manual: false, atStartup: true);
         _timer.Start();
     }
 
     /// <returns>New version, or null when up to date / not installed / offline.</returns>
-    public async Task<string?> CheckAsync(bool manual)
+    public async Task<string?> CheckAsync(bool manual, bool atStartup = false)
     {
         if (!IsInstalled || _busy) return AvailableVersion;
         _busy = true;
@@ -60,7 +63,7 @@ public sealed class UpdateService
             if (info is null) return null;
             var isNew = AvailableVersion != info.TargetFullRelease.Version.ToString();
             _pending = info;
-            if (isNew && !manual) UpdateAvailable?.Invoke(AvailableVersion!);
+            if (isNew && !manual) UpdateAvailable?.Invoke(AvailableVersion!, atStartup);
             return AvailableVersion;
         }
         catch
@@ -74,11 +77,19 @@ public sealed class UpdateService
         }
     }
 
-    /// <summary>Downloads the pending version, then restarts into it.</summary>
-    public async Task DownloadAndRestartAsync(Action<int> progress, Action beforeRestart)
+    /// <summary>Downloads the pending version without installing it.</summary>
+    public async Task DownloadAsync(Action<int>? progress = null)
     {
         if (_pending is null) return;
         await _manager.DownloadUpdatesAsync(_pending, progress);
+        DownloadedVersion = AvailableVersion;
+    }
+
+    /// <summary>Downloads (if needed) the pending version, then restarts into it.</summary>
+    public async Task DownloadAndRestartAsync(Action<int> progress, Action beforeRestart)
+    {
+        if (_pending is null) return;
+        if (DownloadedVersion != AvailableVersion) await DownloadAsync(progress);
         beforeRestart();
         _manager.ApplyUpdatesAndRestart(_pending.TargetFullRelease);
     }

@@ -12,6 +12,7 @@ public sealed class TrayIcon : IDisposable
     readonly ToolStripMenuItem _autoStartItem;
     readonly ToolStripMenuItem _autoHideItem;
     readonly ToolStripMenuItem _updateItem;
+    readonly ToolStripMenuItem _keepUpdatedItem;
 
     public TrayIcon(App app)
     {
@@ -66,6 +67,15 @@ public sealed class TrayIcon : IDisposable
             Font = new Font(SystemFonts.MenuFont ?? Control.DefaultFont, FontStyle.Bold),
         };
 
+        _keepUpdatedItem = new ToolStripMenuItem("Manter atualizado", null, (_, _) =>
+        {
+            app.Settings.Data.AutoUpdate = !app.Settings.Data.AutoUpdate;
+            app.Settings.Save();
+        })
+        {
+            ToolTipText = "Instala novas versões automaticamente ao abrir o MiniPlayer",
+        };
+
         var menu = new ContextMenuStrip();
         menu.Items.Add(new ToolStripMenuItem($"MiniPlayer v{app.Updates.CurrentVersion}") { Enabled = false });
         menu.Items.Add(_updateItem);
@@ -79,7 +89,10 @@ public sealed class TrayIcon : IDisposable
         menu.Items.Add(_autoStartItem);
         menu.Items.Add(new ToolStripSeparator());
         if (app.Updates.IsInstalled)
+        {
+            menu.Items.Add(_keepUpdatedItem);
             menu.Items.Add("Verificar atualizações", null, (_, _) => app.CheckUpdatesManually());
+        }
         menu.Items.Add("Sair", null, (_, _) => app.ExitApp());
         menu.Opening += (_, _) =>
         {
@@ -87,6 +100,7 @@ public sealed class TrayIcon : IDisposable
             _pinItem.Checked = app.ViewModel.PinOnTop;
             _autoHideItem.Checked = app.ViewModel.AutoHideWhenIdle;
             _autoStartItem.Checked = SettingsService.AutoStart;
+            _keepUpdatedItem.Checked = app.Settings.Data.AutoUpdate;
         };
 
         _icon = new NotifyIcon
@@ -103,14 +117,16 @@ public sealed class TrayIcon : IDisposable
         };
     }
 
-    /// <summary>Shows the "update available" toast and menu entry.</summary>
-    public void ShowUpdate(string version)
+    /// <summary>Shows the "⬆ Atualizar para vX" menu entry.</summary>
+    public void ShowUpdateMenu(string version)
     {
         _updateItem.Text = $"⬆ Atualizar para v{version}";
         _updateItem.Visible = true;
-        _icon.ShowBalloonTip(10000, "Nova versão disponível",
-            $"Versão {version} pronta para instalar. Clique aqui para atualizar.", ToolTipIcon.Info);
     }
+
+    /// <summary>Fallback when Windows toasts are unavailable; clicking it offers the update.</summary>
+    public void ShowBalloon(string title, string text) =>
+        _icon.ShowBalloonTip(10000, title, text, ToolTipIcon.Info);
 
     public void SetText(string text) =>
         _icon.Text = text.Length > 120 ? text[..117] + "..." : text;

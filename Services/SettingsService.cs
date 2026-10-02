@@ -31,6 +31,10 @@ public sealed class AppSettings
     public bool ShowLyrics { get; set; }
     /// <summary>Theme id: "builtin:..." or "file:&lt;path&gt;".</summary>
     public string? Theme { get; set; }
+    /// <summary>"Manter atualizado": install updates on start, pre-download them while running.</summary>
+    public bool AutoUpdate { get; set; }
+    /// <summary>Version that ran last time; a change means an update was just applied.</summary>
+    public string? LastVersion { get; set; }
 }
 
 public sealed class SettingsService
