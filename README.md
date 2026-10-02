@@ -25,6 +25,32 @@ do Windows (SMTC), onde Chrome/Edge/Firefox/Brave/Opera publicam a Media Session
 - **Letras sincronizadas** (botão 🎤 / "Mostrar letra na barra"): via [LRCLIB](https://lrclib.net).
   Desligado por padrão; quando ligado envia título/artista ao lrclib.net
 
+## Temas
+5 temas embutidos: **Escuro**, **Claro**, **Vidro (capa)** (capa desfocada no fundo), **Neon** e **Terminal**.
+Escolha em: bandeja → Temas, ou clique direito no player.
+
+### Criar um tema
+Temas são arquivos `.json` em `%APPDATA%\MiniPlayer\themes` (ou numa pasta `themes` ao lado do exe).
+A pasta já vem com `exemplo-oceano.json` comentado. Copie, mude `name` e as cores — salvar recarrega na hora.
+
+| Campo | Exemplo | Descrição |
+|---|---|---|
+| `name`, `author` | `"Oceano"` | Nome no menu e autor |
+| `background` | `"#F21F1F1F"` | Cor do fundo (`#AARRGGBB` aceita transparência) |
+| `backgroundGradient` | `["#082032", "#137C8B"]` | Degradê diagonal (substitui `background`) |
+| `border`, `borderThickness`, `cornerRadius` | `"#33FFFFFF"`, `1`, `10` | Borda e cantos |
+| `foreground`, `secondaryForeground` | `"#FFFFFF"` | Texto principal e secundário |
+| `accent`, `track`, `hover` | `"#60CDFF"` | Destaques, trilho do progresso, hover dos botões |
+| `coverRadius` | `6` | Cantos da capa |
+| `fontFamily` | `"Cascadia Mono"` | Fonte (precisa estar instalada) |
+| `shadowOpacity` | `0.45` | Sombra (0 = sem) |
+| `backdrop` | `"none"` / `"cover"` / `"image"` | Fundo: nada, capa desfocada, ou imagem |
+| `backgroundImage` | `"fundo.png"` | Imagem na mesma pasta do tema (com `backdrop: "image"`) |
+| `overlay` | `"#99000000"` | Película sobre capa/imagem p/ legibilidade |
+
+Temas são só dados (JSON, não XAML), então um tema de terceiros não executa código.
+Arquivos inválidos aparecem com ⚠ no menu de temas.
+
 ## Build
 Requer .NET 10 SDK.
 
