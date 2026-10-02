@@ -1,0 +1,69 @@
+<Window x:Class="MiniPlayer.Views.TaskbarWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MiniPlayer Taskbar" Width="380" Height="48"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ResizeMode="NoResize" ShowInTaskbar="False" ShowActivated="False" Topmost="True"
+        Foreground="{Binding OverlayForeground}" FontFamily="Segoe UI Variable Text, Segoe UI"
+        MouseWheel="OnWheel" MouseDown="OnMouseDown">
+    <Border x:Name="Root" Margin="0,4" CornerRadius="6" MouseLeftButtonDown="OnRootMouseDown" ContextMenuOpening="OnMenuOpening"
+            ToolTip="Clique duas vezes para voltar ao modo normal">
+        <Border.Style>
+            <Style TargetType="Border">
+                <!-- Near-transparent but still hit-testable -->
+                <Setter Property="Background" Value="#01000000" />
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="#1A808080" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+        </Border.Style>
+        <Border.ContextMenu>
+            <ContextMenu Closed="OnMenuClosed">
+                <MenuItem Header="Modo flutuante" Click="OnFloating" />
+                <MenuItem x:Name="ScreensMenu" Header="Mover para a tela" />
+                <MenuItem x:Name="SourcesMenu" Header="Tocando em" />
+                <Separator />
+                <MenuItem Header="Mostrar letra na barra" IsCheckable="True" IsChecked="{Binding ShowLyrics}" />
+                <MenuItem Header="Ocultar quando nada toca" IsCheckable="True" IsChecked="{Binding AutoHideWhenIdle}" />
+                <MenuItem Header="Resetar posição" Click="OnResetPosition" />
+                <Separator />
+                <MenuItem Header="Sair" Click="OnExit" />
+            </ContextMenu>
+        </Border.ContextMenu>
+
+        <Grid Margin="2,0,6,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Button Style="{StaticResource ShuffleButton}" Content="&#xE8B1;" Command="{Binding ShuffleCommand}" FontSize="12" Width="26" />
+                <Button Style="{StaticResource IconButton}" Content="&#xE892;" Command="{Binding PreviousCommand}" FontSize="12" Width="28" ToolTip="Anterior" />
+                <Button Style="{StaticResource IconButton}" Content="{Binding PlayGlyph}" Command="{Binding PlayPauseCommand}" FontSize="16" Width="32" ToolTip="Play / Pause" />
+                <Button Style="{StaticResource IconButton}" Content="&#xE893;" Command="{Binding NextCommand}" FontSize="12" Width="28" ToolTip="Próxima" />
+                <Button Style="{StaticResource RepeatButton}" Content="{Binding RepeatGlyph}" Command="{Binding RepeatCommand}" FontSize="12" Width="26" />
+            </StackPanel>
+
+            <!-- Drag horizontally to move along the taskbar -->
+            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,0,0,0" Background="Transparent"
+                        Cursor="SizeWE" ToolTip="{Binding FullText}"
+                        MouseLeftButtonDown="OnDragStart" MouseMove="OnDragMove" MouseLeftButtonUp="OnDragEnd">
+                <TextBlock Text="{Binding Title}" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                <TextBlock Text="{Binding TaskbarSubtitle}" FontSize="11" Opacity="0.7" TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+
+            <Grid Grid.Row="1" Grid.ColumnSpan="2" Height="8" Margin="4,0,0,1" Background="Transparent" Cursor="Hand"
+                  Visibility="{Binding HasTimeline, Converter={StaticResource BoolToVis}}" MouseLeftButtonDown="OnSeek">
+                <ProgressBar Style="{StaticResource ThinProgress}" Height="2" VerticalAlignment="Center"
+                             Value="{Binding Progress, Mode=OneWay}" />
+            </Grid>
+        </Grid>
+    </Border>
+</Window>
