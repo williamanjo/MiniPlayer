@@ -14,6 +14,8 @@ public partial class PlayerWindow : Window
 {
     /// <summary>Distance (DIP) from a screen edge at which the player snaps to it.</summary>
     const double SnapDistance = 24;
+    const double MinScale = 0.7, MaxScale = 2.0;
+    static readonly double[] ScalePresets = [0.75, 1, 1.25, 1.5, 2];
 
     readonly SettingsService _settings;
 
@@ -22,6 +24,7 @@ public partial class PlayerWindow : Window
         InitializeComponent();
         DataContext = viewModel;
         _settings = settings;
+        ApplyScale(settings.Data.FloatingScale);
         Loaded += (_, _) => RestorePosition();
         SizeChanged += OnSizeChanged;
     }
@@ -55,9 +58,79 @@ public partial class PlayerWindow : Window
     /// </summary>
     void OnSizeChanged(object sender, SizeChangedEventArgs e)
     {
-        if (!IsLoaded || !e.HeightChanged || e.PreviousSize.Height <= 0) return;
-        Top += e.PreviousSize.Height - e.NewSize.Height;
+        if (!IsLoaded || e.PreviousSize.Height <= 0) return;
+        if (e.HeightChanged) Top += e.PreviousSize.Height - e.NewSize.Height;
         KeepInsideWorkArea();
+    }
+
+    double Scale => RootScale.ScaleX;
+
+    void ApplyScale(double scale)
+    {
+        scale = Math.Round(Math.Clamp(scale, MinScale, MaxScale), 2);
+        RootScale.ScaleX = RootScale.ScaleY = scale;
+    }
+
+    /// <summary>Zoom keeping the right edge in place (the player usually sits bottom-right).</summary>
+    void ZoomTo(double scale)
+    {
+        var right = Left + ActualWidth;
+        ApplyScale(scale);
+        UpdateLayout();
+        Left = right - ActualWidth;
+        KeepInsideWorkArea();
+        SaveScaleAndPosition();
+    }
+
+    void SaveScaleAndPosition()
+    {
+        _settings.Data.FloatingScale = Scale;
+        _settings.Data.Left = Left;
+        _settings.Data.Top = Top;
+        _settings.Data.Bottom = Top + ActualHeight;
+        _settings.Save();
+    }
+
+    // Resize grips. Cursor tracked in screen space: the window itself moves while dragging the left side.
+    string? _gripSide;
+    double _gripStartX, _gripStartWidth, _gripStartRight, _gripBaseWidth;
+
+    double CursorX()
+    {
+        TaskbarHelper.GetCursorPos(out var p);
+        return p.X / VisualTreeHelper.GetDpi(this).DpiScaleX;
+    }
+
+    void OnGripDown(object sender, MouseButtonEventArgs e)
+    {
+        var grip = (FrameworkElement)sender;
+        _gripSide = (string)grip.Tag;
+        _gripStartX = CursorX();
+        _gripStartWidth = ActualWidth;
+        _gripStartRight = Left + ActualWidth;
+        _gripBaseWidth = ActualWidth / Scale; // width at 100%
+        grip.CaptureMouse();
+        e.Handled = true; // no window drag
+    }
+
+    void OnGripMove(object sender, MouseEventArgs e)
+    {
+        if (_gripSide is null || !((UIElement)sender).IsMouseCaptured) return;
+        var dx = CursorX() - _gripStartX;
+        var width = _gripStartWidth + (_gripSide == "L" ? -dx : dx);
+        ApplyScale(width / _gripBaseWidth);
+        UpdateLayout();
+        if (_gripSide == "L") Left = _gripStartRight - ActualWidth;
+    }
+
+    void OnGripUp(object sender, MouseButtonEventArgs e)
+    {
+        var grip = (UIElement)sender;
+        if (!grip.IsMouseCaptured) return;
+        grip.ReleaseMouseCapture();
+        _gripSide = null;
+        KeepInsideWorkArea();
+        SaveScaleAndPosition();
     }
 
     Rect WorkArea()
@@ -109,6 +182,12 @@ public partial class PlayerWindow : Window
 
     void OnWheel(object sender, MouseWheelEventArgs e)
     {
+        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+        {
+            ZoomTo(Scale + (e.Delta > 0 ? 0.1 : -0.1));
+            e.Handled = true;
+            return;
+        }
         ViewModel.ChangeVolume(e.Delta);
         e.Handled = true;
     }
@@ -128,7 +207,25 @@ public partial class PlayerWindow : Window
         menu.IsOpen = true;
     }
 
-    void OnMenuOpened(object sender, RoutedEventArgs e) => ThemeMenu.Fill(ThemesMenu);
+    void OnMenuOpened(object sender, RoutedEventArgs e)
+    {
+        ThemeMenu.Fill(ThemesMenu);
+
+        SizeMenu.Items.Clear();
+        foreach (var preset in ScalePresets)
+        {
+            var item = new MenuItem
+            {
+                Header = $"{preset * 100:0}%",
+                IsCheckable = true,
+                IsChecked = Math.Abs(Scale - preset) < 0.01,
+            };
+            item.Click += (_, _) => ZoomTo(preset);
+            SizeMenu.Items.Add(item);
+        }
+        SizeMenu.Items.Add(new Separator());
+        SizeMenu.Items.Add(new MenuItem { Header = "Arraste as bordas ou use Ctrl + roda do mouse", IsEnabled = false });
+    }
 
     void OnTogglePin(object sender, RoutedEventArgs e) => ViewModel.PinOnTop = !ViewModel.PinOnTop;
 

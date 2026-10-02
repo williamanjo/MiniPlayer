@@ -329,7 +329,7 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
 
         var bytes = await MediaService.ReadThumbnailAsync(s.Thumbnail);
         if (key != _coverKey) return; // track changed while loading
-        Cover = bytes is null ? null : Decode(bytes, 160);
+        Cover = bytes is null ? null : Decode(bytes, 320); // sharp up to 200% zoom
         CoverBackdrop = bytes is null ? null : Decode(bytes, 12);
     }
 

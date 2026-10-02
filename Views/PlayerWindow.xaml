@@ -1,13 +1,17 @@
 <Window x:Class="MiniPlayer.Views.PlayerWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MiniPlayer" Width="400" SizeToContent="Height"
+        Title="MiniPlayer" SizeToContent="WidthAndHeight"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         ResizeMode="NoResize" ShowInTaskbar="False"
         Topmost="{Binding PinOnTop}"
         Foreground="{DynamicResource ThemeForeground}" FontFamily="{DynamicResource ThemeFont}"
         MouseWheel="OnWheel" MouseDown="OnMouseDown">
-    <Grid Margin="8">
+    <!-- Fixed design width; the whole player is scaled (crisp vector) instead of re-laid out -->
+    <Grid x:Name="Root" Margin="8" Width="384">
+        <Grid.LayoutTransform>
+            <ScaleTransform x:Name="RootScale" ScaleX="1" ScaleY="1" />
+        </Grid.LayoutTransform>
         <!-- Theme layers. Shadow on its own layer so the text stays crisp. -->
         <Border CornerRadius="{DynamicResource ThemeCornerRadius}" Background="{DynamicResource ThemeBackground}"
                 Effect="{DynamicResource ThemeShadow}" />
@@ -26,6 +30,7 @@
             <Grid.ContextMenu>
                 <ContextMenu x:Name="PlayerMenu" Opened="OnMenuOpened">
                     <MenuItem x:Name="ThemesMenu" Header="Tema" />
+                    <MenuItem x:Name="SizeMenu" Header="Tamanho" />
                 </ContextMenu>
             </Grid.ContextMenu>
             <Grid.RowDefinitions>
@@ -125,5 +130,18 @@
                 <TextBlock Text="{Binding LyricNext}" FontSize="12" Foreground="{DynamicResource ThemeSecondary}" Opacity="0.75" TextAlignment="Center" TextWrapping="Wrap" />
             </StackPanel>
         </Grid>
+        <!-- Resize grips (sides + corners); drag scales the player -->
+        <Border Width="6" HorizontalAlignment="Left" Background="Transparent" Cursor="SizeWE" Tag="L"
+                MouseLeftButtonDown="OnGripDown" MouseMove="OnGripMove" MouseLeftButtonUp="OnGripUp" />
+        <Border Width="6" HorizontalAlignment="Right" Background="Transparent" Cursor="SizeWE" Tag="R"
+                MouseLeftButtonDown="OnGripDown" MouseMove="OnGripMove" MouseLeftButtonUp="OnGripUp" />
+        <Border Width="12" Height="12" HorizontalAlignment="Left" VerticalAlignment="Top" Background="Transparent"
+                Cursor="SizeNWSE" Tag="L" MouseLeftButtonDown="OnGripDown" MouseMove="OnGripMove" MouseLeftButtonUp="OnGripUp" />
+        <Border Width="12" Height="12" HorizontalAlignment="Right" VerticalAlignment="Top" Background="Transparent"
+                Cursor="SizeNESW" Tag="R" MouseLeftButtonDown="OnGripDown" MouseMove="OnGripMove" MouseLeftButtonUp="OnGripUp" />
+        <Border Width="12" Height="12" HorizontalAlignment="Left" VerticalAlignment="Bottom" Background="Transparent"
+                Cursor="SizeNESW" Tag="L" MouseLeftButtonDown="OnGripDown" MouseMove="OnGripMove" MouseLeftButtonUp="OnGripUp" />
+        <Border Width="12" Height="12" HorizontalAlignment="Right" VerticalAlignment="Bottom" Background="Transparent"
+                Cursor="SizeNWSE" Tag="R" MouseLeftButtonDown="OnGripDown" MouseMove="OnGripMove" MouseLeftButtonUp="OnGripUp" />
     </Grid>
 </Window>

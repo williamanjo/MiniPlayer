@@ -8,7 +8,8 @@ do Windows (SMTC), onde Chrome/Edge/Firefox/Brave/Opera publicam a Media Session
 - Título, artista e navegador de origem
 - Play/Pause, anterior, próxima, aleatório, repetir (lista → faixa → off)
 - Barra de progresso clicável (seek)
-- **Fixar no topo** (checkbox)
+- **Fixar no topo** (📌)
+- **Redimensionar** o player flutuante: arraste bordas/cantos, Ctrl + roda do mouse ou clique direito → Tamanho (70%–200%)
 - **Modo barra de tarefas**: player compacto sobre a taskbar, ao lado da bandeja
   - arraste o texto para mover na horizontal; clique direito → menu
   - clique duplo (fora dos botões) → volta ao modo normal
