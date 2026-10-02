@@ -51,6 +51,8 @@
                     <Button Style="{StaticResource IconButton}" Content="&#xE90E;" FontSize="12" Width="26" Height="26"
                             ToolTip="Mover para a barra de tarefas" Click="OnToTaskbar" />
                 </StackPanel>
+                <Button Style="{StaticResource IconButton}" Content="&#xE713;" FontSize="12" Width="26" Height="26"
+                        ToolTip="Configurações" Click="OnOpenSettings" />
                 <Button Style="{StaticResource IconButton}" Content="&#xE8BB;" FontSize="10" Width="26" Height="26"
                         ToolTip="Ocultar (continua na bandeja)" Click="OnClose" />
             </StackPanel>
@@ -116,9 +118,9 @@
                     <MenuItem Header="Mover para a barra de tarefas" Click="OnToTaskbar" />
                     <Separator />
                     <MenuItem x:Name="ThemesMenu" Header="Tema" />
-                    <MenuItem x:Name="ZoomMenu" Header="Zoom" />
                     <MenuItem Header="Restaurar tamanho" Click="OnResetSize" />
                     <Separator />
+                    <MenuItem Header="Configurações…" Click="OnOpenSettings" />
                     <MenuItem Header="Ocultar" Click="OnClose" />
                 </ContextMenu>
             </Grid.ContextMenu>

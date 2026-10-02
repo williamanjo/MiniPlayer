@@ -129,16 +129,6 @@ public partial class TaskbarWindow : Window
 
     void OnMenuOpening(object sender, ContextMenuEventArgs e)
     {
-        ScreensMenu.Items.Clear();
-        var current = TaskbarHelper.GetTaskbar(_settings.Data.TaskbarMonitor)?.Device;
-        foreach (var taskbar in TaskbarHelper.GetTaskbars())
-        {
-            var device = taskbar.Device;
-            var item = new MenuItem { Header = taskbar.Label, IsCheckable = true, IsChecked = device == current };
-            item.Click += (_, _) => ((App)Application.Current).SetTaskbarMonitor(device);
-            ScreensMenu.Items.Add(item);
-        }
-        ScreensMenu.IsEnabled = ScreensMenu.Items.Count > 1;
         _ = SessionMenu.FillAsync(SourcesMenu, ViewModel);
         ThemeMenu.Fill(ThemesMenu);
 
@@ -158,12 +148,7 @@ public partial class TaskbarWindow : Window
 
     void OnFloating(object sender, RoutedEventArgs e) => ((App)Application.Current).SetMode(PlayerMode.Floating);
 
-    void OnResetPosition(object sender, RoutedEventArgs e)
-    {
-        _settings.Data.TaskbarOffset = 0;
-        _settings.Save();
-        Reposition();
-    }
+    void OnOpenSettings(object sender, RoutedEventArgs e) => ((App)Application.Current).ShowSettings("Taskbar");
 
     void OnExit(object sender, RoutedEventArgs e) => ((App)Application.Current).ExitApp();
 }

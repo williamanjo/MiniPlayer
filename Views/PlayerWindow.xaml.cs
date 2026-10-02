@@ -15,7 +15,6 @@ public partial class PlayerWindow : Window
     /// <summary>Distance (DIP) from a screen edge at which the player snaps to it.</summary>
     const double SnapDistance = 24;
     const double MinZoom = 0.7, MaxZoom = 2.0;
-    static readonly double[] ZoomPresets = [0.75, 1, 1.25, 1.5, 2];
 
     // Content size (before zoom), Root grid units.
     const double DefaultWidth = 384, DefaultHeight = 129, LyricsHeight = 200;
@@ -169,7 +168,7 @@ public partial class PlayerWindow : Window
 
     #region Zoom
 
-    double Zoom => RootScale.ScaleX;
+    public double Zoom => RootScale.ScaleX;
 
     void ApplyZoom(double zoom)
     {
@@ -178,7 +177,7 @@ public partial class PlayerWindow : Window
     }
 
     /// <summary>Zoom keeping the right edge in place (the player usually sits bottom-right).</summary>
-    void ZoomTo(double zoom)
+    public void ZoomTo(double zoom)
     {
         var right = Left + ActualWidth;
         ApplyZoom(zoom);
@@ -188,7 +187,9 @@ public partial class PlayerWindow : Window
         SaveState();
     }
 
-    void OnResetSize(object sender, RoutedEventArgs e)
+    void OnResetSize(object sender, RoutedEventArgs e) => ResetSize();
+
+    public void ResetSize()
     {
         var right = Left + ActualWidth;
         _heightBeforeLyrics = null;
@@ -344,25 +345,9 @@ public partial class PlayerWindow : Window
         menu.IsOpen = true;
     }
 
-    void OnMenuOpened(object sender, RoutedEventArgs e)
-    {
-        ThemeMenu.Fill(ThemesMenu);
+    void OnMenuOpened(object sender, RoutedEventArgs e) => ThemeMenu.Fill(ThemesMenu);
 
-        ZoomMenu.Items.Clear();
-        foreach (var preset in ZoomPresets)
-        {
-            var item = new MenuItem
-            {
-                Header = $"{preset * 100:0}%",
-                IsCheckable = true,
-                IsChecked = Math.Abs(Zoom - preset) < 0.01,
-            };
-            item.Click += (_, _) => ZoomTo(preset);
-            ZoomMenu.Items.Add(item);
-        }
-        ZoomMenu.Items.Add(new Separator());
-        ZoomMenu.Items.Add(new MenuItem { Header = "Ctrl + roda do mouse também muda o zoom", IsEnabled = false });
-    }
+    void OnOpenSettings(object sender, RoutedEventArgs e) => ((App)Application.Current).ShowSettings();
 
     void OnTogglePin(object sender, RoutedEventArgs e) => ViewModel.PinOnTop = !ViewModel.PinOnTop;
 

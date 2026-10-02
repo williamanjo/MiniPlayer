@@ -9,10 +9,7 @@ public sealed class TrayIcon : IDisposable
     readonly NotifyIcon _icon;
     readonly ToolStripMenuItem _taskbarItem;
     readonly ToolStripMenuItem _pinItem;
-    readonly ToolStripMenuItem _autoStartItem;
-    readonly ToolStripMenuItem _autoHideItem;
     readonly ToolStripMenuItem _updateItem;
-    readonly ToolStripMenuItem _keepUpdatedItem;
 
     public TrayIcon(App app)
     {
@@ -20,27 +17,6 @@ public sealed class TrayIcon : IDisposable
             app.SetMode(app.Settings.Data.Mode == PlayerMode.Taskbar ? PlayerMode.Floating : PlayerMode.Taskbar));
         _pinItem = new ToolStripMenuItem("Fixar no topo", null, (_, _) =>
             app.ViewModel.PinOnTop = !app.ViewModel.PinOnTop);
-        _autoStartItem = new ToolStripMenuItem("Iniciar com o Windows", null, (_, _) =>
-            SettingsService.AutoStart = !SettingsService.AutoStart);
-
-        _autoHideItem = new ToolStripMenuItem("Ocultar barra quando nada toca", null, (_, _) =>
-            app.ViewModel.AutoHideWhenIdle = !app.ViewModel.AutoHideWhenIdle);
-
-        var screensItem = new ToolStripMenuItem("Barra de tarefas da tela");
-        screensItem.DropDownItems.Add("-"); // placeholder so the arrow shows
-        screensItem.DropDownOpening += (_, _) =>
-        {
-            screensItem.DropDownItems.Clear();
-            var current = app.Settings.Data.Mode == PlayerMode.Taskbar
-                ? TaskbarHelper.GetTaskbar(app.Settings.Data.TaskbarMonitor)?.Device
-                : null;
-            foreach (var taskbar in TaskbarHelper.GetTaskbars())
-            {
-                var device = taskbar.Device;
-                screensItem.DropDownItems.Add(new ToolStripMenuItem(taskbar.Label, null,
-                    (_, _) => app.SetTaskbarMonitor(device)) { Checked = device == current });
-            }
-        };
 
         var themesItem = new ToolStripMenuItem("Temas");
         themesItem.DropDownItems.Add("-"); // placeholder so the arrow shows
@@ -67,40 +43,24 @@ public sealed class TrayIcon : IDisposable
             Font = new Font(SystemFonts.MenuFont ?? Control.DefaultFont, FontStyle.Bold),
         };
 
-        _keepUpdatedItem = new ToolStripMenuItem("Manter atualizado", null, (_, _) =>
-        {
-            app.Settings.Data.AutoUpdate = !app.Settings.Data.AutoUpdate;
-            app.Settings.Save();
-        })
-        {
-            ToolTipText = "Instala novas versões automaticamente ao abrir o MiniPlayer",
-        };
-
         var menu = new ContextMenuStrip();
         menu.Items.Add(new ToolStripMenuItem($"MiniPlayer v{app.Updates.CurrentVersion}") { Enabled = false });
         menu.Items.Add(_updateItem);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Mostrar player", null, (_, _) => app.SetMode(PlayerMode.Floating));
         menu.Items.Add(_taskbarItem);
-        menu.Items.Add(screensItem);
         menu.Items.Add(themesItem);
-        menu.Items.Add(_autoHideItem);
         menu.Items.Add(_pinItem);
-        menu.Items.Add(_autoStartItem);
         menu.Items.Add(new ToolStripSeparator());
-        if (app.Updates.IsInstalled)
+        menu.Items.Add(new ToolStripMenuItem("Configurações…", null, (_, _) => app.ShowSettings())
         {
-            menu.Items.Add(_keepUpdatedItem);
-            menu.Items.Add("Verificar atualizações", null, (_, _) => app.CheckUpdatesManually());
-        }
+            Font = new Font(SystemFonts.MenuFont ?? Control.DefaultFont, FontStyle.Bold),
+        });
         menu.Items.Add("Sair", null, (_, _) => app.ExitApp());
         menu.Opening += (_, _) =>
         {
             _taskbarItem.Checked = app.Settings.Data.Mode == PlayerMode.Taskbar;
             _pinItem.Checked = app.ViewModel.PinOnTop;
-            _autoHideItem.Checked = app.ViewModel.AutoHideWhenIdle;
-            _autoStartItem.Checked = SettingsService.AutoStart;
-            _keepUpdatedItem.Checked = app.Settings.Data.AutoUpdate;
         };
 
         _icon = new NotifyIcon
