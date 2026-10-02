@@ -12,18 +12,17 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AssemblyTitle>MiniPlayer</AssemblyTitle>
     <Product>MiniPlayer</Product>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
+    <!-- Custom Main: Velopack must run before WPF starts -->
+    <StartupObject>MiniPlayer.Program</StartupObject>
     <!-- DPI comes from app.manifest (WPF app; WinForms only used for the tray icon) -->
     <NoWarn>$(NoWarn);WFO0003</NoWarn>
   </PropertyGroup>
 
-  <!-- Single-file exe: dotnet publish -c Release -->
+  <!-- Self-contained publish, packed into an installer by release.ps1 (Velopack) -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>true</SelfContained>
-    <PublishSingleFile>true</PublishSingleFile>
-    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
     <DebugType>none</DebugType>
   </PropertyGroup>
 
@@ -35,6 +34,10 @@
 
   <ItemGroup>
     <Resource Include="Assets\app.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Velopack" Version="1.2.161" />
   </ItemGroup>
 
 </Project>
