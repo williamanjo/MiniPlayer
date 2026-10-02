@@ -40,10 +40,30 @@ public sealed class TrayIcon : IDisposable
             }
         };
 
+        var themesItem = new ToolStripMenuItem("Temas");
+        themesItem.DropDownItems.Add("-"); // placeholder so the arrow shows
+        themesItem.DropDownOpening += (_, _) =>
+        {
+            themesItem.DropDownItems.Clear();
+            foreach (var theme in app.Themes.Themes)
+            {
+                var id = theme.Id;
+                var label = string.IsNullOrWhiteSpace(theme.Author) || theme.BuiltIn ? theme.Name : $"{theme.Name} — {theme.Author}";
+                // "&&": WinForms treats a single "&" as a mnemonic marker.
+                themesItem.DropDownItems.Add(new ToolStripMenuItem(label.Replace("&", "&&"), null,
+                    (_, _) => app.Themes.Apply(id)) { Checked = id == app.Themes.CurrentId });
+            }
+            foreach (var error in app.Themes.Errors)
+                themesItem.DropDownItems.Add(new ToolStripMenuItem("⚠ " + error.Replace("&", "&&")) { Enabled = false });
+            themesItem.DropDownItems.Add(new ToolStripSeparator());
+            themesItem.DropDownItems.Add("Abrir pasta de temas", null, (_, _) => ThemeService.OpenFolder());
+        };
+
         var menu = new ContextMenuStrip();
         menu.Items.Add("Mostrar player", null, (_, _) => app.SetMode(PlayerMode.Floating));
         menu.Items.Add(_taskbarItem);
         menu.Items.Add(screensItem);
+        menu.Items.Add(themesItem);
         menu.Items.Add(_autoHideItem);
         menu.Items.Add(_pinItem);
         menu.Items.Add(_autoStartItem);

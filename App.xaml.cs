@@ -14,6 +14,7 @@ public partial class App : Application
 
     public SettingsService Settings { get; private set; } = null!;
     public PlayerViewModel ViewModel { get; private set; } = null!;
+    public ThemeService Themes { get; private set; } = null!;
 
     protected override async void OnStartup(StartupEventArgs e)
     {
@@ -27,6 +28,8 @@ public partial class App : Application
         }
 
         Settings = SettingsService.Load();
+        Themes = new ThemeService(Settings);
+        Themes.Initialize();
         var media = new MediaService();
         ViewModel = new PlayerViewModel(media, Settings);
         _tray = new TrayIcon(this);

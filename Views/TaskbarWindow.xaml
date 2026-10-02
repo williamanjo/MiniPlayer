@@ -24,6 +24,7 @@
                 <MenuItem Header="Modo flutuante" Click="OnFloating" />
                 <MenuItem x:Name="ScreensMenu" Header="Mover para a tela" />
                 <MenuItem x:Name="SourcesMenu" Header="Tocando em" />
+                <MenuItem x:Name="ThemesMenu" Header="Tema" />
                 <Separator />
                 <MenuItem Header="Mostrar letra na barra" IsCheckable="True" IsChecked="{Binding ShowLyrics}" />
                 <MenuItem Header="Ocultar quando nada toca" IsCheckable="True" IsChecked="{Binding AutoHideWhenIdle}" />

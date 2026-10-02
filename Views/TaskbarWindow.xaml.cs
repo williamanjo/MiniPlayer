@@ -140,6 +140,7 @@ public partial class TaskbarWindow : Window
         }
         ScreensMenu.IsEnabled = ScreensMenu.Items.Count > 1;
         _ = SessionMenu.FillAsync(SourcesMenu, ViewModel);
+        ThemeMenu.Fill(ThemesMenu);
 
         // A never-active window never gets deactivated, so the menu would never close on
         // outside clicks. Let the window activate while the menu is open.

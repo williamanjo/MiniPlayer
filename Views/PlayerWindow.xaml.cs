@@ -128,6 +128,8 @@ public partial class PlayerWindow : Window
         menu.IsOpen = true;
     }
 
+    void OnMenuOpened(object sender, RoutedEventArgs e) => ThemeMenu.Fill(ThemesMenu);
+
     void OnTogglePin(object sender, RoutedEventArgs e) => ViewModel.PinOnTop = !ViewModel.PinOnTop;
 
     void OnToggleLyrics(object sender, RoutedEventArgs e) => ViewModel.ShowLyrics = !ViewModel.ShowLyrics;
