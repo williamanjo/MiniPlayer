@@ -48,7 +48,8 @@ public partial class App : Application
         SetMode(Settings.Data.Mode);
 
         Updates.UpdateAvailable += OnUpdateAvailable;
-        Updates.Start();
+        // Started by a toast button: the click (OnToastActivated) checks and updates by itself.
+        Updates.Start(checkNow: !(Updates.IsInstalled && ToastNotificationManagerCompat.WasCurrentProcessToastActivated()));
 
         try
         {
@@ -131,6 +132,7 @@ public partial class App : Application
     async void OnUpdateAvailable(string version, bool atStartup)
     {
         _tray?.ShowUpdateMenu(version);
+        if (_updating) return; // already installing (e.g. toast button clicked)
 
         if (Settings.Data.AutoUpdate)
         {
@@ -165,7 +167,7 @@ public partial class App : Application
         catch { _tray?.ShowBalloon(title, text); }
     }
 
-    void OnToastActivated(string argument)
+    async void OnToastActivated(string argument)
     {
         ToastArguments.Parse(argument).TryGetValue(NotificationService.ActionKey, out var action);
         switch (action)
@@ -175,7 +177,8 @@ public partial class App : Application
                 _ = UpdateNowAsync();
                 break;
             default:
-                if (Updates.AvailableVersion is not null) InstallUpdate();
+                // Toast body. The app may have just been started by the click: check first.
+                if ((Updates.AvailableVersion ?? await Updates.CheckAsync(manual: false)) is not null) InstallUpdate();
                 else SetMode(Settings.Data.Mode);
                 break;
         }

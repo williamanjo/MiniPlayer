@@ -17,7 +17,8 @@ public sealed class UpdateService
     readonly UpdateManager _manager;
     readonly DispatcherTimer _timer = new() { Interval = CheckInterval };
     UpdateInfo? _pending;
-    bool _busy;
+    /// <summary>In-flight check, shared by concurrent callers (startup check vs toast click).</summary>
+    Task<UpdateInfo?>? _check;
 
     public UpdateService()
     {
@@ -45,26 +46,24 @@ public sealed class UpdateService
     /// <summary>Version already downloaded; Velopack applies it on the next start.</summary>
     public string? DownloadedVersion { get; private set; }
 
-    public void Start()
+    /// <param name="checkNow">False when a toast click launched the app: the click drives the update.</param>
+    public void Start(bool checkNow = true)
     {
         if (!IsInstalled) return;
-        _ = CheckAsync(manual: false, atStartup: true);
+        if (checkNow) _ = CheckAsync(manual: false, atStartup: true);
         _timer.Start();
     }
 
     /// <returns>New version, or null when up to date / not installed / offline.</returns>
     public async Task<string?> CheckAsync(bool manual, bool atStartup = false)
     {
-        if (!IsInstalled || _busy) return AvailableVersion;
-        _busy = true;
+        if (!IsInstalled) return null;
+        var owner = _check is null;
+        _check ??= _manager.CheckForUpdatesAsync();
+        UpdateInfo? info;
         try
         {
-            var info = await _manager.CheckForUpdatesAsync();
-            if (info is null) return null;
-            var isNew = AvailableVersion != info.TargetFullRelease.Version.ToString();
-            _pending = info;
-            if (isNew && !manual) UpdateAvailable?.Invoke(AvailableVersion!, atStartup);
-            return AvailableVersion;
+            info = await _check;
         }
         catch
         {
@@ -73,8 +72,14 @@ public sealed class UpdateService
         }
         finally
         {
-            _busy = false;
+            if (owner) _check = null;
         }
+
+        if (info is null) return null;
+        var isNew = AvailableVersion != info.TargetFullRelease.Version.ToString();
+        _pending = info;
+        if (isNew && !manual) UpdateAvailable?.Invoke(AvailableVersion!, atStartup);
+        return AvailableVersion;
     }
 
     /// <summary>Downloads the pending version without installing it.</summary>
