@@ -24,6 +24,8 @@ public sealed class AppSettings
     public bool AutoHideWhenIdle { get; set; } = true;
     /// <summary>Fetch synced lyrics from lrclib.net (sends title/artist).</summary>
     public bool ShowLyrics { get; set; }
+    /// <summary>Theme id: "builtin:..." or "file:&lt;path&gt;".</summary>
+    public string? Theme { get; set; }
 }
 
 public sealed class SettingsService
