@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using System.Text;
+using MiniPlayer.Localization;
 
 namespace MiniPlayer.Services;
 
@@ -51,8 +52,8 @@ internal static class TaskbarHelper
             get
             {
                 var digits = new string(Device.Reverse().TakeWhile(char.IsDigit).Reverse().ToArray());
-                var name = digits.Length > 0 ? $"Tela {digits}" : Device;
-                return IsPrimary ? $"{name} (principal)" : name;
+                var name = digits.Length > 0 ? Loc.F("screen_n", digits) : Device;
+                return IsPrimary ? Loc.F("screen_primary", name) : name;
             }
         }
     }

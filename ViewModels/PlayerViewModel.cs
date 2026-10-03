@@ -8,6 +8,7 @@ using System.Windows.Threading;
 using Microsoft.Win32;
 using MiniPlayer.Services;
 using Windows.Media;
+using MiniPlayer.Localization;
 
 namespace MiniPlayer.ViewModels;
 
@@ -75,10 +76,10 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
     public RelayCommand ShuffleCommand { get; }
     public RelayCommand RepeatCommand { get; }
 
-    string _title = "Nada tocando";
+    string _title = Loc.T("vm_nothing");
     public string Title { get => _title; private set => Set(ref _title, value); }
 
-    string _subtitle = "Abra uma música no navegador";
+    string _subtitle = Loc.T("vm_open_music");
     public string Subtitle { get => _subtitle; private set { Set(ref _subtitle, value); RaiseSubtitles(); } }
 
     public string FullText => _snap.HasSession ? $"{Title} — {Subtitle}" : Title;
@@ -88,11 +89,51 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
     string? Status { get => _status; set { _status = value; RaiseSubtitles(); } }
 
     /// <summary>Second line of the floating player.</summary>
-    public string SubtitleDisplay => _status ?? Subtitle;
+    public string SubtitleDisplay => _status ?? _otherTabHint ?? Subtitle;
+
+    // Browsers publish one media session (one tab). When that tab is paused while another tab of
+    // the same browser keeps playing, the browser does not hand the session over; say so.
+    string? _otherTabHint;
+    List<AudioService.IAudioMeterInformation> _browserMeters = [];
+    string? _browserMetersFor;
+    DateTime _browserMetersAt, _otherTabSince;
+
+    void CheckOtherTab()
+    {
+        string? hint = null;
+        var process = _snap.HasSession && !_snap.IsPlaying ? AudioService.ProcessNameFor(_media.CurrentAppId) : null;
+        if (process is not null)
+        {
+            if (process != _browserMetersFor || DateTime.Now - _browserMetersAt > TimeSpan.FromSeconds(5))
+            {
+                _browserMeters = AudioService.Meters(process);
+                _browserMetersFor = process;
+                _browserMetersAt = DateTime.Now;
+            }
+            if (AudioService.Peak(_browserMeters) > 0.02f)
+            {
+                if (_otherTabSince == default) _otherTabSince = DateTime.Now;
+                // sustained sound, not the tail of the track that was just paused
+                if (DateTime.Now - _otherTabSince > TimeSpan.FromSeconds(2)) hint = Loc.F("other_tab_playing", _snap.Source);
+            }
+            else
+            {
+                _otherTabSince = default;
+            }
+        }
+        else
+        {
+            _otherTabSince = default;
+        }
+
+        if (hint == _otherTabHint) return;
+        _otherTabHint = hint;
+        RaiseSubtitles();
+    }
 
     /// <summary>Second line of the taskbar overlay: status, else current lyric line, else artist.</summary>
     public string TaskbarSubtitle =>
-        _status ?? (ShowLyrics && !string.IsNullOrEmpty(LyricCurrent) ? LyricCurrent : Subtitle);
+        _status ?? _otherTabHint ?? (ShowLyrics && !string.IsNullOrEmpty(LyricCurrent) ? LyricCurrent : Subtitle);
 
     /// <summary>True while the user picked the source by hand.</summary>
     public bool IsPinned => _media.IsPinned;
@@ -308,9 +349,9 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
     {
         Status = state switch
         {
-            null => "Volume indisponível",
-            { Muted: true } => "🔇 Mudo",
-            var (v, _) => $"🔊 Volume {Math.Round(v * 100)}%",
+            null => Loc.T("vm_volume_unavailable"),
+            { Muted: true } => Loc.T("vm_muted"),
+            var (v, _) => Loc.F("vm_volume", Math.Round(v * 100)),
         };
         _statusUntil = DateTime.Now.AddSeconds(1.5);
     }
@@ -319,6 +360,13 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
 
     /// <summary>Control a specific tab/app; null returns to automatic choice.</summary>
     public void PinSession(object? key) => _media.Pin(key);
+
+    /// <summary>Re-renders texts after the UI language changed.</summary>
+    public void RefreshTexts()
+    {
+        _lyricsKey = null;
+        Apply(_snap);
+    }
 
     public void SeekTo(double fraction)
     {
@@ -357,13 +405,13 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
         _snap = s;
         if (s.HasSession)
         {
-            Title = string.IsNullOrWhiteSpace(s.Title) ? "Sem título" : s.Title;
+            Title = string.IsNullOrWhiteSpace(s.Title) ? Loc.T("vm_untitled") : s.Title;
             Subtitle = string.Join(" · ", new[] { s.Artist, s.Source }.Where(x => !string.IsNullOrWhiteSpace(x)));
         }
         else
         {
-            Title = "Nada tocando";
-            Subtitle = "Abra uma música no navegador";
+            Title = Loc.T("vm_nothing");
+            Subtitle = Loc.T("vm_open_music");
         }
         PlayGlyph = s.IsPlaying ? GlyphPause : GlyphPlay;
         ShuffleOn = s.Shuffle;
@@ -393,13 +441,13 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
         if (key == _lyricsKey) return;
         _lyricsKey = key;
         _lyrics = null;
-        SetLyricLines("", key is null ? "" : "Buscando letra…", "");
+        SetLyricLines("", key is null ? "" : Loc.T("vm_lyrics_searching"), "");
         if (key is null) return;
 
         var result = await LyricsService.GetAsync(s.Title, s.Artist, s.Duration);
         if (key != _lyricsKey) return; // track changed while loading
         _lyrics = result.Lines;
-        SetLyricLines("", _lyrics is not null ? "♪" : result.Found ? "Letra sem sincronização" : "Letra não encontrada", "");
+        SetLyricLines("", _lyrics is not null ? "♪" : result.Found ? Loc.T("vm_lyrics_unsynced") : Loc.T("vm_lyrics_not_found"), "");
         UpdateProgress();
     }
 
@@ -508,9 +556,12 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
         }
     }
 
+    int _ticks;
+
     void UpdateProgress()
     {
         Ticked?.Invoke();
+        if (++_ticks % 4 == 0) CheckOtherTab(); // ~1 s
         if (_status is not null && DateTime.Now > _statusUntil) Status = null;
         if (_snap.IsPlaying) _activeAt = DateTime.Now;
 

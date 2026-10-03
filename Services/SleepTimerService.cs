@@ -1,4 +1,5 @@
 using System.Windows.Threading;
+using MiniPlayer.Localization;
 
 namespace MiniPlayer.Services;
 
@@ -48,7 +49,7 @@ public sealed class SleepTimerService
     {
         get
         {
-            if (_endOfTrack) return "fim da música";
+            if (_endOfTrack) return Loc.T("sleep_end_short");
             if (_endsAt is not { } end) return null;
             var left = end - DateTime.Now;
             return left.TotalSeconds < 60 ? $"{Math.Max(0, (int)left.TotalSeconds)} s" : $"{(int)Math.Ceiling(left.TotalMinutes)} min";

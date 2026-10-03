@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using MiniPlayer.Services;
+using MiniPlayer.Localization;
 
 namespace MiniPlayer.Views;
 
@@ -35,10 +36,10 @@ internal static class ThemeMenu
         }
 
         menu.Items.Add(new Separator());
-        var open = new MenuItem { Header = "Abrir pasta de temas" };
+        var open = new MenuItem { Header = Loc.T("themes_open_folder") };
         open.Click += (_, _) => ThemeService.OpenFolder();
         menu.Items.Add(open);
-        var reload = new MenuItem { Header = "Recarregar temas" };
+        var reload = new MenuItem { Header = Loc.T("themes_reload") };
         reload.Click += (_, _) =>
         {
             themes.Load();

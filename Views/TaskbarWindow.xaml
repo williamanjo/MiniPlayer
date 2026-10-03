@@ -1,6 +1,7 @@
 <Window x:Class="MiniPlayer.Views.TaskbarWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:l="clr-namespace:MiniPlayer.Localization"
         xmlns:local="clr-namespace:MiniPlayer.Views"
         Title="MiniPlayer Taskbar" Width="380" Height="48"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
@@ -8,7 +9,7 @@
         Foreground="{Binding OverlayForeground}" FontFamily="Segoe UI Variable Text, Segoe UI"
         MouseWheel="OnWheel" MouseDown="OnMouseDown">
     <Border x:Name="Root" Margin="0,4" CornerRadius="6" MouseLeftButtonDown="OnRootMouseDown" ContextMenuOpening="OnMenuOpening"
-            ToolTip="Clique duas vezes para voltar ao modo normal">
+            ToolTip="{l:Tr tip_taskbar_dblclick}">
         <Border.Style>
             <Style TargetType="Border">
                 <!-- Near-transparent but still hit-testable -->
@@ -22,16 +23,16 @@
         </Border.Style>
         <Border.ContextMenu>
             <ContextMenu Closed="OnMenuClosed">
-                <MenuItem Header="Modo flutuante" Click="OnFloating" />
-                <MenuItem x:Name="SourcesMenu" Header="Tocando em" />
-                <MenuItem x:Name="ThemesMenu" Header="Tema" />
-                <MenuItem x:Name="SleepTimerMenu" Header="Timer para dormir" />
+                <MenuItem Header="{l:Tr menu_floating}" Click="OnFloating" />
+                <MenuItem x:Name="SourcesMenu" Header="{l:Tr menu_sources}" />
+                <MenuItem x:Name="ThemesMenu" Header="{l:Tr theme}" />
+                <MenuItem x:Name="SleepTimerMenu" Header="{l:Tr sleep_title}" />
                 <Separator />
-                <MenuItem Header="Mostrar letra na barra" IsCheckable="True" IsChecked="{Binding ShowLyrics}" />
+                <MenuItem Header="{l:Tr menu_lyrics_taskbar}" IsCheckable="True" IsChecked="{Binding ShowLyrics}" />
                 <Separator />
-                <MenuItem Header="Histórico…" Click="OnOpenHistory" />
-                <MenuItem Header="Configurações…" Click="OnOpenSettings" />
-                <MenuItem Header="Sair" Click="OnExit" />
+                <MenuItem Header="{l:Tr menu_history}" Click="OnOpenHistory" />
+                <MenuItem Header="{l:Tr menu_settings}" Click="OnOpenSettings" />
+                <MenuItem Header="{l:Tr menu_exit}" Click="OnExit" />
             </ContextMenu>
         </Border.ContextMenu>
 
@@ -47,9 +48,9 @@
 
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                 <Button Style="{StaticResource ShuffleButton}" Content="&#xE8B1;" Command="{Binding ShuffleCommand}" FontSize="12" Width="26" />
-                <Button Style="{StaticResource IconButton}" Content="&#xE892;" Command="{Binding PreviousCommand}" FontSize="12" Width="28" ToolTip="Anterior" />
-                <Button Style="{StaticResource IconButton}" Content="{Binding PlayGlyph}" Command="{Binding PlayPauseCommand}" FontSize="16" Width="32" ToolTip="Play / Pause" />
-                <Button Style="{StaticResource IconButton}" Content="&#xE893;" Command="{Binding NextCommand}" FontSize="12" Width="28" ToolTip="Próxima" />
+                <Button Style="{StaticResource IconButton}" Content="&#xE892;" Command="{Binding PreviousCommand}" FontSize="12" Width="28" ToolTip="{l:Tr tip_previous}" />
+                <Button Style="{StaticResource IconButton}" Content="{Binding PlayGlyph}" Command="{Binding PlayPauseCommand}" FontSize="16" Width="32" ToolTip="{l:Tr action_playpause}" />
+                <Button Style="{StaticResource IconButton}" Content="&#xE893;" Command="{Binding NextCommand}" FontSize="12" Width="28" ToolTip="{l:Tr tip_next}" />
                 <Button Style="{StaticResource RepeatButton}" Content="{Binding RepeatGlyph}" Command="{Binding RepeatCommand}" FontSize="12" Width="26" />
             </StackPanel>
 

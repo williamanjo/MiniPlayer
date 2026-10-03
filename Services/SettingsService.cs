@@ -21,6 +21,8 @@ public sealed class AppSettings
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public PlayerMode Mode { get; set; } = PlayerMode.Floating;
     public bool PinOnTop { get; set; } = true;
+    /// <summary>UI language: null/"auto" = Windows language, "en" or "pt-BR".</summary>
+    public string? Language { get; set; }
     public double? Left { get; set; }
     public double? Top { get; set; }
     /// <summary>Bottom edge of the floating player; it grows upward from here.</summary>

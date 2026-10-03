@@ -6,6 +6,7 @@ using System.Windows.Media;
 using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using MiniPlayer.Localization;
 
 namespace MiniPlayer.Services;
 
@@ -263,17 +264,17 @@ public sealed class ThemeService
 
     static IEnumerable<ThemeDefinition> BuiltInThemes() =>
     [
-        new() { Id = DefaultId, BuiltIn = true, Name = "Escuro" },
+        new() { Id = DefaultId, BuiltIn = true, Name = Loc.T("theme_dark") },
         new()
         {
-            Id = "builtin:claro", BuiltIn = true, Name = "Claro",
+            Id = "builtin:claro", BuiltIn = true, Name = Loc.T("theme_light"),
             Background = "#FFFAFAFA", Border = "#1F000000", Foreground = "#1B1B1B",
             SecondaryForeground = "#8A1B1B1B", Accent = "#0067C0", Track = "#26000000",
             Hover = "#14000000", ShadowOpacity = 0.25,
         },
         new()
         {
-            Id = "builtin:vidro", BuiltIn = true, Name = "Vidro (capa)",
+            Id = "builtin:vidro", BuiltIn = true, Name = Loc.T("theme_glass"),
             Background = "#FF202020", Border = "#40FFFFFF", Backdrop = "cover", Overlay = "#99101010",
             Accent = "#1ED760", SecondaryForeground = "#CCFFFFFF", Track = "#40FFFFFF",
             Hover = "#26FFFFFF", CornerRadius = 14, CoverRadius = 10,

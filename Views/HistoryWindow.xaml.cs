@@ -8,6 +8,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using MiniPlayer.Services;
+using MiniPlayer.Localization;
 
 namespace MiniPlayer.Views;
 
@@ -21,7 +22,6 @@ public partial class HistoryWindow : Window
 
     public sealed record Rank(string Name, string Detail, double Fraction);
 
-    static readonly CultureInfo PtBr = new("pt-BR");
     const int MaxItems = 1000;
 
     readonly App _app = (App)Application.Current;
@@ -32,7 +32,12 @@ public partial class HistoryWindow : Window
     {
         InitializeComponent();
         _app.History.Changed += OnHistoryChanged;
-        Closed += (_, _) => _app.History.Changed -= OnHistoryChanged;
+        Loc.Changed += OnHistoryChanged;
+        Closed += (_, _) =>
+        {
+            _app.History.Changed -= OnHistoryChanged;
+            Loc.Changed -= OnHistoryChanged;
+        };
         // While open, keep above the (often always-on-top) player.
         Activated += (_, _) => Topmost = true;
         Deactivated += (_, _) => Topmost = false;
@@ -80,16 +85,16 @@ public partial class HistoryWindow : Window
 
         EmptyText.Visibility = _records.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         CountText.Text = _records.Count == 0 ? ""
-            : string.IsNullOrEmpty(query) ? $"{_records.Count} músicas no histórico"
-            : $"{matches.Count} de {_records.Count} músicas";
+            : string.IsNullOrEmpty(query) ? Loc.F("history_count", _records.Count)
+            : Loc.F("history_count_filtered", matches.Count, _records.Count);
     }
 
     static string DayLabel(DateTime start)
     {
         var day = start.Date;
-        if (day == DateTime.Today) return "Hoje";
-        if (day == DateTime.Today.AddDays(-1)) return "Ontem";
-        var text = day.ToString("dddd, d 'de' MMMM", PtBr);
+        if (day == DateTime.Today) return Loc.T("period_today");
+        if (day == DateTime.Today.AddDays(-1)) return Loc.T("day_yesterday");
+        var text = day.ToString(Loc.T("day_format"), Loc.Instance.Culture);
         return char.ToUpper(text[0]) + text[1..];
     }
 
@@ -155,7 +160,7 @@ public partial class HistoryWindow : Window
     void OnClear(object sender, RoutedEventArgs e)
     {
         if (_records.Count == 0) return;
-        var answer = MessageBox.Show(this, $"Apagar as {_records.Count} músicas do histórico? Não dá para desfazer.",
+        var answer = MessageBox.Show(this, Loc.F("history_clear_confirm", _records.Count),
             "MiniPlayer", MessageBoxButton.YesNo, MessageBoxImage.Warning);
         if (answer == MessageBoxResult.Yes) _app.History.Clear();
     }
@@ -183,7 +188,9 @@ public partial class HistoryWindow : Window
         TopArtists.ItemsSource = Ranking(
             records.Where(r => !string.IsNullOrWhiteSpace(r.Artist)).GroupBy(r => r.Artist, StringComparer.CurrentCultureIgnoreCase),
             g => g.Sum(r => r.ListenedSec),
-            g => $"{g.Count()} {(g.Count() == 1 ? "música" : "músicas")} · {Duration(g.Sum(r => r.ListenedSec))}");
+            g => g.Count() == 1
+                ? Loc.F("stats_artist_one", Duration(g.Sum(r => r.ListenedSec)))
+                : Loc.F("stats_artist_many", g.Count(), Duration(g.Sum(r => r.ListenedSec))));
 
         TopTracks.ItemsSource = Ranking(
             records.GroupBy(r => $"{r.Title}\u001f{r.Artist}", StringComparer.CurrentCultureIgnoreCase),

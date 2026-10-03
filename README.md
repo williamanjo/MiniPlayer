@@ -40,6 +40,8 @@ do Windows (SMTC), onde Chrome/Edge/Firefox/Brave/Opera publicam a Media Session
 - **Histórico e estatísticas**: músicas ouvidas por dia (busca, copiar, buscar no YouTube/Spotify/Deezer) e mais ouvidos por período
 - **Transmissão (OBS)**: arquivos "tocando agora" (texto, capa e overlay.html) atualizados a cada troca
 
+- **Idiomas**: English e Português (Brasil), troca ao vivo em Configurações → Geral (padrão: idioma do Windows)
+
 ## Temas
 5 temas embutidos: **Escuro**, **Claro**, **Vidro (capa)** (capa desfocada no fundo), **Neon** e **Terminal**.
 Escolha em: bandeja → Temas, ou clique direito no player.
@@ -99,6 +101,7 @@ Testar atualização sem publicar: gere duas versões numa pasta e rode o app in
 Configurações: `%APPDATA%\MiniPlayer\settings.json`.
 
 ## Limitações
+- **Uma aba por navegador**: Chrome/Edge/Firefox publicam só uma aba de mídia por vez. Se a aba publicada for pausada enquanto outra aba do mesmo navegador toca, o player avisa — dê pause/play na outra aba para ela assumir.
 - **Aleatório/Repetir**: navegadores geralmente não expõem esses controles ao Windows,
   então os botões ficam desabilitados (cinza) para YouTube/Spotify Web etc. Funcionam
   com apps que suportam (ex.: Spotify desktop).

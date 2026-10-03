@@ -1,4 +1,5 @@
 using Microsoft.Toolkit.Uwp.Notifications;
+using MiniPlayer.Localization;
 
 namespace MiniPlayer.Services;
 
@@ -19,26 +20,26 @@ public static class NotificationService
     public static void ShowUpdateAvailable(string version, string current) =>
         Show(new ToastContentBuilder()
                 .AddArgument(ActionKey, ActionOpen)
-                .AddText("Nova versão do MiniPlayer")
-                .AddText($"A versão {version} está disponível (você usa a {current}).")
-                .AddButton(new ToastButton().SetContent("Atualizar agora").AddArgument(ActionKey, ActionUpdate))
-                .AddButton(new ToastButtonDismiss("Depois")),
+                .AddText(Loc.T("toast_new_title"))
+                .AddText(Loc.F("toast_new_text", version, current))
+                .AddButton(new ToastButton().SetContent(Loc.T("toast_update_now")).AddArgument(ActionKey, ActionUpdate))
+                .AddButton(new ToastButtonDismiss(Loc.T("toast_later"))),
             UpdateTag);
 
     public static void ShowUpdateDownloaded(string version) =>
         Show(new ToastContentBuilder()
                 .AddArgument(ActionKey, ActionOpen)
-                .AddText("Atualização do MiniPlayer baixada")
-                .AddText($"A versão {version} será instalada na próxima vez que o MiniPlayer abrir.")
-                .AddButton(new ToastButton().SetContent("Reiniciar agora").AddArgument(ActionKey, ActionRestart))
-                .AddButton(new ToastButtonDismiss("Depois")),
+                .AddText(Loc.T("toast_downloaded_title"))
+                .AddText(Loc.F("toast_downloaded_text", version))
+                .AddButton(new ToastButton().SetContent(Loc.T("toast_restart_now")).AddArgument(ActionKey, ActionRestart))
+                .AddButton(new ToastButtonDismiss(Loc.T("toast_later"))),
             UpdateTag);
 
     public static void ShowUpdated(string version) =>
         Show(new ToastContentBuilder()
                 .AddArgument(ActionKey, ActionOpen)
-                .AddText("MiniPlayer atualizado")
-                .AddText($"Agora você está na versão {version}."),
+                .AddText(Loc.T("toast_updated_title"))
+                .AddText(Loc.F("toast_updated_text", version)),
             tag: null);
 
     /// <summary>Drops a stale "new version" toast from the notification center.</summary>

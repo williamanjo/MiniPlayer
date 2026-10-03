@@ -1,5 +1,6 @@
 using System.Windows;
 using Microsoft.Toolkit.Uwp.Notifications;
+using MiniPlayer.Localization;
 using MiniPlayer.Services;
 using MiniPlayer.ViewModels;
 using MiniPlayer.Views;
@@ -39,6 +40,7 @@ public partial class App : Application
         }
 
         Settings = SettingsService.Load();
+        Loc.SetLanguage(Settings.Data.Language);
         Themes = new ThemeService(Settings);
         Themes.Initialize();
         Updates = new UpdateService();
@@ -66,8 +68,8 @@ public partial class App : Application
 
         Calls = new CallMonitorService(media, Settings, () => ViewModel.IsPlaying);
         Calls.CallChanged += caller => ViewModel.ShowStatus(caller is null
-            ? "📞 Ligação encerrada"
-            : $"📞 Ligação ({caller}) — música pausada");
+            ? Loc.T("call_ended")
+            : Loc.F("call_started", caller));
         Ducking = new DuckingService(media, Settings, () => ViewModel.IsPlaying, () => SleepTimer.IsFading);
 
         History = new HistoryService(Settings);
@@ -101,7 +103,7 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
-            ShowMessage($"Não foi possível acessar os controles de mídia do Windows.\n\n{ex.Message}",
+            ShowMessage(Loc.F("err_media", ex.Message),
                 "MiniPlayer", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -204,6 +206,17 @@ public partial class App : Application
         _historyWindow.Activate();
     }
 
+    /// <summary>Switches the UI language live ("auto", "en", "pt-BR").</summary>
+    public void SetLanguage(string code)
+    {
+        Settings.Data.Language = code;
+        Settings.Save();
+        Loc.SetLanguage(code);
+        Themes.Load(); // built-in theme names are translated
+        Themes.Apply(Themes.CurrentId);
+        ViewModel.RefreshTexts();
+    }
+
     public void ShowSettings(string? page = null)
     {
         if (_settingsWindow is null)
@@ -280,7 +293,7 @@ public partial class App : Application
             {
                 await Updates.DownloadAsync();
                 Notify(() => NotificationService.ShowUpdateDownloaded(version),
-                    "Atualização baixada", $"A versão {version} será instalada na próxima abertura.");
+                    Loc.T("balloon_downloaded_title"), Loc.F("balloon_downloaded_text", version));
             }
             catch
             {
@@ -290,7 +303,7 @@ public partial class App : Application
         }
 
         Notify(() => NotificationService.ShowUpdateAvailable(version, Updates.CurrentVersion),
-            "Nova versão disponível", $"Versão {version} pronta para instalar. Clique aqui para atualizar.");
+            Loc.T("balloon_new_title"), Loc.F("balloon_new_text", version));
     }
 
     /// <summary>Toast first; tray balloon if toasts are unavailable.</summary>
@@ -336,9 +349,8 @@ public partial class App : Application
     {
         if (_updating || Updates.AvailableVersion is not { } version) return;
         var answer = ShowMessage(
-            $"A versão {version} está disponível (você usa a {Updates.CurrentVersion}).\n\n" +
-            "Baixar e instalar agora? O MiniPlayer reinicia sozinho.",
-            "MiniPlayer — atualização", MessageBoxButton.YesNo, MessageBoxImage.Information);
+            Loc.F("update_ask", version, Updates.CurrentVersion),
+            Loc.T("update_ask_title"), MessageBoxButton.YesNo, MessageBoxImage.Information);
         if (answer == MessageBoxResult.Yes) await UpdateNowAsync();
     }
 
@@ -356,7 +368,7 @@ public partial class App : Application
             }
             NotificationService.ClearUpdate();
             await Updates.DownloadAndRestartAsync(
-                percent => _tray?.SetText($"Baixando atualização… {percent}%"),
+                percent => _tray?.SetText(Loc.F("update_downloading", percent)),
                 () =>
                 {
                     Settings.Save();
@@ -367,7 +379,7 @@ public partial class App : Application
         catch (Exception ex)
         {
             _updating = false;
-            ShowMessage($"Não foi possível atualizar.\n\n{ex.Message}", "MiniPlayer",
+            ShowMessage(Loc.F("update_failed", ex.Message), "MiniPlayer",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
@@ -377,14 +389,14 @@ public partial class App : Application
         try
         {
             if (await Updates.CheckAsync(manual: true) is null)
-                ShowMessage($"Você já está na versão mais recente ({Updates.CurrentVersion}).", "MiniPlayer",
+                ShowMessage(Loc.F("update_latest", Updates.CurrentVersion), "MiniPlayer",
                     MessageBoxButton.OK, MessageBoxImage.Information);
             else
                 InstallUpdate();
         }
         catch (Exception ex)
         {
-            ShowMessage($"Não foi possível verificar atualizações.\n\n{ex.Message}", "MiniPlayer",
+            ShowMessage(Loc.F("update_check_failed", ex.Message), "MiniPlayer",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }

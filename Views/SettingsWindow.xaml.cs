@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using MiniPlayer.Services;
+using MiniPlayer.Localization;
 
 namespace MiniPlayer.Views;
 
@@ -39,10 +40,11 @@ public partial class SettingsWindow : Window
         SelectByTag(VisualizerPositionBox, _app.Settings.Data.VisualizerPosition.ToString());
         LoadAutomation();
         LoadHistoryAndStream();
+        SelectByTag(LanguageBox, string.IsNullOrEmpty(_app.Settings.Data.Language) ? "auto" : _app.Settings.Data.Language);
 
         var version = _app.Updates.CurrentVersion;
-        VersionText.Text = $"Versão instalada: {version}";
-        AboutVersion.Text = $"Versão {version}";
+        VersionText.Text = Loc.F("settings_version_installed", version);
+        AboutVersion.Text = Loc.F("about_version", version);
         KeepUpdatedBox.IsChecked = _app.Settings.Data.AutoUpdate;
         KeepUpdatedBox.IsEnabled = CheckButton.IsEnabled = _app.Updates.IsInstalled;
         NotInstalledHint.Visibility = _app.Updates.IsInstalled ? Visibility.Collapsed : Visibility.Visible;
@@ -53,10 +55,12 @@ public partial class SettingsWindow : Window
 
         _app.Themes.ThemesChanged += OnThemesChanged;
         _app.SleepTimer.Changed += RefreshSleepTimer;
+        Loc.Changed += RefreshCodeTexts;
         Closed += (_, _) =>
         {
             _app.Themes.ThemesChanged -= OnThemesChanged;
             _app.SleepTimer.Changed -= RefreshSleepTimer;
+            Loc.Changed -= RefreshCodeTexts;
         };
 
         ShowPage("General");
@@ -91,6 +95,29 @@ public partial class SettingsWindow : Window
         Activate(); // the player window grabbed focus
     }
 
+    void OnLanguageChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_loading && TagOf(LanguageBox) is { } code) _app.SetLanguage(code);
+    }
+
+    /// <summary>XAML texts follow the language by binding; these are set from code.</summary>
+    void RefreshCodeTexts()
+    {
+        var wasLoading = _loading;
+        _loading = true;
+        var version = _app.Updates.CurrentVersion;
+        VersionText.Text = Loc.F("settings_version_installed", version);
+        AboutVersion.Text = Loc.F("about_version", version);
+        SleepButtons.Children.Clear();
+        LoadSleepTimer();
+        LoadHotkeys();
+        LoadMicApps();
+        LoadThemes((ThemeList.SelectedItem as ThemeItem)?.Id ?? _app.Themes.CurrentId);
+        UpdateTemplatePreview();
+        if (_updateReady) CheckButton.Content = Loc.T("toast_update_now");
+        _loading = wasLoading;
+    }
+
     void OnAutoStartClick(object sender, RoutedEventArgs e) =>
         SettingsService.AutoStart = AutoStartBox.IsChecked == true;
 
@@ -102,7 +129,7 @@ public partial class SettingsWindow : Window
             button.Click += (_, _) => _app.SleepTimer.Start(TimeSpan.FromMinutes(minutes));
             SleepButtons.Children.Add(button);
         }
-        var endOfTrack = new Button { Content = "No fim desta música", Padding = new Thickness(12, 5, 12, 5), Margin = new Thickness(0, 0, 8, 6) };
+        var endOfTrack = new Button { Content = Loc.T("sleep_end_of_track"), Padding = new Thickness(12, 5, 12, 5), Margin = new Thickness(0, 0, 8, 6) };
         endOfTrack.Click += (_, _) => _app.SleepTimer.StartEndOfTrack();
         SleepButtons.Children.Add(endOfTrack);
         SleepFadeBox.IsChecked = _app.Settings.Data.SleepFade;
@@ -112,7 +139,7 @@ public partial class SettingsWindow : Window
     void RefreshSleepTimer()
     {
         var timer = _app.SleepTimer;
-        SleepStatus.Text = timer.IsActive ? $"🌙 Pausa em {timer.RemainingText}" : "Nenhum timer ativo";
+        SleepStatus.Text = timer.IsActive ? Loc.F("sleep_status", timer.RemainingText) : Loc.T("sleep_none");
         SleepCancel.Visibility = Vis(timer.IsActive);
     }
 
@@ -172,8 +199,8 @@ public partial class SettingsWindow : Window
         foreach (var (action, (_, status)) in _hotkeyRows)
         {
             var taken = _app.Hotkeys.Failed.Contains(action);
-            status.Text = taken ? "⚠ em uso" : "";
-            status.ToolTip = taken ? "Outro programa já usa essa combinação. Escolha outra." : null;
+            status.Text = taken ? Loc.T("hotkey_taken") : "";
+            status.ToolTip = taken ? Loc.T("hotkey_taken_tip") : null;
         }
     }
 
@@ -240,12 +267,12 @@ public partial class SettingsWindow : Window
         var apps = CallMonitorService.MicApps();
         if (apps.Count == 0)
         {
-            MicAppsPanel.Children.Add(new TextBlock { Text = "Nenhum app usou o microfone ainda.", Opacity = 0.7 });
+            MicAppsPanel.Children.Add(new TextBlock { Text = Loc.T("mic_none"), Opacity = 0.7 });
             return;
         }
         foreach (var app in apps.Take(12))
         {
-            var when = app.InUse ? "usando agora" : app.LastUsed is { } t ? $"usado em {t:dd/MM HH:mm}" : "";
+            var when = app.InUse ? Loc.T("mic_in_use") : app.LastUsed is { } t ? Loc.F("mic_used_at", t.ToString("g", Loc.Instance.Culture)) : "";
             var box = new CheckBox
             {
                 Content = $"{app.Name}   ·   {when}",
@@ -329,15 +356,15 @@ public partial class SettingsWindow : Window
         var s = _app.ViewModel.Current;
         var example = s.HasSession
             ? NowPlayingService.Format(TemplateBox.Text, s.Title, s.Artist, s.Source)
-            : NowPlayingService.Format(TemplateBox.Text, "Nome da música", "Artista", "Chrome");
-        TemplatePreview.Text = $"Exemplo: {example}";
+            : NowPlayingService.Format(TemplateBox.Text, Loc.T("np_example_song"), Loc.T("np_example_artist"), "Chrome");
+        TemplatePreview.Text = Loc.F("np_example", example);
     }
 
     void OnChooseNowPlayingFolder(object sender, RoutedEventArgs e)
     {
         using var dialog = new System.Windows.Forms.FolderBrowserDialog
         {
-            Description = "Pasta dos arquivos \"tocando agora\"",
+            Description = Loc.T("np_folder_dialog"),
             UseDescriptionForTitle = true,
             SelectedPath = _app.NowPlaying.Folder,
         };
@@ -379,7 +406,7 @@ public partial class SettingsWindow : Window
         ThemeList.ItemsSource = themes.Themes.Select(t =>
         {
             var res = ThemeService.BuildResources(t);
-            var detail = t.BuiltIn ? "Embutido" : string.IsNullOrWhiteSpace(t.Author) ? "Personalizado" : $"por {t.Author}";
+            var detail = t.BuiltIn ? Loc.T("theme_builtin") : string.IsNullOrWhiteSpace(t.Author) ? Loc.T("theme_custom") : Loc.F("theme_by", t.Author);
             return new ThemeItem(t.Id, t.Name, detail, (Brush)res["ThemeBackground"], (Brush)res["AccentBrush"]);
         }).ToList();
         ThemeList.SelectedItem = ThemeList.Items.OfType<ThemeItem>().FirstOrDefault(i => i.Id == select)
@@ -473,24 +500,24 @@ public partial class SettingsWindow : Window
         }
 
         CheckButton.IsEnabled = false;
-        UpdateStatus.Text = "Verificando…";
+        UpdateStatus.Text = Loc.T("updates_checking");
         try
         {
             var version = await _app.Updates.CheckAsync(manual: true);
             if (version is null)
             {
-                UpdateStatus.Text = "Você está na versão mais recente.";
+                UpdateStatus.Text = Loc.T("updates_latest");
             }
             else
             {
                 _updateReady = true;
-                UpdateStatus.Text = $"Versão {version} disponível.";
-                CheckButton.Content = "Atualizar agora";
+                UpdateStatus.Text = Loc.F("updates_available", version);
+                CheckButton.Content = Loc.T("toast_update_now");
             }
         }
         catch (Exception ex)
         {
-            UpdateStatus.Text = "Não foi possível verificar: " + ex.Message.Split('\n')[0];
+            UpdateStatus.Text = Loc.F("updates_check_failed", ex.Message.Split('\n')[0]);
         }
         finally
         {

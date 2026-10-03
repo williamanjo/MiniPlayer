@@ -1,7 +1,8 @@
 <Window x:Class="MiniPlayer.Views.HistoryWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Histórico — MiniPlayer" Width="760" Height="640" MinWidth="560" MinHeight="420"
+        xmlns:l="clr-namespace:MiniPlayer.Localization"
+        Title="{l:Tr history_window_title}" Width="760" Height="640" MinWidth="560" MinHeight="420"
         WindowStartupLocation="CenterScreen" ThemeMode="System">
     <Window.Resources>
         <Style x:Key="Hint" TargetType="TextBlock">
@@ -41,7 +42,7 @@
 
     <TabControl x:Name="Tabs" Margin="12">
         <!-- ===================== HISTÓRICO ===================== -->
-        <TabItem Header="Histórico">
+        <TabItem Header="{l:Tr nav_history}">
             <Grid Margin="0,12,0,0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -49,10 +50,10 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <DockPanel>
-                    <Button DockPanel.Dock="Right" Content="Limpar histórico" Padding="12,5" Margin="8,0,0,0" Click="OnClear" />
+                    <Button DockPanel.Dock="Right" Content="{l:Tr history_clear}" Padding="12,5" Margin="8,0,0,0" Click="OnClear" />
                     <TextBox x:Name="SearchBox" TextChanged="OnSearchChanged" VerticalContentAlignment="Center" />
                 </DockPanel>
-                <TextBlock x:Name="SearchHint" Text="Buscar por música ou artista…" IsHitTestVisible="False" Opacity="0.5"
+                <TextBlock x:Name="SearchHint" Text="{l:Tr history_search}" IsHitTestVisible="False" Opacity="0.5"
                            Margin="12,0,0,0" VerticalAlignment="Center" />
 
                 <ListBox x:Name="HistoryList" Grid.Row="1" Margin="0,10,0,0" BorderThickness="0" Background="Transparent"
@@ -96,52 +97,52 @@
                     </ListBox.ItemTemplate>
                     <ListBox.ContextMenu>
                         <ContextMenu>
-                            <MenuItem Header="Copiar &quot;artista — música&quot;" Click="OnCopy" />
+                            <MenuItem Header="{l:Tr history_copy}" Click="OnCopy" />
                             <Separator />
-                            <MenuItem Header="Buscar no YouTube" Tag="youtube" Click="OnSearchWeb" />
-                            <MenuItem Header="Buscar no YouTube Music" Tag="ytmusic" Click="OnSearchWeb" />
-                            <MenuItem Header="Buscar no Spotify" Tag="spotify" Click="OnSearchWeb" />
-                            <MenuItem Header="Buscar no Deezer" Tag="deezer" Click="OnSearchWeb" />
-                            <MenuItem Header="Buscar no Google" Tag="google" Click="OnSearchWeb" />
+                            <MenuItem Header="{l:Tr search_youtube}" Tag="youtube" Click="OnSearchWeb" />
+                            <MenuItem Header="{l:Tr search_ytmusic}" Tag="ytmusic" Click="OnSearchWeb" />
+                            <MenuItem Header="{l:Tr search_spotify}" Tag="spotify" Click="OnSearchWeb" />
+                            <MenuItem Header="{l:Tr search_deezer}" Tag="deezer" Click="OnSearchWeb" />
+                            <MenuItem Header="{l:Tr search_google}" Tag="google" Click="OnSearchWeb" />
                         </ContextMenu>
                     </ListBox.ContextMenu>
                 </ListBox>
 
                 <TextBlock x:Name="EmptyText" Grid.Row="1" Style="{StaticResource Hint}" HorizontalAlignment="Center" VerticalAlignment="Center"
                            TextAlignment="Center" Visibility="Collapsed"
-                           Text="Nada no histórico ainda.&#x0a;Músicas aparecem aqui depois de 30 s ouvindo." />
+                           Text="{l:Tr history_empty}" />
                 <TextBlock x:Name="CountText" Grid.Row="2" Style="{StaticResource Hint}" Margin="4,8,0,0"
                            Text="" />
             </Grid>
         </TabItem>
 
         <!-- ===================== ESTATÍSTICAS ===================== -->
-        <TabItem Header="Estatísticas">
+        <TabItem Header="{l:Tr history_tab_stats}">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel Margin="0,12,0,12">
                     <ComboBox x:Name="PeriodBox" HorizontalAlignment="Left" MinWidth="200" SelectionChanged="OnPeriodChanged">
-                        <ComboBoxItem Tag="1" Content="Hoje" />
-                        <ComboBoxItem Tag="7" Content="Últimos 7 dias" IsSelected="True" />
-                        <ComboBoxItem Tag="30" Content="Últimos 30 dias" />
-                        <ComboBoxItem Tag="0" Content="Tudo" />
+                        <ComboBoxItem Tag="1" Content="{l:Tr period_today}" />
+                        <ComboBoxItem Tag="7" Content="{l:Tr period_7}" IsSelected="True" />
+                        <ComboBoxItem Tag="30" Content="{l:Tr period_30}" />
+                        <ComboBoxItem Tag="0" Content="{l:Tr period_all}" />
                     </ComboBox>
 
                     <UniformGrid Columns="3" Margin="0,14,0,6">
                         <Border Style="{StaticResource Card}">
                             <StackPanel>
-                                <TextBlock Text="Tempo ouvindo" Style="{StaticResource Hint}" />
+                                <TextBlock Text="{l:Tr stats_time}" Style="{StaticResource Hint}" />
                                 <TextBlock x:Name="TotalTime" Style="{StaticResource BigNumber}" />
                             </StackPanel>
                         </Border>
                         <Border Style="{StaticResource Card}">
                             <StackPanel>
-                                <TextBlock Text="Músicas tocadas" Style="{StaticResource Hint}" />
+                                <TextBlock Text="{l:Tr stats_plays}" Style="{StaticResource Hint}" />
                                 <TextBlock x:Name="TotalPlays" Style="{StaticResource BigNumber}" />
                             </StackPanel>
                         </Border>
                         <Border Style="{StaticResource Card}">
                             <StackPanel>
-                                <TextBlock Text="Artistas diferentes" Style="{StaticResource Hint}" />
+                                <TextBlock Text="{l:Tr stats_artists}" Style="{StaticResource Hint}" />
                                 <TextBlock x:Name="TotalArtists" Style="{StaticResource BigNumber}" />
                             </StackPanel>
                         </Border>
@@ -154,13 +155,13 @@
                         </Grid.ColumnDefinitions>
                         <Border Style="{StaticResource Card}" VerticalAlignment="Top">
                             <StackPanel>
-                                <TextBlock Text="Artistas mais ouvidos" FontWeight="SemiBold" Margin="0,0,0,6" />
+                                <TextBlock Text="{l:Tr stats_top_artists}" FontWeight="SemiBold" Margin="0,0,0,6" />
                                 <ItemsControl x:Name="TopArtists" ItemTemplate="{StaticResource RankRow}" />
                             </StackPanel>
                         </Border>
                         <Border Grid.Column="1" Style="{StaticResource Card}" VerticalAlignment="Top">
                             <StackPanel>
-                                <TextBlock Text="Músicas mais tocadas" FontWeight="SemiBold" Margin="0,0,0,6" />
+                                <TextBlock Text="{l:Tr stats_top_tracks}" FontWeight="SemiBold" Margin="0,0,0,6" />
                                 <ItemsControl x:Name="TopTracks" ItemTemplate="{StaticResource RankRow}" />
                             </StackPanel>
                         </Border>
@@ -168,7 +169,7 @@
 
                     <Border Style="{StaticResource Card}">
                         <StackPanel>
-                            <TextBlock Text="Onde você ouviu" FontWeight="SemiBold" Margin="0,0,0,6" />
+                            <TextBlock Text="{l:Tr stats_sources}" FontWeight="SemiBold" Margin="0,0,0,6" />
                             <ItemsControl x:Name="TopSources" ItemTemplate="{StaticResource RankRow}" />
                         </StackPanel>
                     </Border>

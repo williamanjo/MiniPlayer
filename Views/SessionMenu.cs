@@ -1,5 +1,6 @@
 using System.Windows.Controls;
 using MiniPlayer.ViewModels;
+using MiniPlayer.Localization;
 
 namespace MiniPlayer.Views;
 
@@ -9,25 +10,25 @@ internal static class SessionMenu
     public static async Task FillAsync(ItemsControl menu, PlayerViewModel vm)
     {
         menu.Items.Clear();
-        menu.Items.Add(new MenuItem { Header = "Carregando…", IsEnabled = false });
+        menu.Items.Add(new MenuItem { Header = Loc.T("sessions_loading"), IsEnabled = false });
 
         var sessions = await vm.GetSessionsAsync();
         menu.Items.Clear();
 
-        var auto = new MenuItem { Header = "Automático (o que estiver tocando)", IsCheckable = true, IsChecked = !vm.IsPinned };
+        var auto = new MenuItem { Header = Loc.T("sessions_auto"), IsCheckable = true, IsChecked = !vm.IsPinned };
         auto.Click += (_, _) => vm.PinSession(null);
         menu.Items.Add(auto);
         menu.Items.Add(new Separator());
 
         if (sessions.Count == 0)
         {
-            menu.Items.Add(new MenuItem { Header = "Nenhuma mídia aberta", IsEnabled = false });
+            menu.Items.Add(new MenuItem { Header = Loc.T("sessions_none"), IsEnabled = false });
             return;
         }
 
         foreach (var s in sessions)
         {
-            var title = string.IsNullOrWhiteSpace(s.Title) ? "Sem título" : s.Title;
+            var title = string.IsNullOrWhiteSpace(s.Title) ? Loc.T("vm_untitled") : s.Title;
             var detail = string.Join(" · ", new[] { s.Artist, s.Source }.Where(x => !string.IsNullOrWhiteSpace(x)));
             var item = new MenuItem
             {
@@ -40,5 +41,11 @@ internal static class SessionMenu
             item.Click += (_, _) => vm.PinSession(key);
             menu.Items.Add(item);
         }
+        menu.Items.Add(new Separator());
+        menu.Items.Add(new MenuItem
+        {
+            Header = new TextBlock { Text = Loc.T("sessions_one_per_browser"), MaxWidth = 420, TextWrapping = System.Windows.TextWrapping.Wrap },
+            IsEnabled = false,
+        });
     }
 }

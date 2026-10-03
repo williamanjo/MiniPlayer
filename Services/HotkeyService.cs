@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Windows.Input;
 using System.Windows.Interop;
+using MiniPlayer.Localization;
 
 namespace MiniPlayer.Services;
 
@@ -38,7 +39,7 @@ public sealed record Hotkey(ModifierKeys Modifiers, Key Key)
         Key.Right => "→",
         Key.Up => "↑",
         Key.Down => "↓",
-        Key.Space => "Espaço",
+        Key.Space => Loc.T("hotkey_space"),
         Key.OemPlus => "+",
         Key.OemMinus => "-",
         _ when Key >= Key.D0 && Key <= Key.D9 => ((int)(Key - Key.D0)).ToString(),
@@ -71,13 +72,13 @@ public sealed class HotkeyService : IDisposable
 
     public static string Label(HotkeyAction action) => action switch
     {
-        HotkeyAction.PlayPause => "Play / Pause",
-        HotkeyAction.Next => "Próxima música",
-        HotkeyAction.Previous => "Música anterior",
-        HotkeyAction.VolumeUp => "Aumentar volume do app",
-        HotkeyAction.VolumeDown => "Diminuir volume do app",
-        HotkeyAction.Mute => "Mudo",
-        HotkeyAction.TogglePlayer => "Mostrar / ocultar o player",
+        HotkeyAction.PlayPause => Loc.T("action_playpause"),
+        HotkeyAction.Next => Loc.T("action_next"),
+        HotkeyAction.Previous => Loc.T("action_previous"),
+        HotkeyAction.VolumeUp => Loc.T("action_volume_up"),
+        HotkeyAction.VolumeDown => Loc.T("action_volume_down"),
+        HotkeyAction.Mute => Loc.T("action_mute"),
+        HotkeyAction.TogglePlayer => Loc.T("action_toggle_player"),
         _ => action.ToString(),
     };
 
