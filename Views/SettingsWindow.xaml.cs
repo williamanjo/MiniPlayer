@@ -74,6 +74,7 @@ public partial class SettingsWindow : Window
     {
         var tag = (Nav.SelectedItem as ListBoxItem)?.Tag as string ?? "General";
         PageGeneral.Visibility = Vis(tag == "General");
+        TaskbarModeHint.Visibility = Vis(_app.Settings.Data.Mode == PlayerMode.Floating);
         PageControls.Visibility = Vis(tag == "Controls");
         PageAutomation.Visibility = Vis(tag == "Automation");
         PageHistory.Visibility = Vis(tag == "History");
