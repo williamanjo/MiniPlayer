@@ -33,7 +33,8 @@ public sealed class UpdateService
     /// <summary>Raised on the UI thread when a new version is found (version, found at startup).</summary>
     public event Action<string, bool>? UpdateAvailable;
 
-    public bool IsInstalled => _manager.IsInstalled;
+    /// <summary>True for installer (Velopack) copies; the Store build updates through the Store.</summary>
+    public bool IsInstalled => !AppInfo.IsStore && _manager.IsInstalled;
 
     public string CurrentVersion =>
         _manager.CurrentVersion?.ToString()

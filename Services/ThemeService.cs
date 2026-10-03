@@ -54,8 +54,7 @@ public sealed class ThemeService
 {
     public const string DefaultId = "builtin:escuro";
 
-    public static readonly string UserDir = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MiniPlayer", "themes");
+    public static readonly string UserDir = AppInfo.ThemesDir;
 
     /// <summary>Portable mode: a "themes" folder next to the exe is read too.</summary>
     static readonly string? PortableDir = Environment.ProcessPath is { } exe

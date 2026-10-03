@@ -26,7 +26,7 @@ public partial class SettingsWindow : Window
 
         ModeFloating.IsChecked = _app.Settings.Data.Mode == PlayerMode.Floating;
         ModeTaskbar.IsChecked = _app.Settings.Data.Mode == PlayerMode.Taskbar;
-        AutoStartBox.IsChecked = SettingsService.AutoStart;
+        _ = LoadAutoStartAsync();
         ZoomSlider.Value = Math.Round(_app.PlayerZoom * 100);
         ZoomText.Text = $"{ZoomSlider.Value:0}%";
 
@@ -48,6 +48,13 @@ public partial class SettingsWindow : Window
         KeepUpdatedBox.IsChecked = _app.Settings.Data.AutoUpdate;
         KeepUpdatedBox.IsEnabled = CheckButton.IsEnabled = _app.Updates.IsInstalled;
         NotInstalledHint.Visibility = _app.Updates.IsInstalled ? Visibility.Collapsed : Visibility.Visible;
+        if (AppInfo.IsStore)
+        {
+            // The Store installs updates; nothing to check or configure here.
+            NotInstalledHint.Text = Loc.T("updates_store");
+            CheckButton.Visibility = Visibility.Collapsed;
+            KeepUpdatedCard.Visibility = Visibility.Collapsed;
+        }
 
         // The player is often "always on top"; while the user works here, stay above it.
         Activated += (_, _) => Topmost = true;
@@ -119,8 +126,11 @@ public partial class SettingsWindow : Window
         _loading = wasLoading;
     }
 
-    void OnAutoStartClick(object sender, RoutedEventArgs e) =>
-        SettingsService.AutoStart = AutoStartBox.IsChecked == true;
+    async Task LoadAutoStartAsync() => AutoStartBox.IsChecked = await AutoStartService.IsEnabledAsync();
+
+    async void OnAutoStartClick(object sender, RoutedEventArgs e) =>
+        // Show what Windows actually allowed (it can refuse in the Store build).
+        AutoStartBox.IsChecked = await AutoStartService.SetAsync(AutoStartBox.IsChecked == true);
 
     void LoadSleepTimer()
     {
@@ -541,8 +551,7 @@ public partial class SettingsWindow : Window
     void OnOpenRepo(object sender, RoutedEventArgs e) => OpenUrl(UpdateService.RepoUrl);
 
     void OnOpenSettingsFolder(object sender, RoutedEventArgs e) =>
-        Process.Start("explorer.exe", Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MiniPlayer"));
+        Process.Start("explorer.exe", AppInfo.DataDirOnDisk);
 
     static void OpenUrl(string url) => Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
 

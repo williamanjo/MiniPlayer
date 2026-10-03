@@ -16,8 +16,7 @@ public sealed record PlayRecord(
 /// </summary>
 public sealed class HistoryService
 {
-    public static readonly string Dir = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MiniPlayer");
+    public static readonly string Dir = AppInfo.DataDir;
     public static readonly string CoversDir = Path.Combine(Dir, "covers");
     static readonly string FilePath = Path.Combine(Dir, "history.jsonl");
     static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };

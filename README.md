@@ -83,6 +83,11 @@ e o botão abre o MiniPlayer e atualiza. Também há o item **⬆ Atualizar para
 **Manter atualizado** (bandeja): ao abrir, instala a nova versão sozinho; com o app aberto, só baixa
 em segundo plano (sem reiniciar no meio da música) e instala na próxima abertura.
 
+### Microsoft Store
+A versão da Store é gerada pelo mesmo código com `-p:StoreBuild=true` e empacotada em MSIX
+(`store/build-store.ps1`). A Store assina e atualiza o app. Guia de publicação e textos: [store/LISTING.md](store/LISTING.md).
+Política de privacidade: [PRIVACY.md](PRIVACY.md).
+
 ## Build
 Requer .NET 10 SDK e, para empacotar, `vpk` (`dotnet tool install -g vpk`).
 

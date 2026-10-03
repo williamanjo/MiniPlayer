@@ -644,7 +644,7 @@
                             <Button x:Name="CheckButton" Grid.Column="2" Content="{l:Tr updates_check_now}" Padding="12,4" Click="OnCheckUpdates" />
                         </Grid>
                     </Border>
-                    <Border Style="{StaticResource Card}">
+                    <Border x:Name="KeepUpdatedCard" Style="{StaticResource Card}">
                         <Grid>
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                             <TextBlock Style="{StaticResource RowIcon}" Text="&#xE896;" />

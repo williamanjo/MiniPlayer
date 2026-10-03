@@ -104,6 +104,7 @@ public static class Strings
         ["taskbar_position_hint"] = ["Drag the title on the taskbar to move the player sideways.", "Arraste o título na barra para mover o player para os lados."],
         ["taskbar_reset_position"] = ["Move back next to the clock", "Voltar para perto do relógio"],
         ["updates_check_now"] = ["Check now", "Verificar agora"],
+        ["updates_store"] = ["This copy came from the Microsoft Store, which installs new versions automatically.", "Esta cópia veio da Microsoft Store, que instala as novas versões automaticamente."],
         ["updates_keep"] = ["Keep up to date", "Manter atualizado"],
         ["updates_keep_hint"] = ["On launch, installs the new version by itself. While running, downloads in the background and installs on the next launch (without interrupting the music).", "Ao abrir, instala a nova versão sozinho. Com o app aberto, baixa em segundo plano e instala na próxima abertura (sem interromper a música)."],
         ["updates_not_installed"] = ["This copy wasn't installed with the installer, so it doesn't update itself. Use MiniPlayer-win-Setup.exe.", "Esta cópia não foi instalada pelo instalador, por isso não se atualiza sozinha. Use o MiniPlayer-win-Setup.exe."],

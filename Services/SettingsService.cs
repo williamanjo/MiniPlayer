@@ -97,11 +97,8 @@ public sealed class AppSettings
 
 public sealed class SettingsService
 {
-    const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
-    const string RunValue = "MiniPlayer";
 
-    static readonly string Dir = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MiniPlayer");
+    static readonly string Dir = AppInfo.DataDir;
     static readonly string FilePath = Path.Combine(Dir, "settings.json");
     static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
@@ -132,23 +129,6 @@ public sealed class SettingsService
         catch
         {
             // Settings are best effort.
-        }
-    }
-
-    public static bool AutoStart
-    {
-        get
-        {
-            using var key = Registry.CurrentUser.OpenSubKey(RunKey);
-            return key?.GetValue(RunValue) is string;
-        }
-        set
-        {
-            using var key = Registry.CurrentUser.CreateSubKey(RunKey);
-            if (value)
-                key.SetValue(RunValue, $"\"{Environment.ProcessPath}\"");
-            else
-                key.DeleteValue(RunValue, throwOnMissingValue: false);
         }
     }
 }

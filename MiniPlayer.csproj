@@ -26,6 +26,11 @@
     <DebugType>none</DebugType>
   </PropertyGroup>
 
+  <!-- Microsoft Store build: dotnet publish -c Release -p:StoreBuild=true (see store/build-store.ps1) -->
+  <PropertyGroup Condition="'$(StoreBuild)' == 'true'">
+    <DefineConstants>$(DefineConstants);STORE</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <!-- Avoid WPF/WinForms type name clashes (Application, Button, ...) -->
     <Using Remove="System.Windows.Forms" />

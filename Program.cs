@@ -12,7 +12,7 @@ public static class Program
         VelopackApp.Build()
             .OnBeforeUninstallFastCallback(_ =>
             {
-                SettingsService.AutoStart = false;
+                AutoStartService.SetAsync(false).GetAwaiter().GetResult();
                 NotificationService.Uninstall();
             })
             // An update downloaded in the background ("Manter atualizado") is applied here.

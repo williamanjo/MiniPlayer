@@ -14,8 +14,7 @@ public sealed class NowPlayingService
 {
     public const string DefaultTemplate = "{artist} — {title}";
 
-    public static readonly string DefaultFolder = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MiniPlayer", "nowplaying");
+    public static readonly string DefaultFolder = AppInfo.NowPlayingDir;
 
     static readonly UTF8Encoding Utf8 = new(encoderShouldEmitUTF8Identifier: false);
 
