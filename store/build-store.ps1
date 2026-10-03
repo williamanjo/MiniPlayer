@@ -12,10 +12,10 @@
 #>
 param(
     [Parameter(Mandatory)][string]$Version,
-    # Placeholders until the Partner Center values exist.
-    [string]$IdentityName = "MiniPlayer.Preview",
-    [string]$Publisher = "CN=MiniPlayerPreview",
-    [string]$PublisherDisplayName = "MiniPlayer",
+    # Partner Center → Product management → Product identity (Store ID 9P1LQ9M6QTJ9).
+    [string]$IdentityName = "williamanjo.MiniPlayerforBrowserMusic",
+    [string]$Publisher = "CN=59D64183-1875-4A28-8BE2-F4FA5BB51D83",
+    [string]$PublisherDisplayName = "williamanjo",
     [string]$DisplayName = "MiniPlayer for Browser Music"
 )
 
