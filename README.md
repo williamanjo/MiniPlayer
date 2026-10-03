@@ -1,4 +1,4 @@
-# MiniPlayer
+# MiniPlayer for Browser Music
 
 Mini player para Windows 11 que mostra e controla a música tocando no navegador
 (YouTube, Spotify Web, SoundCloud, Deezer, ...). Sem extensão: lê os controles de mídia

@@ -104,7 +104,7 @@ public partial class App : Application
         catch (Exception ex)
         {
             ShowMessage(Loc.F("err_media", ex.Message),
-                "MiniPlayer", MessageBoxButton.OK, MessageBoxImage.Error);
+                AppInfo.Name, MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 

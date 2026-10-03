@@ -40,7 +40,7 @@
       <Extensions>
         <!-- "Iniciar com o Windows" (AutoStartService.StoreTaskId) -->
         <uap5:Extension Category="windows.startupTask">
-          <uap5:StartupTask TaskId="MiniPlayerStartup" Enabled="false" DisplayName="MiniPlayer" />
+          <uap5:StartupTask TaskId="MiniPlayerStartup" Enabled="false" DisplayName="$DisplayName$" />
         </uap5:Extension>
       </Extensions>
     </Application>

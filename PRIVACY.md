@@ -1,8 +1,8 @@
-# Política de privacidade — MiniPlayer
+# Política de privacidade — MiniPlayer for Browser Music
 
-_Última atualização: 02/10/2026_ · [English below](#privacy-policy--miniplayer)
+_Última atualização: 02/10/2026_ · [English below](#privacy-policy--miniplayer-for-browser-music)
 
-O MiniPlayer não tem contas, não coleta dados pessoais e não envia telemetria.
+O MiniPlayer for Browser Music não tem contas, não coleta dados pessoais e não envia telemetria.
 
 **O que fica só no seu computador**
 - Configurações, temas e o **histórico** de músicas ouvidas (pode ser desligado e apagado em Configurações → Histórico).
@@ -16,17 +16,17 @@ O MiniPlayer não tem contas, não coleta dados pessoais e não envia telemetria
 **Permissões usadas**
 - Controles de mídia do Windows: ler e controlar o que toca no navegador.
 - Sessões de áudio: volume do app, visualizador, abaixar a música e detectar outra aba tocando.
-- Registro de uso do microfone do Windows (somente se "Pausar em ligação" estiver ligado): saber **se** algum app usa o microfone. O MiniPlayer nunca acessa o áudio do microfone.
+- Registro de uso do microfone do Windows (somente se "Pausar em ligação" estiver ligado): saber **se** algum app usa o microfone. O app nunca acessa o áudio do microfone.
 
 Dúvidas: abra uma issue em https://github.com/williamanjo/MiniPlayer/issues
 
 ---
 
-# Privacy policy — MiniPlayer
+# Privacy policy — MiniPlayer for Browser Music
 
 _Last updated: 2026-10-02_
 
-MiniPlayer has no accounts, collects no personal data and sends no telemetry.
+MiniPlayer for Browser Music has no accounts, collects no personal data and sends no telemetry.
 
 **Stays on your computer**
 - Settings, themes and the listening **history** (can be turned off and cleared in Settings → History).
@@ -40,6 +40,6 @@ MiniPlayer has no accounts, collects no personal data and sends no telemetry.
 **Permissions used**
 - Windows media controls: read and control what plays in the browser.
 - Audio sessions: app volume, visualizer, ducking and detecting another playing tab.
-- Windows microphone usage record (only if "Pause on calls" is on): whether **any** app uses the microphone. MiniPlayer never accesses microphone audio.
+- Windows microphone usage record (only if "Pause on calls" is on): whether **any** app uses the microphone. The app never accesses microphone audio.
 
 Questions: open an issue at https://github.com/williamanjo/MiniPlayer/issues

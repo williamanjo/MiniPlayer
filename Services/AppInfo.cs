@@ -9,6 +9,9 @@ namespace MiniPlayer.Services;
 /// </summary>
 public static class AppInfo
 {
+    /// <summary>Name shown to the user (Store, shortcuts, titles). Folders, exe and ids stay "MiniPlayer".</summary>
+    public const string Name = "MiniPlayer for Browser Music";
+
     /// <summary>Microsoft Store (MSIX) build.</summary>
     public static bool IsStore { get; } =
 #if STORE

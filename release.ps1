@@ -32,7 +32,7 @@ if ($LASTEXITCODE) { throw "dotnet publish failed" }
 
 $pack = @(
     "pack", "--packId", "MiniPlayer", "--packVersion", $Version, "--packDir", "publish",
-    "--mainExe", "MiniPlayer.exe", "--packTitle", "MiniPlayer", "--packAuthors", "williamanjo",
+    "--mainExe", "MiniPlayer.exe", "--packTitle", "MiniPlayer for Browser Music", "--packAuthors", "williamanjo",
     "--icon", "Assets\app.ico", "--outputDir", $OutDir
 )
 if ($Notes) { $pack += @("--releaseNotes", $Notes) }
@@ -41,7 +41,7 @@ if ($LASTEXITCODE) { throw "vpk pack failed" }
 
 if ($Upload) {
     vpk upload github --repoUrl $repo --token (gh auth token) --publish `
-        --releaseName "MiniPlayer v$Version" --tag "v$Version" --outputDir $OutDir
+        --releaseName "MiniPlayer for Browser Music v$Version" --tag "v$Version" --outputDir $OutDir
     if ($LASTEXITCODE) { throw "vpk upload failed" }
     if ($Notes) { gh release edit "v$Version" --notes-file $Notes }
 }

@@ -161,7 +161,7 @@ public partial class HistoryWindow : Window
     {
         if (_records.Count == 0) return;
         var answer = MessageBox.Show(this, Loc.F("history_clear_confirm", _records.Count),
-            "MiniPlayer", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            AppInfo.Name, MessageBoxButton.YesNo, MessageBoxImage.Warning);
         if (answer == MessageBoxResult.Yes) _app.History.Clear();
     }
 

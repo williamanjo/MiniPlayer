@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:l="clr-namespace:MiniPlayer.Localization"
+        xmlns:s="clr-namespace:MiniPlayer.Services"
         Title="{l:Tr settings_window_title}" Width="900" Height="640" MinWidth="700" MinHeight="460"
         WindowStartupLocation="CenterScreen" ThemeMode="System">
     <Window.Resources>
@@ -670,7 +671,7 @@
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                             <Image Source="/Assets/app.ico" Width="40" Height="40" Margin="0,0,16,0" VerticalAlignment="Top" />
                             <StackPanel Grid.Column="1">
-                                <TextBlock Text="MiniPlayer" FontSize="18" FontWeight="SemiBold" />
+                                <TextBlock Text="{x:Static s:AppInfo.Name}" FontSize="18" FontWeight="SemiBold" />
                                 <TextBlock x:Name="AboutVersion" Style="{StaticResource Hint}" />
                                 <TextBlock Style="{StaticResource Hint}" Margin="0,8,0,0" Text="{l:Tr about_desc}" />
                                 <TextBlock Margin="0,10,0,0">

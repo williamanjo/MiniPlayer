@@ -61,7 +61,7 @@ public sealed class TrayIcon : IDisposable
         };
 
         var menu = new ContextMenuStrip();
-        menu.Items.Add(new ToolStripMenuItem($"MiniPlayer v{app.Updates.CurrentVersion}") { Enabled = false });
+        menu.Items.Add(new ToolStripMenuItem($"{AppInfo.Name} v{app.Updates.CurrentVersion}") { Enabled = false });
         menu.Items.Add(_updateItem);
         menu.Items.Add(new ToolStripSeparator());
         var showItem = new ToolStripMenuItem("", null, (_, _) => app.SetMode(PlayerMode.Floating));
@@ -97,7 +97,7 @@ public sealed class TrayIcon : IDisposable
         _icon = new NotifyIcon
         {
             Icon = LoadIcon(),
-            Text = "MiniPlayer",
+            Text = AppInfo.Name,
             ContextMenuStrip = menu,
             Visible = true,
         };

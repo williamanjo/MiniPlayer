@@ -16,7 +16,7 @@ param(
     [string]$IdentityName = "MiniPlayer.Preview",
     [string]$Publisher = "CN=MiniPlayerPreview",
     [string]$PublisherDisplayName = "MiniPlayer",
-    [string]$DisplayName = "MiniPlayer"
+    [string]$DisplayName = "MiniPlayer for Browser Music"
 )
 
 $ErrorActionPreference = "Stop"
