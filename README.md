@@ -85,7 +85,7 @@ em segundo plano (sem reiniciar no meio da música) e instala na próxima abertu
 
 ### Microsoft Store
 A versão da Store é gerada pelo mesmo código com `-p:StoreBuild=true` e empacotada em MSIX
-(`store/build-store.ps1`). A Store assina e atualiza o app. Guia de publicação e textos: [store/LISTING.md](store/LISTING.md).
+(`store/build-store.ps1`). A Store assina e atualiza o app.
 Política de privacidade: [PRIVACY.md](PRIVACY.md).
 
 ## Build

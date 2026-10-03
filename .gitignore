@@ -6,3 +6,6 @@ obj/
 publish/
 releases/
 store/out/
+# Store listing material (texts, art) is kept outside the repo
+store/LISTING.md
+store/make-store-art.ps1
