@@ -44,6 +44,11 @@
                     </Border>
                     <Border CornerRadius="{DynamicResource ThemeCoverRadius}" BorderBrush="{DynamicResource ThemeCoverBorder}"
                             BorderThickness="{DynamicResource ThemeCoverBorderThickness}" />
+                    <Border Visibility="{DynamicResource ThemeCreditCoverVisibility}" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,4">
+                        <Border x:Name="CoverCreditBadge" CornerRadius="4" Background="#99000000" Padding="5,1">
+                            <TextBlock x:Name="CoverCredit" FontSize="8" Foreground="White" TextTrimming="CharacterEllipsis" />
+                        </Border>
+                    </Border>
                 </Grid>
                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
                     <Grid>
@@ -83,5 +88,10 @@
             <TextBlock Grid.Row="2" Text="♪ la la la" FontSize="14" FontWeight="SemiBold" HorizontalAlignment="Center"
                        VerticalAlignment="Center" Foreground="{DynamicResource ThemeLyrics}" />
         </Grid>
+        <!-- "theme by …" credit, placed like in the player -->
+        <Border HorizontalAlignment="{DynamicResource ThemeCreditHorizontal}" VerticalAlignment="{DynamicResource ThemeCreditVertical}"
+                Margin="{DynamicResource ThemeCreditMargin}" Visibility="{DynamicResource ThemeCreditVisibility}">
+            <TextBlock x:Name="Credit" FontSize="9" Opacity="0.55" Foreground="{DynamicResource ThemeSecondary}" />
+        </Border>
     </Grid>
 </UserControl>

@@ -44,7 +44,7 @@ public partial class ThemeEditorWindow : Window
         _previewDebounce.Tick += (_, _) =>
         {
             _previewDebounce.Stop();
-            Preview.Resources = ThemeService.BuildResources(_theme);
+            Preview.Show(_theme);
         };
         Activated += (_, _) => Topmost = true;
         Deactivated += (_, _) => Topmost = false;
