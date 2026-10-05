@@ -82,6 +82,10 @@ public sealed class ThemeDefinition
     public string CoverShape { get; set; } = "rounded";
     /// <summary>A circular cover spins while the music plays.</summary>
     public bool CoverSpin { get; set; }
+    /// <summary>Seconds per turn of the spinning cover (smaller = faster).</summary>
+    public double CoverSpinSeconds { get; set; } = 12;
+    /// <summary>clockwise or counterclockwise.</summary>
+    public string CoverSpinDirection { get; set; } = "clockwise";
     public string? CoverBorder { get; set; }
     public double CoverBorderThickness { get; set; }
     /// <summary>0 = no shadow under the cover.</summary>

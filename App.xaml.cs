@@ -55,6 +55,7 @@ public partial class App : Application
         ViewModel = new PlayerViewModel(media, Settings);
         void ApplyCoverSpin(ThemeDefinition t)
         {
+            ViewModel.SetSpinSpeed(t.CoverSpinSeconds, !string.Equals(t.CoverSpinDirection, "counterclockwise", StringComparison.OrdinalIgnoreCase));
             ViewModel.CoverSpin = t.CoverSpin && string.Equals(t.CoverShape, "circle", StringComparison.OrdinalIgnoreCase);
             ViewModel.ThemeAuthor = t.Author;
         }

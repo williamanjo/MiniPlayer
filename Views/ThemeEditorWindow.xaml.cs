@@ -122,6 +122,10 @@ public partial class ThemeEditorWindow : Window
         Section("editor_sec_cover");
         Row("editor_cover_shape", Combo([("rounded", "editor_shape_rounded"), ("circle", "editor_shape_circle")], () => t.CoverShape, v => t.CoverShape = v));
         Row("editor_cover_spin", Switch(() => t.CoverSpin, v => t.CoverSpin = v), () => t.CoverShape == "circle");
+        Row("editor_spin_speed", Slider(() => t.CoverSpinSeconds, v => t.CoverSpinSeconds = v, 2, 60, 1, "{0:0} s"),
+            () => t.CoverShape == "circle" && t.CoverSpin);
+        Row("editor_spin_direction", Combo([("clockwise", "editor_spin_cw"), ("counterclockwise", "editor_spin_ccw")],
+            () => t.CoverSpinDirection, v => t.CoverSpinDirection = v), () => t.CoverShape == "circle" && t.CoverSpin);
         Row("editor_cover_radius", Slider(() => t.CoverRadius, v => t.CoverRadius = v, 0, 42, 1, "{0:0} px"), () => t.CoverShape != "circle");
         Row("editor_cover_border", Color(() => t.CoverBorder, v => t.CoverBorder = v, optional: true));
         Row("editor_cover_border_thickness", Slider(() => t.CoverBorderThickness, v => t.CoverBorderThickness = v, 0, 10, 0.5, "{0:0.#} px"),

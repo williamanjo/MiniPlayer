@@ -75,7 +75,7 @@ public static class OverlayHtml
             .card.enter { opacity: 0; transform: {{(s.Animation == "slide" ? "translateY(14px)" : "none")}}; }
             .cover { width: {{N(s.CoverSize)}}px; height: {{N(s.CoverSize)}}px; flex: none; border-radius: {{coverRadius}};
                      object-fit: cover; display: {{(showCover ? "block" : "none")}}; }
-            .cover.spin { animation: spin 12s linear infinite; }
+            .cover.spin { animation: spin {{N(Math.Clamp(s.SpinSeconds, 1, 120))}}s linear infinite {{(s.SpinReverse ? "reverse" : "normal")}}; }
             .cover.spin.paused { animation-play-state: paused; }
             @keyframes spin { to { transform: rotate(360deg); } }
             .text { min-width: 0; flex: 1; text-align: {{(direction == "column" ? align : "left")}}; text-shadow: {{textShadow}};

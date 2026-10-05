@@ -107,6 +107,10 @@ public partial class OverlayEditorWindow : Window
         _form.Row("editor_cover_radius", _form.Slider(() => s.CoverRadius, v => s.CoverRadius = v, 0, 60, 1, "{0:0} px"),
             () => s.Layout != "text" && !s.CoverCircle);
         _form.Row("editor_cover_spin", _form.Switch(() => s.CoverSpin, v => s.CoverSpin = v), () => s.Layout != "text" && s.CoverCircle);
+        _form.Row("editor_spin_speed", _form.Slider(() => s.SpinSeconds, v => s.SpinSeconds = v, 2, 60, 1, "{0:0} s"),
+            () => s.Layout != "text" && s.CoverCircle && s.CoverSpin);
+        _form.Row("editor_spin_direction", _form.Combo([("cw", "editor_spin_cw"), ("ccw", "editor_spin_ccw")],
+            () => s.SpinReverse ? "ccw" : "cw", v => s.SpinReverse = v == "ccw"), () => s.Layout != "text" && s.CoverCircle && s.CoverSpin);
 
         _form.Section("editor_sec_text");
         _form.Row("editor_font", _form.FontCombo(() => s.FontFamily, v => s.FontFamily = v ?? "Segoe UI", optional: false));

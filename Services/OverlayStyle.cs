@@ -35,6 +35,10 @@ public sealed class OverlayStyle
     public double CoverRadius { get; set; } = 8;
     public bool CoverCircle { get; set; }
     public bool CoverSpin { get; set; }
+    /// <summary>Seconds per turn of the spinning cover.</summary>
+    public double SpinSeconds { get; set; } = 12;
+    /// <summary>Spin counterclockwise.</summary>
+    public bool SpinReverse { get; set; }
 
     // Text
     public string Accent { get; set; } = "#60CDFF";

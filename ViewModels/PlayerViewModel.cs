@@ -235,13 +235,58 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
         {
             if (_coverSpin == value) return;
             _coverSpin = value;
+            if (!value) CoverAngle = 0; // other theme: cover back upright
             OnPropertyChanged();
             OnPropertyChanged(nameof(CoverSpinning));
+            UpdateSpin();
         }
     }
 
-    /// <summary>The vinyl turns only while the music plays.</summary>
+    /// <summary>Seconds per turn and direction (+1 clockwise, -1 counterclockwise), from the theme.</summary>
+    public void SetSpinSpeed(double secondsPerTurn, bool clockwise)
+    {
+        _spinSeconds = Math.Clamp(secondsPerTurn, 1, 120);
+        _spinDirection = clockwise ? 1 : -1;
+    }
+
+    double _spinSeconds = 12;
+    int _spinDirection = 1;
+    double _coverAngle;
+    TimeSpan? _lastFrame;
+    bool _spinHooked;
+
+    /// <summary>Rotation of the cover in degrees (bound by the cover template).</summary>
+    public double CoverAngle
+    {
+        get => _coverAngle;
+        private set
+        {
+            _coverAngle = value;
+            OnPropertyChanged();
+        }
+    }
+
+    /// <summary>The vinyl turns only while the music plays (it stops where it is when paused).</summary>
     public bool CoverSpinning => _coverSpin && _snap.IsPlaying;
+
+    /// <summary>Turns per-frame updates on only while spinning, so idle players cost nothing.</summary>
+    void UpdateSpin()
+    {
+        var on = CoverSpinning;
+        if (on == _spinHooked) return;
+        _spinHooked = on;
+        _lastFrame = null;
+        if (on) CompositionTarget.Rendering += OnSpinFrame;
+        else CompositionTarget.Rendering -= OnSpinFrame;
+    }
+
+    void OnSpinFrame(object? sender, EventArgs e)
+    {
+        var now = ((RenderingEventArgs)e).RenderingTime;
+        if (_lastFrame is { } last && now > last)
+            CoverAngle = (_coverAngle + _spinDirection * 360 * (now - last).TotalSeconds / _spinSeconds) % 360;
+        _lastFrame = now;
+    }
 
     /// <summary>Identifies the current track (sleep timer "end of track").</summary>
     public string TrackKey => $"{_snap.Source}|{_snap.Title}|{_snap.Artist}";
@@ -464,6 +509,7 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(IsPinned));
         OnPropertyChanged(nameof(IsPlaying));
         OnPropertyChanged(nameof(CoverSpinning));
+        UpdateSpin();
         TrackChanged?.Invoke();
         UpdateProgress();
         _ = UpdateCoverAsync(s);

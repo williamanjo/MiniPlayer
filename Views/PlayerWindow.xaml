@@ -24,7 +24,7 @@
                 <Grid.RenderTransform>
                     <TransformGroup>
                         <ScaleTransform ScaleX="{Binding CoverScale}" ScaleY="{Binding CoverScale}" />
-                        <RotateTransform x:Name="Spin" />
+                        <RotateTransform Angle="{Binding CoverAngle}" />
                     </TransformGroup>
                 </Grid.RenderTransform>
                 <Border CornerRadius="{DynamicResource ThemeCoverRadius}" Background="{DynamicResource ThemeTrack}"
@@ -57,28 +57,6 @@
                 </Border>
             </Grid>
             </Grid>
-            <ControlTemplate.Triggers>
-                <!-- Vinyl: spins while playing, stops where it is when paused -->
-                <DataTrigger Binding="{Binding CoverSpinning}" Value="True">
-                    <DataTrigger.EnterActions>
-                        <BeginStoryboard x:Name="SpinStory" HandoffBehavior="SnapshotAndReplace">
-                            <Storyboard>
-                                <DoubleAnimation Storyboard.TargetName="Spin" Storyboard.TargetProperty="Angle" By="360"
-                                                 Duration="0:0:12" RepeatBehavior="Forever" />
-                            </Storyboard>
-                        </BeginStoryboard>
-                    </DataTrigger.EnterActions>
-                    <DataTrigger.ExitActions>
-                        <PauseStoryboard BeginStoryboardName="SpinStory" />
-                    </DataTrigger.ExitActions>
-                </DataTrigger>
-                <!-- Theme without spin: drop the animation so the cover goes back upright -->
-                <DataTrigger Binding="{Binding CoverSpin}" Value="False">
-                    <DataTrigger.EnterActions>
-                        <RemoveStoryboard BeginStoryboardName="SpinStory" />
-                    </DataTrigger.EnterActions>
-                </DataTrigger>
-            </ControlTemplate.Triggers>
         </ControlTemplate>
 
         <!-- Shuffle / prev / play / next / repeat. Tag = visibility of shuffle + repeat. -->
