@@ -114,7 +114,7 @@ public sealed class VisualizerControl : FrameworkElement
         var straight = 2 * (half - corner);
         var perimeter = 4 * straight + 2 * Math.PI * corner;
         var count = BarCount > 0 ? BarCount : Math.Clamp((int)(perimeter / 6), 16, 120);
-        var barWidth = Math.Max(1.2, perimeter / count * 0.5);
+        var barWidth = Math.Clamp(perimeter / count * 0.5, 1.2, Math.Max(1.2, outer * 0.035)); // few bars: thin, not fat blobs
         var radius = Math.Min(barWidth / 2, 2);
         var t = Environment.TickCount64 / 1000.0;
         var level = service.Level;
