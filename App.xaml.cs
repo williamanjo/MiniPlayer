@@ -416,13 +416,21 @@ public partial class App : Application
         _mutex?.ReleaseMutex();
         _mutex?.Dispose();
         _mutex = null;
+        try
+        {
 #if STORE
-        // a packaged app must be started through its app id, not the exe
-        var family = global::Windows.ApplicationModel.Package.Current.Id.FamilyName;
-        System.Diagnostics.Process.Start("explorer.exe", $@"shell:AppsFolder\{family}!MiniPlayer");
+            // a packaged app must be started through its app id, not the exe
+            var family = global::Windows.ApplicationModel.Package.Current.Id.FamilyName;
+            System.Diagnostics.Process.Start("explorer.exe", $@"shell:AppsFolder\{family}!MiniPlayer");
 #else
-        System.Diagnostics.Process.Start(Environment.ProcessPath!);
+            System.Diagnostics.Process.Start(Environment.ProcessPath!);
 #endif
+        }
+        catch (Exception ex)
+        {
+            // tray and mutex are already gone: close anyway, the settings are saved
+            ShowMessage(ex.Message, "MiniPlayer", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
         Shutdown();
     }
 
