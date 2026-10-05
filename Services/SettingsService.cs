@@ -11,7 +11,7 @@ public enum PlayerMode { Floating, Taskbar }
 public enum WheelAction { Volume, Track }
 
 /// <summary>Where the audio bars go in the floating player.</summary>
-public enum VisualizerPosition { Controls, Cover, Bottom }
+public enum VisualizerPosition { Controls, Cover, Bottom, AroundCover }
 
 /// <summary>What the middle mouse button does over the player.</summary>
 public enum MiddleClickAction { Mute, PlayPause }

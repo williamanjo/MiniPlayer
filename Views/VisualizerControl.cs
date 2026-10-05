@@ -13,7 +13,12 @@ public sealed class VisualizerControl : FrameworkElement
         Wave,
         /// <summary>Few bars bouncing around the current level (tiny equalizer icon).</summary>
         Equalizer,
+        /// <summary>Bars pointing outward on a circle (around the cover).</summary>
+        Ring,
     }
+
+    /// <summary>Ring style: inner radius as a fraction of the control's half size (the cover's scale).</summary>
+    public const double RingInner = 0.8;
 
     public static readonly DependencyProperty FillProperty = DependencyProperty.Register(
         nameof(Fill), typeof(Brush), typeof(VisualizerControl),
@@ -65,6 +70,11 @@ public sealed class VisualizerControl : FrameworkElement
         var h = ActualHeight;
         var count = BarCount > 0 ? BarCount : Math.Clamp((int)(w / 7), 3, 48);
         if (service is null || w <= 0 || h <= 0) return;
+        if (StyleKind == VisualizerStyle.Ring)
+        {
+            RenderRing(dc, service, w, h);
+            return;
+        }
 
         var gap = Math.Max(1, w / count * 0.25);
         var barWidth = (w - gap * (count - 1)) / count;
@@ -81,6 +91,34 @@ public sealed class VisualizerControl : FrameworkElement
             var barHeight = Math.Max(1.5, value * h);
             var x = i * (barWidth + gap);
             dc.DrawRoundedRectangle(Fill, null, new Rect(x, h - barHeight, barWidth, barHeight), radius, radius);
+        }
+    }
+
+    void RenderRing(DrawingContext dc, VisualizerService service, double w, double h)
+    {
+        var center = new Point(w / 2, h / 2);
+        var outer = Math.Min(w, h) / 2;
+        var inner = outer * RingInner + Math.Max(1.5, outer * 0.025);
+        var room = outer - inner;
+        if (room <= 1) return;
+        var count = BarCount > 0 ? BarCount : Math.Clamp((int)(2 * Math.PI * inner / 6), 16, 96);
+        var barWidth = Math.Max(1.2, 2 * Math.PI * inner / count * 0.5);
+        var radius = Math.Min(barWidth / 2, 2);
+        var t = Environment.TickCount64 / 1000.0;
+        var level = service.Level;
+
+        for (var i = 0; i < count; i++)
+        {
+            // each bar its own speed/phase (golden-ratio spread) so the ring ripples instead of pulsing
+            var speed = 4.5 + (i * 0.618 % 1) * 6;
+            var phase = i * 2.39996;
+            var value = level * (0.3 + 0.7 * (0.5 + 0.5 * Math.Sin(t * speed + phase)));
+            var length = Math.Max(1.2, value * room);
+            dc.PushTransform(new RotateTransform(360.0 * i / count, center.X, center.Y));
+            // bar points up from the inner circle; the rotation spreads them around
+            dc.DrawRoundedRectangle(Fill, null,
+                new Rect(center.X - barWidth / 2, center.Y - inner - length, barWidth, length), radius, radius);
+            dc.Pop();
         }
     }
 }

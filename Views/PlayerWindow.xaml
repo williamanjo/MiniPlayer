@@ -16,9 +16,16 @@
 
         <!-- Album art (YouTube thumbnails are 16:9, so crop to square) -->
         <ControlTemplate x:Key="CoverTemplate" TargetType="ContentControl">
-            <Grid ToolTip="{Binding FullText}" RenderTransformOrigin="0.5,0.5">
+            <Grid ToolTip="{Binding FullText}">
+                <!-- Visualizer "em volta da capa": ring of bars; the cover shrinks to fit inside -->
+                <local:VisualizerControl StyleKind="Ring" BarCount="0" Fill="{DynamicResource ThemeVisualizer}" Opacity="{DynamicResource ThemeVisualizerOpacity}"
+                                         Visibility="{Binding VisualizerAroundCover, Converter={StaticResource BoolToVis}}" />
+            <Grid RenderTransformOrigin="0.5,0.5">
                 <Grid.RenderTransform>
-                    <RotateTransform x:Name="Spin" />
+                    <TransformGroup>
+                        <ScaleTransform ScaleX="{Binding CoverScale}" ScaleY="{Binding CoverScale}" />
+                        <RotateTransform x:Name="Spin" />
+                    </TransformGroup>
                 </Grid.RenderTransform>
                 <Border CornerRadius="{DynamicResource ThemeCoverRadius}" Background="{DynamicResource ThemeTrack}"
                         Effect="{DynamicResource ThemeCoverShadow}">
@@ -37,6 +44,7 @@
                                          Height="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=Grid}, Converter={StaticResource FractionConverter}, ConverterParameter=0.32}"
                                          Fill="{DynamicResource ThemeVisualizer}"
                                          Visibility="{Binding VisualizerOnCover, Converter={StaticResource BoolToVis}}" />
+            </Grid>
             </Grid>
             <ControlTemplate.Triggers>
                 <!-- Vinyl: spins while playing, stops where it is when paused -->

@@ -323,6 +323,7 @@
                                         <ComboBoxItem Tag="Controls" Content="{l:Tr viz_pos_controls}" />
                                         <ComboBoxItem Tag="Cover" Content="{l:Tr viz_pos_cover}" />
                                         <ComboBoxItem Tag="Bottom" Content="{l:Tr viz_pos_bottom}" />
+                                        <ComboBoxItem Tag="AroundCover" Content="{l:Tr viz_pos_around}" />
                                     </ComboBox>
                                 </Grid>
                             </StackPanel>

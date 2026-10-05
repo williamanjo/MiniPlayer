@@ -191,12 +191,17 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
     public bool VisualizerAtControls => ShowVisualizer && VisualizerPosition == VisualizerPosition.Controls;
     public bool VisualizerOnCover => ShowVisualizer && VisualizerPosition == VisualizerPosition.Cover;
     public bool VisualizerAtBottom => ShowVisualizer && VisualizerPosition == VisualizerPosition.Bottom;
+    public bool VisualizerAroundCover => ShowVisualizer && VisualizerPosition == VisualizerPosition.AroundCover;
+    /// <summary>The cover shrinks to leave room for the ring of bars around it.</summary>
+    public double CoverScale => VisualizerAroundCover ? Views.VisualizerControl.RingInner : 1;
 
     void RaiseVisualizerPlacement()
     {
         OnPropertyChanged(nameof(VisualizerAtControls));
         OnPropertyChanged(nameof(VisualizerOnCover));
         OnPropertyChanged(nameof(VisualizerAtBottom));
+        OnPropertyChanged(nameof(VisualizerAroundCover));
+        OnPropertyChanged(nameof(CoverScale));
     }
 
     /// <summary>Shows a short message in place of the subtitle (e.g. "call: music paused").</summary>
