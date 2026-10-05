@@ -8,6 +8,7 @@
     <Application.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
         <views:FractionConverter x:Key="FractionConverter" />
+        <views:MinSizeToVisibilityConverter x:Key="MinSizeToVis" />
         <FontFamily x:Key="IconFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
         <!-- Theme tokens: defaults here, replaced at runtime by ThemeService -->
         <SolidColorBrush x:Key="AccentBrush" Color="#60CDFF" />
