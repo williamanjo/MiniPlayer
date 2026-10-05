@@ -26,6 +26,7 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
     string? _coverTrack;
     int _coverGeneration;
     string? _coverHash;
+    bool _coverIsHd; // the shown cover came from the HD lookup: browser thumbnails don't replace it
     DateTime _coverReadAt;
     // After a track change, poll the artwork this often for this long (browsers send it ~1-4 s late).
     static readonly TimeSpan CoverPollInterval = TimeSpan.FromMilliseconds(500);
@@ -496,11 +497,13 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
 
         _coverTrack = track;
         var generation = ++_coverGeneration;
+        _coverIsHd = false;
         if (track is null)
         {
             ShowCover(null, null);
             return;
         }
+        if (_settings.Data.HdCovers) _ = LoadHdCoverAsync(generation, s.Title, s.Artist);
 
         var found = false;
         var until = DateTime.Now + CoverPollWindow;
@@ -511,21 +514,47 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
             if (DateTime.Now >= until) break;
             await Task.Delay(CoverPollInterval);
         }
-        if (!found) ShowCover(null, null); // track has no art
+        if (!found && !_coverIsHd) ShowCover(null, null); // track has no art
     }
 
     /// <returns>True when the session returned an image (new or unchanged).</returns>
     async Task<bool> LoadCoverAsync(int generation)
     {
         _coverReadAt = DateTime.Now;
+        if (_coverIsHd) return true;
         // Fresh properties every time: an older thumbnail reference keeps returning the old image.
         var fresh = await _media.GetSnapshotAsync();
         if (fresh.Title != _snap.Title || fresh.Artist != _snap.Artist) return false; // track moved on
         var bytes = await MediaService.ReadThumbnailAsync(fresh.Thumbnail);
-        if (generation != _coverGeneration || bytes is null) return false;
+        if (generation != _coverGeneration || bytes is null || _coverIsHd) return false;
         var hash = Convert.ToHexString(System.Security.Cryptography.SHA1.HashData(bytes));
         if (hash != _coverHash) ShowCover(bytes, hash);
         return true;
+    }
+
+    /// <summary>Browsers hand over ~120 px art; swap in the album's 1000 px cover when one matches.</summary>
+    async Task LoadHdCoverAsync(int generation, string title, string artist)
+    {
+        var bytes = await CoverArtService.FindAsync(title, artist);
+        if (bytes is null || generation != _coverGeneration) return; // no match, or the track changed
+        _coverIsHd = true;
+        ShowCover(bytes, Convert.ToHexString(System.Security.Cryptography.SHA1.HashData(bytes)));
+    }
+
+    public bool HdCovers
+    {
+        get => _settings.Data.HdCovers;
+        set
+        {
+            if (_settings.Data.HdCovers == value) return;
+            _settings.Data.HdCovers = value;
+            _settings.Save();
+            OnPropertyChanged();
+            // reload the current track's cover with the new setting
+            _coverTrack = null;
+            _coverHash = null;
+            _ = UpdateCoverAsync(_snap);
+        }
     }
 
     void ShowCover(byte[]? bytes, string? hash)
@@ -533,18 +562,20 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
         _coverHash = hash;
         CoverBytes = bytes;
         CoverUpdated?.Invoke();
-        Cover = bytes is null ? null : Decode(bytes, 320); // sharp up to 200% zoom
+        Cover = bytes is null ? null : Decode(bytes, 800); // big players, 200% zoom, HiDPI
         CoverBackdrop = bytes is null ? null : Decode(bytes, 12);
     }
 
-    static BitmapImage? Decode(byte[] bytes, int height)
+    /// <param name="maxHeight">Downscale bigger images to this; smaller ones keep their size.</param>
+    static BitmapImage? Decode(byte[] bytes, int maxHeight)
     {
         try
         {
+            var original = BitmapFrame.Create(new MemoryStream(bytes), BitmapCreateOptions.DelayCreation, BitmapCacheOption.None).PixelHeight;
             var image = new BitmapImage();
             image.BeginInit();
             image.CacheOption = BitmapCacheOption.OnLoad;
-            image.DecodePixelHeight = height;
+            if (original > maxHeight) image.DecodePixelHeight = maxHeight;
             image.StreamSource = new MemoryStream(bytes);
             image.EndInit();
             image.Freeze();

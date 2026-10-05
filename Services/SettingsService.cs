@@ -47,6 +47,9 @@ public sealed class AppSettings
     /// <summary>Version that ran last time; a change means an update was just applied.</summary>
     public string? LastVersion { get; set; }
 
+    /// <summary>Look up the album art in high resolution (Deezer / iTunes) by title and artist.</summary>
+    public bool HdCovers { get; set; } = true;
+
     /// <summary>Audio bars on the cover / taskbar.</summary>
     public bool ShowVisualizer { get; set; } = true;
 

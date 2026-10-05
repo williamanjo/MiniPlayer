@@ -296,7 +296,7 @@
                                                     <Border CornerRadius="{DynamicResource ThemeCoverRadius}"
                                                             Visibility="{Binding HasCover, Converter={StaticResource BoolToVis}}">
                                                         <Border.Background>
-                                                            <ImageBrush ImageSource="{Binding Cover}" Stretch="UniformToFill" />
+                                                            <ImageBrush ImageSource="{Binding Cover}" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality" />
                                                         </Border.Background>
                                                     </Border>
                                                 </Grid>
@@ -350,6 +350,19 @@
                                            Text="{l:Tr themes_hint}" />
                                 <TextBlock x:Name="ThemeErrors" Style="{StaticResource Hint}" Foreground="#E0A030" Visibility="Collapsed" />
                             </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="{l:Tr sec_cover}" />
+                    <Border Style="{StaticResource Card}">
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <TextBlock Style="{StaticResource RowIcon}" Text="&#xE8B9;" />
+                            <StackPanel Grid.Column="1" Margin="0,0,16,0">
+                                <TextBlock Style="{StaticResource RowTitle}" Text="{l:Tr hdcover_title}" />
+                                <TextBlock Style="{StaticResource Hint}" Text="{l:Tr hdcover_hint}" />
+                            </StackPanel>
+                            <CheckBox Grid.Column="2" Style="{StaticResource Switch}" IsChecked="{Binding HdCovers}" />
                         </Grid>
                     </Border>
 

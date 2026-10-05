@@ -24,7 +24,7 @@
                 </Border>
                 <Border CornerRadius="{DynamicResource ThemeCoverRadius}" Visibility="{Binding HasCover, Converter={StaticResource BoolToVis}}">
                     <Border.Background>
-                        <ImageBrush ImageSource="{Binding Cover}" Stretch="UniformToFill" />
+                        <ImageBrush ImageSource="{Binding Cover}" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality" />
                     </Border.Background>
                 </Border>
                 <local:VisualizerControl VerticalAlignment="Bottom" Margin="6,0,6,5" BarCount="14" Opacity="0.9"

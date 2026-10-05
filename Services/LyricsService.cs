@@ -99,7 +99,7 @@ public static partial class LyricsService
     /// Turns YouTube-style metadata ("Artist - Song (Official Video)" by "ArtistVEVO") into
     /// a clean track/artist pair.
     /// </summary>
-    static (string Track, string Artist) Clean(string title, string artist)
+    internal static (string Track, string Artist) Clean(string title, string artist)
     {
         var a = ChannelSuffix().Replace(artist, "").Trim();
         var t = Noise().Replace(title, "").Trim();
