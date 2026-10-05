@@ -25,6 +25,7 @@ public partial class PlayerWindow : Window
     enum LayoutMode { Mini, Standard, Tall }
 
     readonly SettingsService _settings;
+    readonly System.Windows.Threading.DispatcherTimer _topmostTimer = new() { Interval = TimeSpan.FromMilliseconds(500) };
     LayoutMode _mode = LayoutMode.Standard;
     double? _heightBeforeLyrics;
 
@@ -50,6 +51,18 @@ public partial class PlayerWindow : Window
         SetTheme(themes.Current);
         themes.Applied += t => Dispatcher.Invoke(() => SetTheme(t));
         Loaded += (_, _) => RestorePosition();
+        // Over the taskbar (snapping to the screen edges): after the Start menu the taskbar comes
+        // back above every topmost window, so the pinned player re-asserts itself.
+        _topmostTimer.Tick += (_, _) =>
+        {
+            var hwnd = new WindowInteropHelper(this).Handle;
+            if (Topmost && hwnd != IntPtr.Zero && TaskbarHelper.OverlapsTaskbar(hwnd)) TaskbarHelper.BringTopmost(hwnd);
+        };
+        IsVisibleChanged += (_, _) =>
+        {
+            if (IsVisible) _topmostTimer.Start();
+            else _topmostTimer.Stop();
+        };
         SizeChanged += OnSizeChanged;
     }
 

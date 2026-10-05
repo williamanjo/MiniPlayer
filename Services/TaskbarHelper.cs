@@ -214,6 +214,11 @@ internal static class TaskbarHelper
     public static void PlaceTopmost(IntPtr hwnd, int x, int y, int width, int height) =>
         SetWindowPos(hwnd, HWND_TOPMOST, x, y, width, height, SWP_NOACTIVATE);
 
+    /// <summary>True when the window covers part of any taskbar.</summary>
+    public static bool OverlapsTaskbar(IntPtr hwnd) =>
+        GetWindowRect(hwnd, out var r) && GetTaskbars().Any(t =>
+            r.Left < t.Bounds.Right && r.Right > t.Bounds.Left && r.Top < t.Bounds.Bottom && r.Bottom > t.Bounds.Top);
+
     public static void BringTopmost(IntPtr hwnd) =>
         SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 }
