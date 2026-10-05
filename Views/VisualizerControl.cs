@@ -13,7 +13,7 @@ public sealed class VisualizerControl : FrameworkElement
         Wave,
         /// <summary>Few bars bouncing around the current level (tiny equalizer icon).</summary>
         Equalizer,
-        /// <summary>Bars pointing outward on a circle (around the cover).</summary>
+        /// <summary>Bars pointing outward around the cover, following its shape.</summary>
         Ring,
     }
 
@@ -32,9 +32,15 @@ public sealed class VisualizerControl : FrameworkElement
         nameof(StyleKind), typeof(VisualizerStyle), typeof(VisualizerControl),
         new FrameworkPropertyMetadata(VisualizerStyle.Wave, FrameworkPropertyMetadataOptions.AffectsRender));
 
+    public static readonly DependencyProperty ShapeRadiusProperty = DependencyProperty.Register(
+        nameof(ShapeRadius), typeof(CornerRadius), typeof(VisualizerControl),
+        new FrameworkPropertyMetadata(new CornerRadius(9999), FrameworkPropertyMetadataOptions.AffectsRender));
+
     public Brush Fill { get => (Brush)GetValue(FillProperty); set => SetValue(FillProperty, value); }
     /// <summary>Number of bars; 0 = as many as fit (about one per 7 px).</summary>
     public int BarCount { get => (int)GetValue(BarCountProperty); set => SetValue(BarCountProperty, value); }
+    /// <summary>Ring style: corner radius of the shape the bars go around (the cover's).</summary>
+    public CornerRadius ShapeRadius { get => (CornerRadius)GetValue(ShapeRadiusProperty); set => SetValue(ShapeRadiusProperty, value); }
     public VisualizerStyle StyleKind { get => (VisualizerStyle)GetValue(StyleKindProperty); set => SetValue(StyleKindProperty, value); }
 
     // Fixed per-bar character for the equalizer look.
@@ -98,27 +104,76 @@ public sealed class VisualizerControl : FrameworkElement
     {
         var center = new Point(w / 2, h / 2);
         var outer = Math.Min(w, h) / 2;
-        var inner = outer * RingInner + Math.Max(1.5, outer * 0.025);
-        var room = outer - inner;
+        // the cover is drawn at RingInner of this size: follow its outline (rounded square or circle)
+        var half = outer * RingInner;
+        var corner = Math.Min(half, ShapeRadius.TopLeft * RingInner);
+        var gap = Math.Max(1.5, outer * 0.025);
+        var room = outer - half - gap;
         if (room <= 1) return;
-        var count = BarCount > 0 ? BarCount : Math.Clamp((int)(2 * Math.PI * inner / 6), 16, 96);
-        var barWidth = Math.Max(1.2, 2 * Math.PI * inner / count * 0.5);
+
+        var straight = 2 * (half - corner);
+        var perimeter = 4 * straight + 2 * Math.PI * corner;
+        var count = BarCount > 0 ? BarCount : Math.Clamp((int)(perimeter / 6), 16, 120);
+        var barWidth = Math.Max(1.2, perimeter / count * 0.5);
         var radius = Math.Min(barWidth / 2, 2);
         var t = Environment.TickCount64 / 1000.0;
         var level = service.Level;
 
         for (var i = 0; i < count; i++)
         {
+            var (point, angle) = Outline(center, half, corner, straight, perimeter * i / count);
             // each bar its own speed/phase (golden-ratio spread) so the ring ripples instead of pulsing
             var speed = 4.5 + (i * 0.618 % 1) * 6;
-            var phase = i * 2.39996;
-            var value = level * (0.3 + 0.7 * (0.5 + 0.5 * Math.Sin(t * speed + phase)));
+            var value = level * (0.3 + 0.7 * (0.5 + 0.5 * Math.Sin(t * speed + i * 2.39996)));
             var length = Math.Max(1.2, value * room);
-            dc.PushTransform(new RotateTransform(360.0 * i / count, center.X, center.Y));
-            // bar points up from the inner circle; the rotation spreads them around
-            dc.DrawRoundedRectangle(Fill, null,
-                new Rect(center.X - barWidth / 2, center.Y - inner - length, barWidth, length), radius, radius);
+            var transform = new TransformGroup();
+            transform.Children.Add(new RotateTransform(angle));
+            transform.Children.Add(new TranslateTransform(point.X, point.Y));
+            dc.PushTransform(transform);
+            // bar points outward (up before the rotation) from just outside the outline
+            dc.DrawRoundedRectangle(Fill, null, new Rect(-barWidth / 2, -gap - length, barWidth, length), radius, radius);
             dc.Pop();
         }
+    }
+
+    /// <summary>
+    /// Point at distance <paramref name="s"/> along a rounded square (clockwise from top center) and
+    /// the outward normal as a rotation in degrees (0 = up, 90 = right).
+    /// </summary>
+    static (Point, double) Outline(Point c, double half, double r, double straight, double s)
+    {
+        var arc = Math.PI * r / 2;
+        var side = half - r; // center to where the corner arc starts
+        // corners clockwise from top-right: arc center and starting angle
+        (double X, double Y)[] corners = [(side, -side), (side, side), (-side, side), (-side, -side)];
+
+        // first half of the top edge
+        if (s < straight / 2) return (new Point(c.X + s, c.Y - half), 0);
+        s -= straight / 2;
+        for (var k = 0; k < 4; k++)
+        {
+            var start = 90.0 * k;
+            if (s < arc)
+            {
+                var deg = start + (arc > 0 ? s / arc * 90 : 0);
+                var rad = deg * Math.PI / 180;
+                return (new Point(c.X + corners[k].X + r * Math.Sin(rad), c.Y + corners[k].Y - r * Math.Cos(rad)), deg);
+            }
+            s -= arc;
+            var len = k == 3 ? straight / 2 : straight;
+            if (s < len || k == 3)
+            {
+                var edge = start + 90;
+                return edge switch
+                {
+                    90 => (new Point(c.X + half, c.Y - side + s), 90),
+                    180 => (new Point(c.X + side - s, c.Y + half), 180),
+                    270 => (new Point(c.X - half, c.Y + side - s), 270),
+                    _ => (new Point(c.X - side + s, c.Y - half), 0),
+                };
+            }
+            s -= len;
+        }
+        return (new Point(c.X, c.Y - half), 0);
     }
 }

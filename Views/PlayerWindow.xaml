@@ -18,7 +18,7 @@
         <ControlTemplate x:Key="CoverTemplate" TargetType="ContentControl">
             <Grid ToolTip="{Binding FullText}">
                 <!-- Visualizer "em volta da capa": ring of bars; the cover shrinks to fit inside -->
-                <local:VisualizerControl StyleKind="Ring" BarCount="{Binding VisualizerBars}" Fill="{DynamicResource ThemeVisualizer}" Opacity="{DynamicResource ThemeVisualizerOpacity}"
+                <local:VisualizerControl StyleKind="Ring" BarCount="{Binding VisualizerBars}" ShapeRadius="{DynamicResource ThemeCoverRadius}" Fill="{DynamicResource ThemeVisualizer}" Opacity="{DynamicResource ThemeVisualizerOpacity}"
                                          Visibility="{Binding VisualizerAroundCover, Converter={StaticResource BoolToVis}}" />
             <Grid RenderTransformOrigin="0.5,0.5">
                 <Grid.RenderTransform>
