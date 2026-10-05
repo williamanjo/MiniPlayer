@@ -89,6 +89,8 @@ public sealed class AppSettings
     public string? NowPlayingFolder { get; set; }
     public string? NowPlayingTemplate { get; set; } = NowPlayingService.DefaultTemplate;
     public bool NowPlayingClearWhenPaused { get; set; } = true;
+    /// <summary>Look of overlay.html (OBS browser source), set in the overlay editor.</summary>
+    public OverlayStyle Overlay { get; set; } = new();
 
     /// <summary>Sleep timer lowers the volume during the last seconds before pausing.</summary>
     public bool SleepFade { get; set; } = true;

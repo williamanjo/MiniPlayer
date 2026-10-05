@@ -544,6 +544,17 @@
                         </Border>
                         <Border Style="{StaticResource Card}">
                             <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                <TextBlock Style="{StaticResource RowIcon}" Text="&#xE790;" />
+                                <StackPanel Grid.Column="1" Margin="0,0,16,0">
+                                    <TextBlock Style="{StaticResource RowTitle}" Text="{l:Tr ov_row}" />
+                                    <TextBlock Style="{StaticResource Hint}" Text="{l:Tr ov_row_hint}" />
+                                </StackPanel>
+                                <Button Grid.Column="2" Content="{l:Tr ov_edit}" Padding="12,5" VerticalAlignment="Center" Click="OnEditOverlay" />
+                            </Grid>
+                        </Border>
+                        <Border Style="{StaticResource Card}">
+                            <Grid>
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                                 <TextBlock Style="{StaticResource RowTitle}" Text="{l:Tr np_clear_paused}" VerticalAlignment="Center" />
                                 <CheckBox x:Name="ClearWhenPausedBox" Grid.Column="1" Style="{StaticResource Switch}" Click="OnNowPlayingChanged" />

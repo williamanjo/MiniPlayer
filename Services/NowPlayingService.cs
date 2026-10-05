@@ -1,5 +1,4 @@
 using System.IO;
-using System.Net;
 using System.Text;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -20,6 +19,8 @@ public sealed class NowPlayingService
 
     readonly SettingsService _settings;
     string? _written;
+    string? _writtenScript;
+    string? _writtenPage;
     string? _coverHash;
     byte[]? _cover;
 
@@ -47,27 +48,48 @@ public sealed class NowPlayingService
         var source = show ? s.Source : "";
         var text = show ? Format(_settings.Data.NowPlayingTemplate ?? DefaultTemplate, title, artist, source) : "";
 
-        var state = $"{text}|{title}|{artist}|{(show ? _coverHash : null)}|{Folder}";
-        if (state == _written) return;
-        _written = state;
-
         try
         {
-            Directory.CreateDirectory(Folder);
-            File.WriteAllText(Path.Combine(Folder, "nowplaying.txt"), text, Utf8);
-            File.WriteAllText(Path.Combine(Folder, "title.txt"), title, Utf8);
-            File.WriteAllText(Path.Combine(Folder, "artist.txt"), artist, Utf8);
-            WriteCover(show ? _cover : null);
-            File.WriteAllText(Path.Combine(Folder, "overlay.html"), Overlay(title, artist, show), Utf8);
+            var state = $"{text}|{title}|{artist}|{(show ? _coverHash : null)}|{Folder}";
+            if (state != _written)
+            {
+                Directory.CreateDirectory(Folder);
+                File.WriteAllText(Path.Combine(Folder, "nowplaying.txt"), text, Utf8);
+                File.WriteAllText(Path.Combine(Folder, "title.txt"), title, Utf8);
+                File.WriteAllText(Path.Combine(Folder, "artist.txt"), artist, Utf8);
+                WriteCover(show ? _cover : null);
+                _written = state;
+            }
+
+            // overlay.html only changes with its style; the song goes to nowplaying.js
+            var page = OverlayHtml.Build(_settings.Data.Overlay);
+            var pageState = page + "|" + Folder;
+            if (pageState != _writtenPage)
+            {
+                Directory.CreateDirectory(Folder);
+                File.WriteAllText(Path.Combine(Folder, "overlay.html"), page, Utf8);
+                _writtenPage = pageState;
+            }
+
+            // position is sent with its timestamp; the page moves the bar on its own in between
+            var at = s.LastUpdated == default ? DateTimeOffset.Now : s.LastUpdated;
+            var script = OverlayHtml.Script(new OverlayHtml.Data(show, title, artist, source,
+                show && _cover is not null ? $"cover.png?v={_coverHash}" : null,
+                show && s.IsPlaying, s.Position.TotalSeconds, s.Duration.TotalSeconds, at.ToUnixTimeMilliseconds()));
+            if (script + Folder != _writtenScript)
+            {
+                File.WriteAllText(Path.Combine(Folder, "nowplaying.js"), script, Utf8);
+                _writtenScript = script + Folder;
+            }
         }
         catch
         {
-            _written = null; // file locked by OBS for a moment: retry on the next tick
+            _written = _writtenScript = _writtenPage = null; // file locked by OBS for a moment: retry on the next tick
         }
     }
 
     /// <summary>Forces a rewrite (settings changed).</summary>
-    public void Invalidate() => _written = null;
+    public void Invalidate() => _written = _writtenScript = _writtenPage = null;
 
     void WriteCover(byte[]? bytes)
     {
@@ -91,36 +113,5 @@ public sealed class NowPlayingService
         encoder.Frames.Add(BitmapFrame.Create(image));
         using var file = File.Create(Path.Combine(Folder, "cover.png"));
         encoder.Save(file);
-    }
-
-    /// <summary>Card for an OBS browser source; reloads itself every 2 s to pick up changes.</summary>
-    string Overlay(string title, string artist, bool show)
-    {
-        var t = WebUtility.HtmlEncode(title);
-        var a = WebUtility.HtmlEncode(artist);
-        var cover = $"cover.png?v={_coverHash ?? "none"}";
-        var body = show
-            ? $"""<div class="card"><img src="{cover}" alt=""><div class="text"><div class="title">{t}</div><div class="artist">{a}</div></div></div>"""
-            : "";
-        return $$"""
-            <!doctype html>
-            <html lang="pt-br">
-            <head>
-            <meta charset="utf-8">
-            <meta http-equiv="refresh" content="2">
-            <title>MiniPlayer — tocando agora</title>
-            <style>
-              html, body { margin: 0; background: transparent; font-family: "Segoe UI", sans-serif; }
-              .card { display: inline-flex; align-items: center; gap: 14px; padding: 12px 18px 12px 12px;
-                      background: rgba(20, 20, 20, .78); border-radius: 14px; color: #fff; max-width: 560px; }
-              img { width: 72px; height: 72px; border-radius: 8px; object-fit: cover; }
-              .title { font-size: 22px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-              .artist { font-size: 16px; opacity: .75; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-              .text { min-width: 0; }
-            </style>
-            </head>
-            <body>{{body}}</body>
-            </html>
-            """;
     }
 }

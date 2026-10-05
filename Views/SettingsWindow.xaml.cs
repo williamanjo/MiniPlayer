@@ -465,6 +465,8 @@ public partial class SettingsWindow : Window
 
     void OnOpenThemes(object sender, RoutedEventArgs e) => ThemeService.OpenFolder();
 
+    void OnEditOverlay(object sender, RoutedEventArgs e) => new OverlayEditorWindow { Owner = this }.Show();
+
     void OnExportBackup(object sender, RoutedEventArgs e)
     {
         var dialog = new Microsoft.Win32.SaveFileDialog
