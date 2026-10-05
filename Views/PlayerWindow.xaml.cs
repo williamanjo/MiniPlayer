@@ -46,9 +46,53 @@ public partial class PlayerWindow : Window
         {
             if (e.PropertyName == nameof(PlayerViewModel.ShowLyrics)) OnLyricsToggled();
         };
+        var themes = ((App)Application.Current).Themes;
+        SetTheme(themes.Current);
+        themes.Applied += t => Dispatcher.Invoke(() => SetTheme(t));
         Loaded += (_, _) => RestorePosition();
         SizeChanged += OnSizeChanged;
     }
+
+    #region Shadow room
+
+    // Transparent room around the player so the theme shadow is not cut off square at the window
+    // edge. Positions, snapping and the work-area clamp use the old fixed 8px margin as reference,
+    // so the visible player stays where it was whatever the shadow size.
+    const double BaseMargin = 8;
+    Thickness _pad = new(BaseMargin);
+    double _pendingBottomShift;
+    ThemeDefinition? _theme;
+
+    void SetTheme(ThemeDefinition theme)
+    {
+        _theme = theme;
+        UpdatePad();
+    }
+
+    void UpdatePad()
+    {
+        var shadow = _theme is { ShadowOpacity: > 0 };
+        var blur = shadow ? Math.Clamp(_theme!.ShadowBlur, 0, 60) : 0;
+        var depth = shadow ? Math.Clamp(_theme!.ShadowDepth, 0, 30) * 0.71 : 0; // 315°: right and down
+        double Side(double v) => Math.Max(BaseMargin, Math.Ceiling(v * Zoom));
+        var pad = new Thickness(Side(blur), Side(blur), Side(blur + depth), Side(blur + depth));
+        if (pad == _pad) return;
+        if (IsLoaded)
+        {
+            Left -= pad.Left - _pad.Left;
+            _pendingBottomShift += pad.Bottom - _pad.Bottom; // applied when the new size lands
+        }
+        _pad = pad;
+        Root.Margin = pad;
+    }
+
+    /// <summary>Extra room beyond the reference margin, per side.</summary>
+    double ExtraLeft => _pad.Left - BaseMargin;
+    double ExtraTop => _pad.Top - BaseMargin;
+    double ExtraRight => _pad.Right - BaseMargin;
+    double ExtraBottom => _pad.Bottom - BaseMargin;
+
+    #endregion
 
     void RestorePosition()
     {
@@ -60,15 +104,15 @@ public partial class PlayerWindow : Window
             && left + 40 <= SystemParameters.VirtualScreenLeft + SystemParameters.VirtualScreenWidth
             && b <= SystemParameters.VirtualScreenTop + SystemParameters.VirtualScreenHeight + 40)
         {
-            Left = left;
-            Top = b - ActualHeight;
+            Left = left - ExtraLeft;
+            Top = b - ActualHeight + ExtraBottom;
         }
         else
         {
             // Default: docked bottom-right, just above the taskbar.
             var area = SystemParameters.WorkArea;
-            Left = area.Right - ActualWidth;
-            Top = area.Bottom - ActualHeight;
+            Left = area.Right - ActualWidth + ExtraRight;
+            Top = area.Bottom - ActualHeight + ExtraBottom;
         }
         KeepInsideWorkArea();
     }
@@ -80,7 +124,8 @@ public partial class PlayerWindow : Window
     void OnSizeChanged(object sender, SizeChangedEventArgs e)
     {
         if (!IsLoaded || _grip is not null || e.PreviousSize.Height <= 0) return;
-        if (e.HeightChanged) Top += e.PreviousSize.Height - e.NewSize.Height;
+        if (e.HeightChanged) Top += e.PreviousSize.Height - e.NewSize.Height + _pendingBottomShift;
+        _pendingBottomShift = 0;
         KeepInsideWorkArea();
     }
 
@@ -174,15 +219,16 @@ public partial class PlayerWindow : Window
     {
         zoom = Math.Round(Math.Clamp(zoom, MinZoom, MaxZoom), 2);
         RootScale.ScaleX = RootScale.ScaleY = zoom;
+        UpdatePad(); // the shadow scales with the zoom
     }
 
     /// <summary>Zoom keeping the right edge in place (the player usually sits bottom-right).</summary>
     public void ZoomTo(double zoom)
     {
-        var right = Left + ActualWidth;
+        var right = Left + ActualWidth - _pad.Right;
         ApplyZoom(zoom);
         UpdateLayout();
-        Left = right - ActualWidth;
+        Left = right - ActualWidth + _pad.Right;
         KeepInsideWorkArea();
         SaveState();
     }
@@ -191,12 +237,12 @@ public partial class PlayerWindow : Window
 
     public void ResetSize()
     {
-        var right = Left + ActualWidth;
+        var right = Left + ActualWidth - _pad.Right;
         _heightBeforeLyrics = null;
         ApplyZoom(1);
         SetContentSize(DefaultWidth, ViewModel.ShowLyrics ? LyricsHeight : DefaultHeight);
         UpdateLayout();
-        Left = right - ActualWidth;
+        Left = right - ActualWidth + _pad.Right;
         KeepInsideWorkArea();
         SaveState();
     }
@@ -210,9 +256,9 @@ public partial class PlayerWindow : Window
         _settings.Data.FloatingHeight = Root.Height;
         if (IsLoaded)
         {
-            _settings.Data.Left = Left;
-            _settings.Data.Top = Top;
-            _settings.Data.Bottom = Top + ActualHeight;
+            _settings.Data.Left = Left + ExtraLeft;
+            _settings.Data.Top = Top + ExtraTop;
+            _settings.Data.Bottom = Top + ActualHeight - ExtraBottom;
         }
         _settings.Save();
     }
@@ -274,6 +320,13 @@ public partial class PlayerWindow : Window
 
     #endregion
 
+    /// <summary>Work area grown by the shadow room: the shadow may spill past the screen edge.</summary>
+    Rect ShadowArea()
+    {
+        var a = WorkArea();
+        return new Rect(a.Left - ExtraLeft, a.Top - ExtraTop, a.Width + ExtraLeft + ExtraRight, a.Height + ExtraTop + ExtraBottom);
+    }
+
     Rect WorkArea()
     {
         var hwnd = new WindowInteropHelper(this).Handle;
@@ -285,7 +338,7 @@ public partial class PlayerWindow : Window
 
     void KeepInsideWorkArea()
     {
-        var a = WorkArea();
+        var a = ShadowArea();
         Left = Math.Max(a.Left, Math.Min(Left, a.Right - ActualWidth));
         Top = Math.Max(a.Top, Math.Min(Top, a.Bottom - ActualHeight));
     }
@@ -293,7 +346,7 @@ public partial class PlayerWindow : Window
     /// <summary>Dropped near a screen edge: stick to it.</summary>
     void SnapToEdges()
     {
-        var a = WorkArea();
+        var a = ShadowArea();
         if (Math.Abs(Left - a.Left) < SnapDistance) Left = a.Left;
         if (Math.Abs(Left + ActualWidth - a.Right) < SnapDistance) Left = a.Right - ActualWidth;
         if (Math.Abs(Top - a.Top) < SnapDistance) Top = a.Top;
