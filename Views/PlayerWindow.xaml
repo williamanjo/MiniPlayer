@@ -61,6 +61,12 @@
                         <PauseStoryboard BeginStoryboardName="SpinStory" />
                     </DataTrigger.ExitActions>
                 </DataTrigger>
+                <!-- Theme without spin: drop the animation so the cover goes back upright -->
+                <DataTrigger Binding="{Binding CoverSpin}" Value="False">
+                    <DataTrigger.EnterActions>
+                        <RemoveStoryboard BeginStoryboardName="SpinStory" />
+                    </DataTrigger.EnterActions>
+                </DataTrigger>
             </ControlTemplate.Triggers>
         </ControlTemplate>
 

@@ -235,6 +235,7 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
         {
             if (_coverSpin == value) return;
             _coverSpin = value;
+            OnPropertyChanged();
             OnPropertyChanged(nameof(CoverSpinning));
         }
     }
