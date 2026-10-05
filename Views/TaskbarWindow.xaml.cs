@@ -21,8 +21,7 @@ public partial class TaskbarWindow : Window
     readonly SettingsService _settings;
     readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromMilliseconds(500) };
     IntPtr _hwnd;
-    int _dragStartX;
-    double _dragStartOffset;
+    double _grabFromRight;
     double _scale = 1;
 
     public TaskbarWindow(PlayerViewModel viewModel, SettingsService settings)
@@ -98,8 +97,9 @@ public partial class TaskbarWindow : Window
             return;
         }
         TaskbarHelper.GetCursorPos(out var p);
-        _dragStartX = p.X;
-        _dragStartOffset = _settings.Data.TaskbarOffset;
+        // where the cursor grabbed the player, from its right edge (kept when it moves to another screen)
+        if (TaskbarHelper.GetTaskbar(_settings.Data.TaskbarMonitor) is { } current)
+            _grabFromRight = current.TrayLeft - (TrayGap + _settings.Data.TaskbarOffset) * current.Scale - p.X;
         ((UIElement)sender).CaptureMouse();
         e.Handled = true;
     }
@@ -108,7 +108,15 @@ public partial class TaskbarWindow : Window
     {
         if (!((UIElement)sender).IsMouseCaptured) return;
         TaskbarHelper.GetCursorPos(out var p);
-        _settings.Data.TaskbarOffset = Math.Max(0, _dragStartOffset + (_dragStartX - p.X) / _scale);
+        // dragged onto another screen's taskbar: the player moves there, under the cursor
+        var under = TaskbarHelper.GetTaskbars().FirstOrDefault(t => t.IsHorizontal && !t.IsHidden
+            && p.X >= t.Bounds.Left && p.X < t.Bounds.Right && p.Y >= t.Bounds.Top - 40 && p.Y < t.Bounds.Bottom + 40);
+        var current = TaskbarHelper.GetTaskbar(_settings.Data.TaskbarMonitor);
+        var target = under ?? current;
+        if (target is null) return;
+        if (target.Device != current?.Device) _settings.Data.TaskbarMonitor = target.Device;
+        // the grabbed point follows the cursor (offset is measured leftwards from the tray, in DIPs)
+        _settings.Data.TaskbarOffset = Math.Max(0, (target.TrayLeft - (p.X + _grabFromRight)) / target.Scale - TrayGap);
         Reposition();
     }
 
