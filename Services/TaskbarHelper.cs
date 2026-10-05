@@ -88,12 +88,6 @@ internal static class TaskbarHelper
     [DllImport("shcore.dll")]
     static extern int GetDpiForMonitor(IntPtr hMonitor, int dpiType, out uint dpiX, out uint dpiY);
 
-    delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
-
-    [DllImport("user32.dll")]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    static extern bool EnumWindows(EnumWindowsProc callback, IntPtr lParam);
-
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     static extern bool SetWindowPos(IntPtr hWnd, IntPtr after, int x, int y, int cx, int cy, uint flags);
@@ -117,26 +111,28 @@ internal static class TaskbarHelper
     /// <summary>All taskbars (primary first, then left to right). One per monitor when "show on all displays" is on.</summary>
     public static List<TaskbarInfo> GetTaskbars()
     {
+        // FindWindowEx, not EnumWindows: while the Start menu is open the taskbar moves to a higher
+        // window band that EnumWindows skips, and the player jumped to another screen.
         var list = new List<TaskbarInfo>();
-        var cls = new StringBuilder(64);
-        EnumWindows((hwnd, _) =>
+        foreach (var (name, primary) in new[] { ("Shell_TrayWnd", true), ("Shell_SecondaryTrayWnd", false) })
         {
-            cls.Clear();
-            GetClassName(hwnd, cls, cls.Capacity);
-            var name = cls.ToString();
-            if (name is "Shell_TrayWnd" or "Shell_SecondaryTrayWnd"
-                && Describe(hwnd, name == "Shell_TrayWnd") is { } info)
-                list.Add(info);
-            return true;
-        }, IntPtr.Zero);
+            var hwnd = IntPtr.Zero;
+            while ((hwnd = FindWindowEx(IntPtr.Zero, hwnd, name, null)) != IntPtr.Zero)
+                if (Describe(hwnd, primary) is { } info)
+                    list.Add(info);
+        }
         return [.. list.OrderByDescending(t => t.IsPrimary).ThenBy(t => t.Bounds.Left)];
     }
 
-    /// <summary>Taskbar on the given monitor, or the primary one if that monitor is gone.</summary>
+    /// <summary>
+    /// Taskbar on the given monitor (null = primary), or the primary one if that monitor is gone.
+    /// Null when the wanted taskbar is missing for a moment: better hidden than on another screen.
+    /// </summary>
     public static TaskbarInfo? GetTaskbar(string? device)
     {
         var all = GetTaskbars();
-        return all.FirstOrDefault(t => t.Device == device) ?? all.FirstOrDefault();
+        if (device is not null && all.FirstOrDefault(t => t.Device == device) is { } wanted) return wanted;
+        return all.FirstOrDefault(t => t.IsPrimary);
     }
 
     static TaskbarInfo? Describe(IntPtr tray, bool isPrimary)
