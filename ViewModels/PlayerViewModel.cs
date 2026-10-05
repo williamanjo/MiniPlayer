@@ -208,6 +208,22 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
 
     public bool IsPlaying => _snap.IsPlaying;
 
+    bool _coverSpin;
+    /// <summary>Theme asks for a spinning (vinyl) cover.</summary>
+    public bool CoverSpin
+    {
+        get => _coverSpin;
+        set
+        {
+            if (_coverSpin == value) return;
+            _coverSpin = value;
+            OnPropertyChanged(nameof(CoverSpinning));
+        }
+    }
+
+    /// <summary>The vinyl turns only while the music plays.</summary>
+    public bool CoverSpinning => _coverSpin && _snap.IsPlaying;
+
     /// <summary>Identifies the current track (sleep timer "end of track").</summary>
     public string TrackKey => $"{_snap.Source}|{_snap.Title}|{_snap.Artist}";
 
@@ -428,6 +444,7 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(FullText));
         OnPropertyChanged(nameof(IsPinned));
         OnPropertyChanged(nameof(IsPlaying));
+        OnPropertyChanged(nameof(CoverSpinning));
         TrackChanged?.Invoke();
         UpdateProgress();
         _ = UpdateCoverAsync(s);
@@ -563,7 +580,7 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
         CoverBytes = bytes;
         CoverUpdated?.Invoke();
         Cover = bytes is null ? null : Decode(bytes, 800); // big players, 200% zoom, HiDPI
-        CoverBackdrop = bytes is null ? null : Decode(bytes, 12);
+        CoverBackdrop = bytes is null ? null : Decode(bytes, 64); // the theme blurs it
     }
 
     /// <param name="maxHeight">Downscale bigger images to this; smaller ones keep their size.</param>

@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:l="clr-namespace:MiniPlayer.Localization"
              xmlns:views="clr-namespace:MiniPlayer.Views"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
              ShutdownMode="OnExplicitShutdown">
     <Application.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
@@ -24,6 +25,26 @@
         <Visibility x:Key="ThemeCoverBackdropVisibility">Collapsed</Visibility>
         <SolidColorBrush x:Key="ThemeImageBrush" Color="Transparent" />
         <SolidColorBrush x:Key="ThemeOverlay" Color="Transparent" />
+        <FontFamily x:Key="ThemeTitleFont">Segoe UI Variable Text, Segoe UI</FontFamily>
+        <sys:Double x:Key="ThemeTitleSize">14</sys:Double>
+        <sys:Double x:Key="ThemeTitleSizeLarge">16</sys:Double>
+        <sys:Double x:Key="ThemeTitleSizeSmall">13</sys:Double>
+        <FontWeight x:Key="ThemeTitleWeight">SemiBold</FontWeight>
+        <sys:Double x:Key="ThemeSubtitleSize">12</sys:Double>
+        <SolidColorBrush x:Key="ThemeLyrics" Color="White" />
+        <SolidColorBrush x:Key="ThemeLyricsDim" Color="#B3FFFFFF" />
+        <SolidColorBrush x:Key="ThemeIcon" Color="White" />
+        <SolidColorBrush x:Key="ThemePlayBackground" Color="Transparent" />
+        <SolidColorBrush x:Key="ThemePlayForeground" Color="White" />
+        <CornerRadius x:Key="ThemePlayCorner">5</CornerRadius>
+        <sys:Double x:Key="ThemePlaySize">44</sys:Double>
+        <SolidColorBrush x:Key="ThemeCoverBorder" Color="Transparent" />
+        <Thickness x:Key="ThemeCoverBorderThickness">0</Thickness>
+        <SolidColorBrush x:Key="ThemeProgress" Color="#60CDFF" />
+        <sys:Double x:Key="ThemeProgressHeight">4</sys:Double>
+        <SolidColorBrush x:Key="ThemeVisualizer" Color="#60CDFF" />
+        <sys:Double x:Key="ThemeVisualizerOpacity">0.85</sys:Double>
+        <sys:Double x:Key="ThemeImageOpacity">1</sys:Double>
 
         <Style x:Key="IconButton" TargetType="Button">
             <Setter Property="FontFamily" Value="{StaticResource IconFont}" />
@@ -95,10 +116,39 @@
             </Style.Triggers>
         </Style>
 
+        <!-- Play/pause: plain icon, or icon on a filled circle (theme "playButton": "circle") -->
+        <Style x:Key="PlayButton" TargetType="Button" BasedOn="{StaticResource IconButton}">
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="Width" Value="{DynamicResource ThemePlaySize}" />
+            <Setter Property="Height" Value="40" />
+            <Setter Property="Background" Value="{DynamicResource ThemePlayBackground}" />
+            <Setter Property="Foreground" Value="{DynamicResource ThemePlayForeground}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="{DynamicResource ThemePlayCorner}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Opacity" Value="0.82" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bg" Property="Opacity" Value="0.65" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.3" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="ThinProgress" TargetType="ProgressBar">
             <Setter Property="Minimum" Value="0" />
             <Setter Property="Maximum" Value="1" />
-            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource ThemeProgress}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ProgressBar">

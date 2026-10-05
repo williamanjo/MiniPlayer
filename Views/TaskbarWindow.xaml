@@ -60,7 +60,7 @@
                        MouseLeftButtonDown="OnDragStart" MouseMove="OnDragMove" MouseLeftButtonUp="OnDragEnd">
                 <!-- Tiny equalizer while audio plays -->
                 <local:VisualizerControl DockPanel.Dock="Left" Width="14" Height="16" Margin="0,0,7,0" BarCount="4"
-                                         StyleKind="Equalizer" Fill="{DynamicResource AccentBrush}"
+                                         StyleKind="Equalizer" Fill="{DynamicResource ThemeVisualizer}"
                                          Visibility="{Binding ShowVisualizer, Converter={StaticResource BoolToVis}}" />
                 <StackPanel>
                     <TextBlock Text="{Binding Title}" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />

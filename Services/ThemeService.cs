@@ -45,6 +45,59 @@ public sealed class ThemeDefinition
     /// <summary>Tint drawn over the backdrop so text stays readable.</summary>
     public string Overlay { get; set; } = "#00000000";
 
+    // ---- background
+    /// <summary>Direction of <see cref="BackgroundGradient"/> in degrees (0 = left→right, 90 = top→bottom).</summary>
+    public double BackgroundAngle { get; set; } = 45;
+    /// <summary>Blur of the "cover" backdrop (0 = sharp … 80 = very soft).</summary>
+    public double BackdropBlur { get; set; } = 30;
+    /// <summary>Opacity of <see cref="BackgroundImage"/> (0..1).</summary>
+    public double BackgroundImageOpacity { get; set; } = 1;
+
+    // ---- text
+    /// <summary>Font of the song title (null = <see cref="FontFamily"/>).</summary>
+    public string? TitleFont { get; set; }
+    public double TitleSize { get; set; } = 14;
+    /// <summary>"normal", "semibold" or "bold".</summary>
+    public string TitleWeight { get; set; } = "semibold";
+    public double SubtitleSize { get; set; } = 12;
+    /// <summary>Current lyric line (null = <see cref="Foreground"/>).</summary>
+    public string? LyricsColor { get; set; }
+    /// <summary>Previous/next lyric lines (null = <see cref="SecondaryForeground"/>).</summary>
+    public string? LyricsDimColor { get; set; }
+
+    // ---- buttons
+    /// <summary>Control icons (null = <see cref="Foreground"/>).</summary>
+    public string? IconColor { get; set; }
+    /// <summary>"plain" or "circle" (filled circle behind play/pause).</summary>
+    public string PlayButton { get; set; } = "plain";
+    /// <summary>Circle color (null = <see cref="Accent"/>).</summary>
+    public string? PlayButtonColor { get; set; }
+    /// <summary>Play/pause icon on the circle (null = white).</summary>
+    public string? PlayIconColor { get; set; }
+
+    // ---- cover
+    /// <summary>"rounded" or "circle" (vinyl look).</summary>
+    public string CoverShape { get; set; } = "rounded";
+    /// <summary>A circular cover spins while the music plays.</summary>
+    public bool CoverSpin { get; set; }
+    public string? CoverBorder { get; set; }
+    public double CoverBorderThickness { get; set; }
+    /// <summary>0 = no shadow under the cover.</summary>
+    public double CoverShadowOpacity { get; set; }
+
+    // ---- progress / visualizer
+    /// <summary>Two or more colors for the progress bar (null = <see cref="Accent"/>).</summary>
+    public string[]? ProgressGradient { get; set; }
+    public double ProgressHeight { get; set; } = 4;
+    /// <summary>Two or more colors for the audio bars, bottom → top (null = <see cref="Accent"/>).</summary>
+    public string[]? VisualizerGradient { get; set; }
+    public double VisualizerOpacity { get; set; } = 0.85;
+
+    // ---- shadow
+    public string ShadowColor { get; set; } = "#000000";
+    public double ShadowBlur { get; set; } = 14;
+    public double ShadowDepth { get; set; } = 2;
+
     [JsonIgnore] public string Id { get; set; } = "";
     [JsonIgnore] public string? Directory { get; set; }
     [JsonIgnore] public bool BuiltIn { get; set; }
@@ -127,6 +180,78 @@ public sealed class ThemeService
     /// <summary>Raised after the theme list is (re)loaded, e.g. a file changed in the folder.</summary>
     public event Action? ThemesChanged;
 
+    /// <summary>Raised after a theme was applied (e.g. to start/stop the spinning vinyl cover).</summary>
+    public event Action<ThemeDefinition>? Applied;
+
+    public ThemeDefinition Current => Find(CurrentId);
+
+    static readonly JsonSerializerOptions WriteOptions = new()
+    {
+        WriteIndented = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping, // keep accents readable
+    };
+
+    public static string ToJson(ThemeDefinition theme) => JsonSerializer.Serialize(theme, WriteOptions);
+
+    /// <summary>Deep copy (the editor works on one), dropping the built-in flag.</summary>
+    public static ThemeDefinition Copy(ThemeDefinition theme)
+    {
+        var copy = JsonSerializer.Deserialize<ThemeDefinition>(ToJson(theme), JsonOptions)!;
+        copy.Directory = theme.Directory;
+        return copy;
+    }
+
+    /// <summary>Saves a theme into the themes folder (overwrites its own file) and applies it.</summary>
+    public string Save(ThemeDefinition theme, string? existingFile)
+    {
+        EnsureUserDir();
+        var path = existingFile ?? UniquePath(theme.Name);
+        File.WriteAllText(path, ToJson(theme));
+        Load();
+        var id = "file:" + path;
+        Apply(id);
+        return id;
+    }
+
+    /// <summary>Copies a theme file (and its background image, if any) into the themes folder.</summary>
+    public string Import(string sourcePath)
+    {
+        var theme = JsonSerializer.Deserialize<ThemeDefinition>(File.ReadAllText(sourcePath), JsonOptions)
+                    ?? throw new InvalidDataException("empty theme");
+        EnsureUserDir();
+        if (theme.BackgroundImage is { } image)
+        {
+            var src = Path.Combine(Path.GetDirectoryName(sourcePath)!, image);
+            if (File.Exists(src)) File.Copy(src, Path.Combine(UserDir, Path.GetFileName(image)), overwrite: true);
+            theme.BackgroundImage = Path.GetFileName(image);
+        }
+        var path = UniquePath(theme.Name);
+        File.WriteAllText(path, ToJson(theme));
+        Load();
+        return "file:" + path;
+    }
+
+    /// <summary>Writes a theme to a file chosen by the user (copies its background image next to it).</summary>
+    public static void Export(ThemeDefinition theme, string targetPath)
+    {
+        File.WriteAllText(targetPath, ToJson(theme));
+        if (theme.BackgroundImage is { } image && theme.Directory is { } dir && File.Exists(Path.Combine(dir, image)))
+            File.Copy(Path.Combine(dir, image), Path.Combine(Path.GetDirectoryName(targetPath)!, Path.GetFileName(image)), overwrite: true);
+    }
+
+    static string UniquePath(string name)
+    {
+        var safe = string.Concat((string.IsNullOrWhiteSpace(name) ? "tema" : name).Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '-' : c)).Trim();
+        var path = Path.Combine(UserDir, safe + ".json");
+        for (var i = 2; File.Exists(path); i++) path = Path.Combine(UserDir, $"{safe} ({i}).json");
+        return path;
+    }
+
+    /// <summary>File behind a folder theme, or null for built-ins.</summary>
+    public static string? FileOf(ThemeDefinition theme) => theme.Id.StartsWith("file:") ? theme.Id[5..] : null;
+
     public ThemeDefinition Find(string? id) =>
         Themes.FirstOrDefault(t => t.Id == id) ?? Themes.First(t => t.Id == DefaultId);
 
@@ -138,6 +263,7 @@ public sealed class ThemeService
         foreach (var key in resources.Keys) app[key] = resources[key];
 
         CurrentId = theme.Id;
+        Applied?.Invoke(theme);
         if (_settings.Data.Theme != theme.Id)
         {
             _settings.Data.Theme = theme.Id;
@@ -155,7 +281,7 @@ public sealed class ThemeService
         var r = new ResourceDictionary();
 
         r["ThemeBackground"] = theme.BackgroundGradient is { Length: >= 2 } stops
-            ? Gradient(stops, Color(theme.Background, fallback.Background))
+            ? Gradient(stops, Color(theme.Background, fallback.Background), theme.BackgroundAngle)
             : Brush(theme.Background, fallback.Background);
         r["ThemeBorder"] = Brush(theme.Border, fallback.Border);
         r["ThemeBorderThickness"] = new Thickness(Math.Clamp(theme.BorderThickness, 0, 8));
@@ -168,8 +294,63 @@ public sealed class ThemeService
         r["ThemeHover"] = Brush(theme.Hover, fallback.Hover);
         r["ThemeFont"] = Font(theme.FontFamily, fallback.FontFamily);
         r["ThemeShadow"] = theme.ShadowOpacity > 0
-            ? Frozen(new DropShadowEffect { BlurRadius = 14, ShadowDepth = 2, Opacity = Math.Min(theme.ShadowOpacity, 1) })
+            ? Frozen(new DropShadowEffect
+            {
+                BlurRadius = Math.Clamp(theme.ShadowBlur, 0, 60),
+                ShadowDepth = Math.Clamp(theme.ShadowDepth, 0, 30),
+                Color = Color(theme.ShadowColor, fallback.ShadowColor),
+                Opacity = Math.Min(theme.ShadowOpacity, 1),
+            })
             : null;
+
+        // text
+        r["ThemeTitleFont"] = Font(theme.TitleFont ?? theme.FontFamily, fallback.FontFamily);
+        var titleSize = Math.Clamp(theme.TitleSize, 9, 32);
+        r["ThemeTitleSize"] = titleSize;
+        r["ThemeTitleSizeLarge"] = titleSize + 2;
+        r["ThemeTitleSizeSmall"] = Math.Max(9, titleSize - 1);
+        r["ThemeTitleWeight"] = theme.TitleWeight?.ToLowerInvariant() switch
+        {
+            "normal" or "regular" => FontWeights.Normal,
+            "bold" => FontWeights.Bold,
+            _ => FontWeights.SemiBold,
+        };
+        r["ThemeSubtitleSize"] = Math.Clamp(theme.SubtitleSize, 8, 24);
+        r["ThemeLyrics"] = Brush(theme.LyricsColor ?? theme.Foreground, fallback.Foreground);
+        r["ThemeLyricsDim"] = Brush(theme.LyricsDimColor ?? theme.SecondaryForeground, fallback.SecondaryForeground);
+
+        // buttons
+        r["ThemeIcon"] = Brush(theme.IconColor ?? theme.Foreground, fallback.Foreground);
+        var circle = theme.PlayButton?.ToLowerInvariant() == "circle";
+        r["ThemePlayBackground"] = circle ? Brush(theme.PlayButtonColor ?? theme.Accent, fallback.Accent) : Brushes.Transparent;
+        r["ThemePlayForeground"] = circle
+            ? Brush(theme.PlayIconColor ?? "#FFFFFF", "#FFFFFF")
+            : Brush(theme.IconColor ?? theme.Foreground, fallback.Foreground);
+        r["ThemePlayCorner"] = new CornerRadius(circle ? 20 : 5);
+        r["ThemePlaySize"] = circle ? 40d : 44d;
+
+        // cover
+        var round = theme.CoverShape?.ToLowerInvariant() == "circle";
+        if (round) r["ThemeCoverRadius"] = new CornerRadius(9999); // a circle, whatever the size
+        r["ThemeCoverBorder"] = theme.CoverBorder is null ? Brushes.Transparent : Brush(theme.CoverBorder, "#00000000");
+        r["ThemeCoverBorderThickness"] = new Thickness(Math.Clamp(theme.CoverBorderThickness, 0, 10));
+        r["ThemeCoverShadow"] = theme.CoverShadowOpacity > 0
+            ? Frozen(new DropShadowEffect { BlurRadius = 16, ShadowDepth = 3, Opacity = Math.Min(theme.CoverShadowOpacity, 1) })
+            : null;
+
+        // progress / visualizer
+        r["ThemeProgress"] = theme.ProgressGradient is { Length: >= 2 } progress
+            ? Gradient(progress, Color(theme.Accent, fallback.Accent), 0)
+            : Brush(theme.Accent, fallback.Accent);
+        r["ThemeProgressHeight"] = Math.Clamp(theme.ProgressHeight, 1, 12);
+        r["ThemeVisualizer"] = theme.VisualizerGradient is { Length: >= 2 } bars
+            ? Gradient(bars, Color(theme.Accent, fallback.Accent), 270) // bottom → top
+            : Brush(theme.Accent, fallback.Accent);
+        r["ThemeVisualizerOpacity"] = Math.Clamp(theme.VisualizerOpacity, 0.1, 1);
+        r["ThemeBackdropEffect"] = theme.BackdropBlur > 0
+            ? Frozen(new BlurEffect { Radius = Math.Clamp(theme.BackdropBlur, 0, 80), KernelType = KernelType.Gaussian })
+            : null;
+        r["ThemeImageOpacity"] = Math.Clamp(theme.BackgroundImageOpacity, 0, 1);
 
         var backdrop = theme.Backdrop?.ToLowerInvariant();
         r["ThemeCoverBackdropVisibility"] = backdrop == "cover" ? Visibility.Visible : Visibility.Collapsed;
@@ -204,7 +385,7 @@ public sealed class ThemeService
         _watcher.Renamed += (s, e) => restart(s, e);
     }
 
-    static void EnsureUserDir()
+    public static void EnsureUserDir()
     {
         if (System.IO.Directory.Exists(UserDir)) return;
         System.IO.Directory.CreateDirectory(UserDir);
@@ -244,9 +425,12 @@ public sealed class ThemeService
 
     static SolidColorBrush Brush(string? value, string fallback) => Frozen(new SolidColorBrush(Color(value, fallback)));
 
-    static LinearGradientBrush Gradient(string[] colors, Color fallback)
+    /// <param name="angle">Degrees: 0 = left→right, 90 = top→bottom, 45 = diagonal.</param>
+    static LinearGradientBrush Gradient(string[] colors, Color fallback, double angle = 45)
     {
-        var brush = new LinearGradientBrush { StartPoint = new Point(0, 0), EndPoint = new Point(1, 1) };
+        var rad = angle * Math.PI / 180;
+        var (dx, dy) = (Math.Cos(rad) / 2, Math.Sin(rad) / 2);
+        var brush = new LinearGradientBrush { StartPoint = new Point(0.5 - dx, 0.5 - dy), EndPoint = new Point(0.5 + dx, 0.5 + dy) };
         for (var i = 0; i < colors.Length; i++)
             brush.GradientStops.Add(new GradientStop(Color(colors[i], fallback.ToString()), i / (double)(colors.Length - 1)));
         return Frozen(brush);
@@ -284,6 +468,16 @@ public sealed class ThemeService
             BackgroundGradient = ["#F21A0B2E", "#F23B0F4F", "#F2120C3A"], Border = "#FFFF2BD6",
             BorderThickness = 1.5, Accent = "#00F0FF", SecondaryForeground = "#FFC9A8FF",
             Track = "#4DFF2BD6", Hover = "#33FF2BD6", CornerRadius = 16, CoverRadius = 12, ShadowOpacity = 0.7,
+        },
+        new()
+        {
+            Id = "builtin:vinil", BuiltIn = true, Name = Loc.T("theme_vinyl"),
+            BackgroundGradient = ["#F7241A14", "#F7140E0B"], BackgroundAngle = 90, Border = "#33FFB347",
+            Accent = "#FF8A3D", SecondaryForeground = "#B3FFE2C7", Track = "#33FFB347", Hover = "#26FFB347",
+            CornerRadius = 18, CoverShape = "circle", CoverSpin = true, CoverBorder = "#FF0B0B0B",
+            CoverBorderThickness = 6, CoverShadowOpacity = 0.55, PlayButton = "circle", PlayIconColor = "#FF1A120C",
+            ProgressGradient = ["#FFB347", "#FF5E62"], VisualizerGradient = ["#FF5E62", "#FFB347"],
+            TitleWeight = "bold", ShadowOpacity = 0.6, ShadowBlur = 22,
         },
         new()
         {

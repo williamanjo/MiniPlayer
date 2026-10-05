@@ -16,8 +16,12 @@
 
         <!-- Album art (YouTube thumbnails are 16:9, so crop to square) -->
         <ControlTemplate x:Key="CoverTemplate" TargetType="ContentControl">
-            <Grid ToolTip="{Binding FullText}">
-                <Border CornerRadius="{DynamicResource ThemeCoverRadius}" Background="{DynamicResource ThemeTrack}">
+            <Grid ToolTip="{Binding FullText}" RenderTransformOrigin="0.5,0.5">
+                <Grid.RenderTransform>
+                    <RotateTransform x:Name="Spin" />
+                </Grid.RenderTransform>
+                <Border CornerRadius="{DynamicResource ThemeCoverRadius}" Background="{DynamicResource ThemeTrack}"
+                        Effect="{DynamicResource ThemeCoverShadow}">
                     <Viewbox Margin="22" MaxWidth="48">
                         <TextBlock Text="&#xE8D6;" FontFamily="{StaticResource IconFont}" Opacity="0.5" />
                     </Viewbox>
@@ -27,11 +31,29 @@
                         <ImageBrush ImageSource="{Binding Cover}" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality" />
                     </Border.Background>
                 </Border>
+                <Border CornerRadius="{DynamicResource ThemeCoverRadius}" BorderBrush="{DynamicResource ThemeCoverBorder}"
+                        BorderThickness="{DynamicResource ThemeCoverBorderThickness}" />
                 <local:VisualizerControl VerticalAlignment="Bottom" Margin="6,0,6,5" BarCount="14" Opacity="0.9"
                                          Height="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=Grid}, Converter={StaticResource FractionConverter}, ConverterParameter=0.32}"
-                                         Fill="{DynamicResource AccentBrush}"
+                                         Fill="{DynamicResource ThemeVisualizer}"
                                          Visibility="{Binding VisualizerOnCover, Converter={StaticResource BoolToVis}}" />
             </Grid>
+            <ControlTemplate.Triggers>
+                <!-- Vinyl: spins while playing, stops where it is when paused -->
+                <DataTrigger Binding="{Binding CoverSpinning}" Value="True">
+                    <DataTrigger.EnterActions>
+                        <BeginStoryboard x:Name="SpinStory" HandoffBehavior="SnapshotAndReplace">
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetName="Spin" Storyboard.TargetProperty="Angle" By="360"
+                                                 Duration="0:0:12" RepeatBehavior="Forever" />
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </DataTrigger.EnterActions>
+                    <DataTrigger.ExitActions>
+                        <PauseStoryboard BeginStoryboardName="SpinStory" />
+                    </DataTrigger.ExitActions>
+                </DataTrigger>
+            </ControlTemplate.Triggers>
         </ControlTemplate>
 
         <!-- Shuffle / prev / play / next / repeat. Tag = visibility of shuffle + repeat. -->
@@ -39,10 +61,12 @@
             <StackPanel Orientation="Horizontal">
                 <Button Style="{StaticResource ShuffleButton}" Content="&#xE8B1;" Command="{Binding ShuffleCommand}"
                         Margin="0,0,2,0" Visibility="{TemplateBinding Tag}" />
-                <Button Style="{StaticResource IconButton}" Content="&#xE892;" Command="{Binding PreviousCommand}" ToolTip="{l:Tr tip_previous}" />
-                <Button Style="{StaticResource IconButton}" Content="{Binding PlayGlyph}" Command="{Binding PlayPauseCommand}"
-                        FontSize="20" Width="44" Height="40" Margin="2,0" ToolTip="{l:Tr action_playpause}" />
-                <Button Style="{StaticResource IconButton}" Content="&#xE893;" Command="{Binding NextCommand}" ToolTip="{l:Tr tip_next}" />
+                <Button Style="{StaticResource IconButton}" Content="&#xE892;" Command="{Binding PreviousCommand}" ToolTip="{l:Tr tip_previous}"
+                        Foreground="{DynamicResource ThemeIcon}" />
+                <Button Style="{StaticResource PlayButton}" Content="{Binding PlayGlyph}" Command="{Binding PlayPauseCommand}"
+                        Margin="2,0" ToolTip="{l:Tr action_playpause}" />
+                <Button Style="{StaticResource IconButton}" Content="&#xE893;" Command="{Binding NextCommand}" ToolTip="{l:Tr tip_next}"
+                        Foreground="{DynamicResource ThemeIcon}" />
                 <Button Style="{StaticResource RepeatButton}" Content="{Binding RepeatGlyph}" Command="{Binding RepeatCommand}"
                         Margin="2,0,0,0" Visibility="{TemplateBinding Tag}" />
             </StackPanel>
@@ -60,12 +84,12 @@
                     <Button Style="{StaticResource LyricsButton}" Content="&#xE720;" FontSize="12" Width="26" Height="26"
                             Click="OnToggleLyrics" />
                     <Button Style="{StaticResource IconButton}" Content="&#xE90E;" FontSize="12" Width="26" Height="26"
-                            ToolTip="{l:Tr menu_to_taskbar}" Click="OnToTaskbar" />
+                            ToolTip="{l:Tr menu_to_taskbar}" Click="OnToTaskbar" Foreground="{DynamicResource ThemeIcon}" />
                 </StackPanel>
                 <Button Style="{StaticResource IconButton}" Content="&#xE713;" FontSize="12" Width="26" Height="26"
-                        ToolTip="{l:Tr tip_settings}" Click="OnOpenSettings" />
+                        ToolTip="{l:Tr tip_settings}" Click="OnOpenSettings" Foreground="{DynamicResource ThemeIcon}" />
                 <Button Style="{StaticResource IconButton}" Content="&#xE8BB;" FontSize="10" Width="26" Height="26"
-                        ToolTip="{l:Tr tip_hide}" Click="OnClose" />
+                        ToolTip="{l:Tr tip_hide}" Click="OnClose" Foreground="{DynamicResource ThemeIcon}" />
             </StackPanel>
         </ControlTemplate>
 
@@ -81,7 +105,7 @@
                            MinWidth="34" VerticalAlignment="Center" />
                 <Grid Grid.Column="1" Height="14" Background="Transparent" Cursor="Hand" Margin="6,0"
                       MouseLeftButtonDown="OnSeek" ToolTip="{l:Tr tip_seek}">
-                    <ProgressBar Style="{StaticResource ThinProgress}" Height="4" Value="{Binding Progress, Mode=OneWay}" />
+                    <ProgressBar Style="{StaticResource ThinProgress}" Height="{DynamicResource ThemeProgressHeight}" Value="{Binding Progress, Mode=OneWay}" />
                 </Grid>
                 <TextBlock Grid.Column="2" Text="{Binding DurationText}" FontSize="11" Foreground="{DynamicResource ThemeSecondary}"
                            MinWidth="34" TextAlignment="Right" VerticalAlignment="Center" />
@@ -91,11 +115,12 @@
         <!-- Synced lyrics. Tag = visibility of the previous/next lines (hidden when space is short). -->
         <ControlTemplate x:Key="LyricsTemplate" TargetType="ContentControl">
             <StackPanel VerticalAlignment="Center" Visibility="{Binding ShowLyrics, Converter={StaticResource BoolToVis}}">
-                <TextBlock Text="{Binding LyricPrevious}" FontSize="12" Foreground="{DynamicResource ThemeSecondary}" Opacity="0.75"
+                <TextBlock Text="{Binding LyricPrevious}" FontSize="12" Foreground="{DynamicResource ThemeLyricsDim}" Opacity="0.75"
                            TextAlignment="Center" TextWrapping="Wrap" Visibility="{TemplateBinding Tag}" />
                 <TextBlock Text="{Binding LyricCurrent}" FontSize="15" FontWeight="SemiBold" TextAlignment="Center"
+                           Foreground="{DynamicResource ThemeLyrics}"
                            TextWrapping="Wrap" Margin="0,3" />
-                <TextBlock Text="{Binding LyricNext}" FontSize="12" Foreground="{DynamicResource ThemeSecondary}" Opacity="0.75"
+                <TextBlock Text="{Binding LyricNext}" FontSize="12" Foreground="{DynamicResource ThemeLyricsDim}" Opacity="0.75"
                            TextAlignment="Center" TextWrapping="Wrap" Visibility="{TemplateBinding Tag}" />
             </StackPanel>
         </ControlTemplate>
@@ -112,18 +137,19 @@
                 Effect="{DynamicResource ThemeShadow}" />
         <!-- Backdrop "cover": tiny album art upscaled = cheap blur -->
         <Border CornerRadius="{DynamicResource ThemeCornerRadius}" Visibility="{DynamicResource ThemeCoverBackdropVisibility}"
-                RenderOptions.BitmapScalingMode="HighQuality">
+                RenderOptions.BitmapScalingMode="HighQuality" Effect="{DynamicResource ThemeBackdropEffect}" ClipToBounds="True">
             <Border.Background>
                 <ImageBrush ImageSource="{Binding CoverBackdrop}" Stretch="UniformToFill" />
             </Border.Background>
         </Border>
-        <Border CornerRadius="{DynamicResource ThemeCornerRadius}" Background="{DynamicResource ThemeImageBrush}" />
+        <Border CornerRadius="{DynamicResource ThemeCornerRadius}" Background="{DynamicResource ThemeImageBrush}"
+                Opacity="{DynamicResource ThemeImageOpacity}" />
         <Border CornerRadius="{DynamicResource ThemeCornerRadius}" Background="{DynamicResource ThemeOverlay}"
                 BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="{DynamicResource ThemeBorderThickness}" />
 
         <!-- Visualizer option "rodapé": soft wave along the bottom, behind the content -->
         <local:VisualizerControl VerticalAlignment="Bottom" Height="26" Margin="12,0,12,4" BarCount="0" Opacity="0.35"
-                                 Fill="{DynamicResource AccentBrush}"
+                                 Fill="{DynamicResource ThemeVisualizer}"
                                  Visibility="{Binding VisualizerAtBottom, Converter={StaticResource BoolToVis}}" />
 
         <Grid x:Name="Body" Margin="14,10,10,10" Background="Transparent" MouseLeftButtonDown="OnDragArea">
@@ -154,10 +180,10 @@
                 <ContentControl x:Name="MiniCover" Template="{StaticResource CoverTemplate}" Margin="0,0,10,0" />
                 <DockPanel x:Name="MiniText" Grid.Column="1" VerticalAlignment="Center" ToolTip="{Binding FullText}">
                     <local:VisualizerControl DockPanel.Dock="Left" Width="14" Height="16" Margin="0,0,8,0" BarCount="4"
-                                             StyleKind="Equalizer" Fill="{DynamicResource AccentBrush}"
+                                             StyleKind="Equalizer" Fill="{DynamicResource ThemeVisualizer}"
                                              Visibility="{Binding VisualizerAtControls, Converter={StaticResource BoolToVis}}" />
                     <StackPanel>
-                    <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Text="{Binding Title}" FontSize="{DynamicResource ThemeTitleSizeSmall}" FontWeight="{DynamicResource ThemeTitleWeight}" FontFamily="{DynamicResource ThemeTitleFont}" TextTrimming="CharacterEllipsis" />
                     <TextBlock Text="{Binding TaskbarSubtitle}" FontSize="11" Foreground="{DynamicResource ThemeSecondary}"
                                TextTrimming="CharacterEllipsis" Background="Transparent" Cursor="Hand"
                                MouseLeftButtonDown="OnPickSource" />
@@ -166,7 +192,7 @@
                 <ContentControl x:Name="MiniTransport" Grid.Column="2" Template="{StaticResource TransportTemplate}"
                                 VerticalAlignment="Center" Margin="6,0,0,0" />
                 <Button Grid.Column="3" Style="{StaticResource IconButton}" Content="&#xE8BB;" FontSize="10" Width="24" Height="24"
-                        VerticalAlignment="Center" ToolTip="{l:Tr tip_hide}" Click="OnClose" />
+                        VerticalAlignment="Center" ToolTip="{l:Tr tip_hide}" Click="OnClose" Foreground="{DynamicResource ThemeIcon}" />
                 <Grid Grid.ColumnSpan="4" Height="8" Margin="0,0,0,-9" VerticalAlignment="Bottom" Background="Transparent"
                       Cursor="Hand" MouseLeftButtonDown="OnSeek"
                       Visibility="{Binding HasTimeline, Converter={StaticResource BoolToVis}}">
@@ -200,13 +226,13 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <StackPanel VerticalAlignment="Center" ToolTip="{Binding FullText}">
-                                <TextBlock Text="{Binding Title}" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding Title}" FontSize="{DynamicResource ThemeTitleSize}" FontWeight="{DynamicResource ThemeTitleWeight}" FontFamily="{DynamicResource ThemeTitleFont}" TextTrimming="CharacterEllipsis" />
                                 <!-- Click: choose which tab/app to control -->
                                 <DockPanel Margin="0,1,0,0" Background="Transparent" Cursor="Hand" HorizontalAlignment="Left"
                                            MouseLeftButtonDown="OnPickSource" ToolTip="{l:Tr tip_pick_source}">
                                     <TextBlock DockPanel.Dock="Right" Text="&#xE70D;" FontFamily="{StaticResource IconFont}"
                                                FontSize="9" Foreground="{DynamicResource ThemeSecondary}" VerticalAlignment="Center" Margin="4,1,0,0" />
-                                    <TextBlock Text="{Binding SubtitleDisplay}" FontSize="12" Foreground="{DynamicResource ThemeSecondary}"
+                                    <TextBlock Text="{Binding SubtitleDisplay}" FontSize="{DynamicResource ThemeSubtitleSize}" Foreground="{DynamicResource ThemeSecondary}"
                                                TextTrimming="CharacterEllipsis" />
                                 </DockPanel>
                             </StackPanel>
@@ -217,7 +243,7 @@
                             <ContentControl x:Name="StdTransport" DockPanel.Dock="Left" Template="{StaticResource TransportTemplate}" />
                             <!-- Audio bars fill the space right of the buttons -->
                             <local:VisualizerControl Height="22" Margin="10,0,4,0" VerticalAlignment="Center" BarCount="0"
-                                                     Opacity="0.85" Fill="{DynamicResource AccentBrush}"
+                                                     Opacity="{DynamicResource ThemeVisualizerOpacity}" Fill="{DynamicResource ThemeVisualizer}"
                                                      Visibility="{Binding VisualizerAtControls, Converter={StaticResource BoolToVis}}" />
                         </DockPanel>
                     </Grid>
@@ -242,9 +268,9 @@
                                 HorizontalAlignment="Right" Margin="0,0,0,4" />
                 <ContentControl x:Name="TallCover" Grid.Row="1" Template="{StaticResource CoverTemplate}" HorizontalAlignment="Center" />
                 <StackPanel Grid.Row="2" Margin="0,10,4,0" ToolTip="{Binding FullText}">
-                    <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="SemiBold" TextAlignment="Center"
+                    <TextBlock Text="{Binding Title}" FontSize="{DynamicResource ThemeTitleSizeLarge}" FontWeight="{DynamicResource ThemeTitleWeight}" FontFamily="{DynamicResource ThemeTitleFont}" TextAlignment="Center"
                                TextTrimming="CharacterEllipsis" />
-                    <TextBlock Text="{Binding SubtitleDisplay}" FontSize="12" Foreground="{DynamicResource ThemeSecondary}"
+                    <TextBlock Text="{Binding SubtitleDisplay}" FontSize="{DynamicResource ThemeSubtitleSize}" Foreground="{DynamicResource ThemeSecondary}"
                                TextAlignment="Center" TextTrimming="CharacterEllipsis" Background="Transparent" Cursor="Hand"
                                MouseLeftButtonDown="OnPickSource" Margin="0,2,0,0" />
                 </StackPanel>
@@ -252,7 +278,7 @@
                 <ContentControl x:Name="TallTransport" Grid.Row="4" Template="{StaticResource TransportTemplate}"
                                 HorizontalAlignment="Center" Margin="0,2,0,0" />
                 <local:VisualizerControl Grid.Row="5" Height="18" Width="160" Margin="0,6,0,0" BarCount="0"
-                                         HorizontalAlignment="Center" Opacity="0.85" Fill="{DynamicResource AccentBrush}"
+                                         HorizontalAlignment="Center" Opacity="{DynamicResource ThemeVisualizerOpacity}" Fill="{DynamicResource ThemeVisualizer}"
                                          Visibility="{Binding VisualizerAtControls, Converter={StaticResource BoolToVis}}" />
                 <ContentControl x:Name="TallLyrics" Grid.Row="6" Template="{StaticResource LyricsTemplate}" Margin="4,6,4,0"
                                 ClipToBounds="True" SizeChanged="OnLyricsSizeChanged" />

@@ -53,6 +53,10 @@ public partial class App : Application
         }
         var media = new MediaService();
         ViewModel = new PlayerViewModel(media, Settings);
+        void ApplyCoverSpin(ThemeDefinition t) =>
+            ViewModel.CoverSpin = t.CoverSpin && string.Equals(t.CoverShape, "circle", StringComparison.OrdinalIgnoreCase);
+        ApplyCoverSpin(Themes.Current);
+        Themes.Applied += ApplyCoverSpin;
 
         Visualizer = new VisualizerService(() => media.CurrentAppId, () => ViewModel.IsPlaying)
         {
