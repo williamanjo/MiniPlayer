@@ -12,7 +12,7 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AssemblyTitle>MiniPlayer for Browser Music</AssemblyTitle>
     <Product>MiniPlayer for Browser Music</Product>
-    <Version>1.8.1</Version>
+    <Version>1.8.2</Version>
     <!-- Custom Main: Velopack must run before WPF starts -->
     <StartupObject>MiniPlayer.Program</StartupObject>
     <!-- DPI comes from app.manifest (WPF app; WinForms only used for the tray icon) -->
