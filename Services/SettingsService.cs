@@ -37,6 +37,8 @@ public sealed class AppSettings
     public double? FloatingHeight { get; set; }
     /// <summary>Distance (DIP) between the overlay and the notification area.</summary>
     public double TaskbarOffset { get; set; }
+    /// <summary>Width of the taskbar player in DIPs (resized by dragging its left/right edge).</summary>
+    public double TaskbarWidth { get; set; } = 380;
     /// <summary>Monitor whose taskbar hosts the overlay (e.g. \\.\DISPLAY2); null = primary.</summary>
     public string? TaskbarMonitor { get; set; }
     /// <summary>Taskbar overlay disappears when nothing plays (3 s) or after a long pause (30 s).</summary>

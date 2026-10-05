@@ -8,6 +8,7 @@
         ResizeMode="NoResize" ShowInTaskbar="False" ShowActivated="False" Topmost="True"
         Foreground="{Binding OverlayForeground}" FontFamily="Segoe UI Variable Text, Segoe UI"
         MouseWheel="OnWheel" MouseDown="OnMouseDown">
+    <Grid>
     <Border x:Name="Root" Margin="0,4" CornerRadius="6" MouseLeftButtonDown="OnRootMouseDown" ContextMenuOpening="OnMenuOpening"
             ToolTip="{l:Tr tip_taskbar_dblclick}">
         <Border.Style>
@@ -75,4 +76,10 @@
             </Grid>
         </Grid>
     </Border>
+    <!-- Resize: drag the left or right edge -->
+    <Border Width="6" HorizontalAlignment="Left" Background="#01000000" Cursor="SizeWE" Tag="L"
+            MouseLeftButtonDown="OnGripDown" MouseMove="OnGripMove" MouseLeftButtonUp="OnGripUp" />
+    <Border Width="6" HorizontalAlignment="Right" Background="#01000000" Cursor="SizeWE" Tag="R"
+            MouseLeftButtonDown="OnGripDown" MouseMove="OnGripMove" MouseLeftButtonUp="OnGripUp" />
+    </Grid>
 </Window>

@@ -15,7 +15,7 @@ namespace MiniPlayer.Views;
 /// </summary>
 public partial class TaskbarWindow : Window
 {
-    const double DesignWidth = 380;
+    const double MinBarWidth = 200, MaxBarWidth = 900;
     const double TrayGap = 8;
 
     readonly SettingsService _settings;
@@ -59,7 +59,7 @@ public partial class TaskbarWindow : Window
 
         // Use the target monitor's DPI: the window may still sit on another screen.
         var scale = _scale = taskbar.Scale;
-        var width = (int)Math.Round(DesignWidth * scale);
+        var width = (int)Math.Round(BarWidth() * scale);
         var right = taskbar.TrayLeft - (int)Math.Round((TrayGap + _settings.Data.TaskbarOffset) * scale);
         var x = Math.Max(taskbar.Bounds.Left, right - width);
 
@@ -67,6 +67,58 @@ public partial class TaskbarWindow : Window
     }
 
     PlayerViewModel ViewModel => (PlayerViewModel)DataContext;
+
+    double BarWidth() => Math.Clamp(_settings.Data.TaskbarWidth, MinBarWidth, MaxBarWidth);
+
+    #region Resize grips
+
+    string? _grip;
+    int _gripX;
+    double _gripWidth, _gripOffset;
+
+    void OnGripDown(object sender, MouseButtonEventArgs e)
+    {
+        var grip = (FrameworkElement)sender;
+        TaskbarHelper.GetCursorPos(out var p);
+        _grip = (string)grip.Tag;
+        _gripX = p.X;
+        _gripWidth = BarWidth();
+        _gripOffset = _settings.Data.TaskbarOffset;
+        grip.CaptureMouse();
+        e.Handled = true; // no drag along the bar, no double-click
+    }
+
+    void OnGripMove(object sender, MouseEventArgs e)
+    {
+        if (_grip is null || !((UIElement)sender).IsMouseCaptured) return;
+        TaskbarHelper.GetCursorPos(out var p);
+        var dx = (p.X - _gripX) / _scale;
+        if (_grip == "L")
+        {
+            // right edge stays: wider to the left
+            _settings.Data.TaskbarWidth = Math.Clamp(_gripWidth - dx, MinBarWidth, MaxBarWidth);
+        }
+        else
+        {
+            // left edge stays: the right edge moves toward the tray, at most up to it
+            var delta = Math.Min(Math.Clamp(_gripWidth + dx, MinBarWidth, MaxBarWidth) - _gripWidth, _gripOffset);
+            _settings.Data.TaskbarWidth = _gripWidth + delta;
+            _settings.Data.TaskbarOffset = _gripOffset - delta;
+        }
+        Reposition();
+    }
+
+    void OnGripUp(object sender, MouseButtonEventArgs e)
+    {
+        var grip = (UIElement)sender;
+        if (!grip.IsMouseCaptured) return;
+        grip.ReleaseMouseCapture();
+        _grip = null;
+        _settings.Save();
+        e.Handled = true;
+    }
+
+    #endregion
 
     void OnWheel(object sender, MouseWheelEventArgs e)
     {
