@@ -424,7 +424,8 @@ public partial class SettingsWindow : Window
         ThemeList.ItemsSource = themes.Themes.Select(t =>
         {
             var res = ThemeService.BuildResources(t);
-            var detail = t.BuiltIn ? Loc.T("theme_builtin") : string.IsNullOrWhiteSpace(t.Author) ? Loc.T("theme_custom") : Loc.F("theme_by", t.Author);
+            var by = string.IsNullOrWhiteSpace(t.Author) ? null : Loc.F("theme_by", t.Author);
+            var detail = t.BuiltIn ? Loc.T("theme_builtin") + (by is null ? "" : " · " + by) : by ?? Loc.T("theme_custom");
             return new ThemeItem(t.Id, t.Name, detail, (Brush)res["ThemeBackground"], (Brush)res["AccentBrush"]);
         }).ToList();
         ThemeList.SelectedItem = ThemeList.Items.OfType<ThemeItem>().FirstOrDefault(i => i.Id == select)

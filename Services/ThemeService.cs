@@ -445,7 +445,12 @@ public sealed class ThemeService
         return freezable;
     }
 
+    const string BuiltInAuthor = "williamanjo";
+
     static IEnumerable<ThemeDefinition> BuiltInThemes() =>
+        BuiltInList().Select(t => { t.Author ??= BuiltInAuthor; return t; });
+
+    static IEnumerable<ThemeDefinition> BuiltInList() =>
     [
         new() { Id = DefaultId, BuiltIn = true, Name = Loc.T("theme_dark") },
         new()

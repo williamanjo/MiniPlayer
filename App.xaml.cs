@@ -56,7 +56,7 @@ public partial class App : Application
         void ApplyCoverSpin(ThemeDefinition t)
         {
             ViewModel.CoverSpin = t.CoverSpin && string.Equals(t.CoverShape, "circle", StringComparison.OrdinalIgnoreCase);
-            ViewModel.ThemeAuthor = t.BuiltIn ? null : t.Author;
+            ViewModel.ThemeAuthor = t.Author;
         }
         ApplyCoverSpin(Themes.Current);
         Themes.Applied += ApplyCoverSpin;
