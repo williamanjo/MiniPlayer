@@ -605,11 +605,14 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
 
     public bool HasThemeCredit => ShowThemeAuthor && _themeAuthor is not null;
     public string? ThemeCredit => HasThemeCredit ? Loc.F("theme_credit", _themeAuthor) : null;
+    /// <summary>Shorter credit ("por …") for the badge on the cover.</summary>
+    public string? ThemeCreditShort => HasThemeCredit ? Loc.F("theme_by", _themeAuthor) : null;
 
     void RaiseThemeCredit()
     {
         OnPropertyChanged(nameof(HasThemeCredit));
         OnPropertyChanged(nameof(ThemeCredit));
+        OnPropertyChanged(nameof(ThemeCreditShort));
     }
 
     public bool HdCovers

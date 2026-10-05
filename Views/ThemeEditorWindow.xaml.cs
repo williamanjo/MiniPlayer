@@ -62,6 +62,10 @@ public partial class ThemeEditorWindow : Window
         Section("editor_sec_general");
         Row("editor_name", Text(() => t.Name, v => t.Name = string.IsNullOrWhiteSpace(v) ? "Tema" : v));
         Row("editor_author", Text(() => t.Author, v => t.Author = string.IsNullOrWhiteSpace(v) ? null : v));
+        Row("editor_author_position", Combo([("bottom", "editor_pos_bottom"), ("bottomLeft", "editor_pos_bottom_left"),
+                ("bottomRight", "editor_pos_bottom_right"), ("top", "editor_pos_top"), ("topLeft", "editor_pos_top_left"), ("topRight", "editor_pos_top_right"), ("cover", "editor_pos_cover"),
+                ("none", "editor_pos_none")],
+            () => t.AuthorPosition, v => t.AuthorPosition = v), () => t.Author is not null);
 
         Section("editor_sec_background");
         Row("editor_bg_color", Color(() => t.BackgroundGradient is { Length: >= 2 } bg ? bg[0] : t.Background, v =>

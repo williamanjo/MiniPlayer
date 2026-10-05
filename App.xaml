@@ -45,6 +45,11 @@
         <SolidColorBrush x:Key="ThemeVisualizer" Color="#60CDFF" />
         <sys:Double x:Key="ThemeVisualizerOpacity">0.85</sys:Double>
         <sys:Double x:Key="ThemeImageOpacity">1</sys:Double>
+        <Visibility x:Key="ThemeCreditVisibility">Visible</Visibility>
+        <Visibility x:Key="ThemeCreditCoverVisibility">Collapsed</Visibility>
+        <VerticalAlignment x:Key="ThemeCreditVertical">Bottom</VerticalAlignment>
+        <HorizontalAlignment x:Key="ThemeCreditHorizontal">Center</HorizontalAlignment>
+        <Thickness x:Key="ThemeCreditMargin">0,0,0,1</Thickness>
 
         <Style x:Key="IconButton" TargetType="Button">
             <Setter Property="FontFamily" Value="{StaticResource IconFont}" />

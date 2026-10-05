@@ -44,6 +44,14 @@
                                          Height="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=Grid}, Converter={StaticResource FractionConverter}, ConverterParameter=0.32}"
                                          Fill="{DynamicResource ThemeVisualizer}"
                                          Visibility="{Binding VisualizerOnCover, Converter={StaticResource BoolToVis}}" />
+                <!-- authorPosition "cover": small badge on the cover -->
+                <Border Visibility="{DynamicResource ThemeCreditCoverVisibility}" VerticalAlignment="Bottom" HorizontalAlignment="Center"
+                        Margin="0,0,0,4" IsHitTestVisible="False">
+                    <Border CornerRadius="4" Background="#99000000" Padding="5,1"
+                            Visibility="{Binding HasThemeCredit, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="{Binding ThemeCreditShort}" FontSize="8" Foreground="White" TextTrimming="CharacterEllipsis" />
+                    </Border>
+                </Border>
             </Grid>
             </Grid>
             <ControlTemplate.Triggers>
@@ -300,9 +308,12 @@
         </Grid>
 
         <!-- "Tema por …" credit, in the bottom padding (hidden in the mini layout) -->
-        <Border x:Name="ThemeCreditHost" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,1" IsHitTestVisible="False">
-            <TextBlock Text="{Binding ThemeCredit}" FontSize="9" Opacity="0.55" Foreground="{DynamicResource ThemeSecondary}"
-                       TextTrimming="CharacterEllipsis" Visibility="{Binding HasThemeCredit, Converter={StaticResource BoolToVis}}" />
+        <Border x:Name="ThemeCreditHost" HorizontalAlignment="{DynamicResource ThemeCreditHorizontal}"
+                VerticalAlignment="{DynamicResource ThemeCreditVertical}" Margin="{DynamicResource ThemeCreditMargin}" IsHitTestVisible="False">
+            <Border Visibility="{DynamicResource ThemeCreditVisibility}">
+                <TextBlock Text="{Binding ThemeCredit}" FontSize="9" Opacity="0.55" Foreground="{DynamicResource ThemeSecondary}"
+                           TextTrimming="CharacterEllipsis" Visibility="{Binding HasThemeCredit, Converter={StaticResource BoolToVis}}" />
+            </Border>
         </Border>
 
         <!-- Resize grips: edges + corners -->

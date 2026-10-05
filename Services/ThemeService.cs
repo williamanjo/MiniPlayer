@@ -18,6 +18,8 @@ public sealed class ThemeDefinition
 {
     public string Name { get; set; } = "Sem nome";
     public string? Author { get; set; }
+    /// <summary>Where the "theme by …" credit goes: bottom, bottomLeft, bottomRight, top, topLeft, topRight, cover or none.</summary>
+    public string AuthorPosition { get; set; } = "bottom";
 
     /// <summary>Panel color, or ignored when <see cref="BackgroundGradient"/> is set.</summary>
     public string Background { get; set; } = "#F21F1F1F";
@@ -352,6 +354,16 @@ public sealed class ThemeService
             : null;
         r["ThemeImageOpacity"] = Math.Clamp(theme.BackgroundImageOpacity, 0, 1);
 
+        // "theme by …" credit placement (inside the window padding)
+        var credit = theme.AuthorPosition?.Trim().ToLowerInvariant() ?? "bottom";
+        var top = credit.StartsWith("top");
+        r["ThemeCreditVisibility"] = credit is "none" or "cover" ? Visibility.Collapsed : Visibility.Visible;
+        r["ThemeCreditCoverVisibility"] = credit == "cover" ? Visibility.Visible : Visibility.Collapsed;
+        r["ThemeCreditVertical"] = top ? VerticalAlignment.Top : VerticalAlignment.Bottom;
+        r["ThemeCreditHorizontal"] = credit.EndsWith("left") ? HorizontalAlignment.Left
+            : credit.EndsWith("right") ? HorizontalAlignment.Right : HorizontalAlignment.Center;
+        r["ThemeCreditMargin"] = new Thickness(credit.EndsWith("left") ? 16 : 0, top ? 3 : 0, credit.EndsWith("right") ? 16 : 0, top ? 0 : 1);
+
         var backdrop = theme.Backdrop?.ToLowerInvariant();
         r["ThemeCoverBackdropVisibility"] = backdrop == "cover" ? Visibility.Visible : Visibility.Collapsed;
         r["ThemeImageBrush"] = backdrop == "image" ? (object?)LoadImage(theme) ?? Brushes.Transparent : Brushes.Transparent;
@@ -554,6 +566,8 @@ public sealed class ThemeService
         {
           "name": "Oceano (exemplo)",
           "author": "MiniPlayer",
+          // onde aparece "tema por …": bottom, bottomLeft, bottomRight, top, topLeft, topRight, cover (sobre a capa) ou none
+          "authorPosition": "bottom",
 
           // Fundo: cor única ou degradê diagonal (2+ cores)
           "background": "#F20B2540",
