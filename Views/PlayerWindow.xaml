@@ -293,6 +293,12 @@
             </Grid>
         </Grid>
 
+        <!-- "Tema por …" credit, in the bottom padding (hidden in the mini layout) -->
+        <Border x:Name="ThemeCreditHost" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,1" IsHitTestVisible="False">
+            <TextBlock Text="{Binding ThemeCredit}" FontSize="9" Opacity="0.55" Foreground="{DynamicResource ThemeSecondary}"
+                       TextTrimming="CharacterEllipsis" Visibility="{Binding HasThemeCredit, Converter={StaticResource BoolToVis}}" />
+        </Border>
+
         <!-- Resize grips: edges + corners -->
         <Border Width="5" HorizontalAlignment="Left" Background="Transparent" Cursor="SizeWE" Tag="L"
                 MouseLeftButtonDown="OnGripDown" MouseMove="OnGripMove" MouseLeftButtonUp="OnGripUp" />

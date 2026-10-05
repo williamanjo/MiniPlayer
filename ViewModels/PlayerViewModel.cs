@@ -576,6 +576,41 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
         ShowCover(bytes, Convert.ToHexString(System.Security.Cryptography.SHA1.HashData(bytes)));
     }
 
+    string? _themeAuthor;
+
+    /// <summary>Author of the theme in use (set by the app when a theme is applied).</summary>
+    public string? ThemeAuthor
+    {
+        get => _themeAuthor;
+        set
+        {
+            _themeAuthor = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+            RaiseThemeCredit(); // also on the same author: the language may have changed
+        }
+    }
+
+    public bool ShowThemeAuthor
+    {
+        get => _settings.Data.ShowThemeAuthor;
+        set
+        {
+            if (_settings.Data.ShowThemeAuthor == value) return;
+            _settings.Data.ShowThemeAuthor = value;
+            _settings.Save();
+            OnPropertyChanged();
+            RaiseThemeCredit();
+        }
+    }
+
+    public bool HasThemeCredit => ShowThemeAuthor && _themeAuthor is not null;
+    public string? ThemeCredit => HasThemeCredit ? Loc.F("theme_credit", _themeAuthor) : null;
+
+    void RaiseThemeCredit()
+    {
+        OnPropertyChanged(nameof(HasThemeCredit));
+        OnPropertyChanged(nameof(ThemeCredit));
+    }
+
     public bool HdCovers
     {
         get => _settings.Data.HdCovers;

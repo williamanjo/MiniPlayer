@@ -49,6 +49,8 @@ public sealed class AppSettings
 
     /// <summary>Look up the album art in high resolution (Deezer / iTunes) by title and artist.</summary>
     public bool HdCovers { get; set; } = true;
+    /// <summary>Small "theme by …" credit in the player when the theme has an author.</summary>
+    public bool ShowThemeAuthor { get; set; } = true;
 
     /// <summary>Audio bars on the cover / taskbar.</summary>
     public bool ShowVisualizer { get; set; } = true;

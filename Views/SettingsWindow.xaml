@@ -284,6 +284,11 @@
                                 </StackPanel>
                                 <TextBlock Style="{StaticResource Hint}" Margin="0,8,0,0"
                                            Text="{l:Tr themes_hint}" />
+                                <Grid Margin="0,10,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                    <TextBlock Text="{l:Tr theme_show_author}" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,12,0" />
+                                    <CheckBox Grid.Column="1" Style="{StaticResource Switch}" IsChecked="{Binding ShowThemeAuthor}" />
+                                </Grid>
                                 <TextBlock x:Name="ThemeErrors" Style="{StaticResource Hint}" Foreground="#E0A030" Visibility="Collapsed" />
                             </StackPanel>
                         </Grid>

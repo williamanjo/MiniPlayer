@@ -153,6 +153,7 @@ public partial class PlayerWindow : Window
               : LayoutMode.Standard;
 
         MiniLayout.Visibility = Vis(_mode == LayoutMode.Mini);
+        ThemeCreditHost.Visibility = Vis(_mode != LayoutMode.Mini); // no room in mini
         StandardLayout.Visibility = Vis(_mode == LayoutMode.Standard);
         TallLayout.Visibility = Vis(_mode == LayoutMode.Tall);
 
