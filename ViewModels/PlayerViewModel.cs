@@ -187,6 +187,19 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
         }
     }
 
+    public int VisualizerBars
+    {
+        get => _settings.Data.VisualizerBars;
+        set
+        {
+            value = Math.Clamp(value, 0, 160);
+            if (_settings.Data.VisualizerBars == value) return;
+            _settings.Data.VisualizerBars = value;
+            _settings.Save();
+            OnPropertyChanged();
+        }
+    }
+
     // Where the floating player shows the bars (each false when the visualizer is off).
     public bool VisualizerAtControls => ShowVisualizer && VisualizerPosition == VisualizerPosition.Controls;
     public bool VisualizerOnCover => ShowVisualizer && VisualizerPosition == VisualizerPosition.Cover;

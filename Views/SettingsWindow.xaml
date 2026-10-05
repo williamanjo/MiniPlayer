@@ -326,6 +326,17 @@
                                         <ComboBoxItem Tag="AroundCover" Content="{l:Tr viz_pos_around}" />
                                     </ComboBox>
                                 </Grid>
+                                <Grid Margin="0,12,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                    <StackPanel Margin="0,0,16,0">
+                                        <TextBlock Text="{l:Tr viz_bars}" />
+                                        <TextBlock Style="{StaticResource Hint}" Text="{l:Tr viz_bars_hint}" />
+                                    </StackPanel>
+                                    <Slider x:Name="VisualizerBarsSlider" Grid.Column="1" Width="200" Minimum="0" Maximum="160" TickFrequency="4"
+                                            IsSnapToTickEnabled="True" VerticalAlignment="Center"
+                                            Value="{Binding VisualizerBars}" ValueChanged="OnVisualizerBarsChanged" />
+                                    <TextBlock x:Name="VisualizerBarsText" Grid.Column="2" MinWidth="80" TextAlignment="Right" VerticalAlignment="Center" />
+                                </Grid>
                             </StackPanel>
                         </StackPanel>
                     </Border>

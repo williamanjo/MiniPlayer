@@ -65,6 +65,8 @@ public sealed class AppSettings
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public VisualizerPosition VisualizerPosition { get; set; } = VisualizerPosition.Controls;
+    /// <summary>Number of visualizer bars; 0 = automatic (by available space).</summary>
+    public int VisualizerBars { get; set; }
 
     /// <summary>Pause while an app uses the microphone (calls).</summary>
     public bool PauseOnCall { get; set; }

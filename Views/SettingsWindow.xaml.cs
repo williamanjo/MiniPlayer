@@ -38,6 +38,7 @@ public partial class SettingsWindow : Window
         SelectByTag(TaskbarWheelBox, _app.Settings.Data.TaskbarWheelAction.ToString());
         SelectByTag(MiddleClickBox, _app.Settings.Data.MiddleClickAction.ToString());
         SelectByTag(VisualizerPositionBox, _app.Settings.Data.VisualizerPosition.ToString());
+        OnVisualizerBarsChanged(this, new RoutedPropertyChangedEventArgs<double>(0, _app.Settings.Data.VisualizerBars));
         LoadAutomation();
         LoadHistoryAndStream();
         SelectByTag(LanguageBox, string.IsNullOrEmpty(_app.Settings.Data.Language) ? "auto" : _app.Settings.Data.Language);
@@ -249,6 +250,12 @@ public partial class SettingsWindow : Window
         _app.Settings.Save();
         _app.ApplyHotkeys();
         LoadHotkeys();
+    }
+
+    void OnVisualizerBarsChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (VisualizerBarsText is null) return; // fires during InitializeComponent
+        VisualizerBarsText.Text = e.NewValue < 1 ? Loc.T("viz_bars_auto") : $"{e.NewValue:0}";
     }
 
     void OnVisualizerPositionChanged(object sender, SelectionChangedEventArgs e)
