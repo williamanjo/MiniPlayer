@@ -430,6 +430,7 @@ public partial class SettingsWindow : Window
         }).ToList();
         ThemeList.SelectedItem = ThemeList.Items.OfType<ThemeItem>().FirstOrDefault(i => i.Id == select)
                                  ?? ThemeList.Items.OfType<ThemeItem>().FirstOrDefault();
+        if (ThemeList.SelectedItem is { } selected) ThemeList.ScrollIntoView(selected);
 
         ThemeErrors.Text = string.Join("\n", themes.Errors.Select(e => "⚠ " + e));
         ThemeErrors.Visibility = Vis(themes.Errors.Count > 0);
@@ -442,7 +443,7 @@ public partial class SettingsWindow : Window
     void OnThemeSelected(object sender, SelectionChangedEventArgs e)
     {
         if (ThemeList.SelectedItem is not ThemeItem item) return;
-        Preview.Resources = ThemeService.BuildResources(_app.Themes.Find(item.Id));
+        Preview.Show(_app.Themes.Find(item.Id));
         RefreshThemeButtons();
     }
 
