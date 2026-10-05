@@ -186,11 +186,12 @@ internal static class TaskbarHelper
     }
 
     /// <summary>Work area (screen minus taskbar) of the monitor holding the window, physical pixels.</summary>
-    public static RECT GetWorkArea(IntPtr hwnd)
+    /// <param name="wholeMonitor">The full screen, taskbar included, instead of the work area.</param>
+    public static RECT GetWorkArea(IntPtr hwnd, bool wholeMonitor = false)
     {
         var info = new MONITORINFO { cbSize = Marshal.SizeOf<MONITORINFO>() };
         GetMonitorInfo(MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST), ref info);
-        return info.rcWork;
+        return wholeMonitor ? info.rcMonitor : info.rcWork;
     }
 
     /// <summary>Hide from Alt+Tab and never steal focus from the app the user is in.</summary>

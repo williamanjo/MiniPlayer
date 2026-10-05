@@ -181,6 +181,21 @@
                     <Border Style="{StaticResource Card}">
                         <Grid>
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <TextBlock Style="{StaticResource RowIcon}" Text="&#xE7C4;" />
+                            <StackPanel Grid.Column="1" Margin="0,0,16,0">
+                                <TextBlock Style="{StaticResource RowTitle}" Text="{l:Tr general_snap}" />
+                                <TextBlock Style="{StaticResource Hint}" Text="{l:Tr general_snap_hint}" />
+                            </StackPanel>
+                            <ComboBox x:Name="SnapBox" Grid.Column="2" MinWidth="220" VerticalAlignment="Center" SelectionChanged="OnSnapChanged">
+                                <ComboBoxItem Tag="WorkArea" Content="{l:Tr snap_workarea}" />
+                                <ComboBoxItem Tag="Screen" Content="{l:Tr snap_screen}" />
+                                <ComboBoxItem Tag="Off" Content="{l:Tr snap_off}" />
+                            </ComboBox>
+                        </Grid>
+                    </Border>
+                    <Border Style="{StaticResource Card}">
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                             <TextBlock Style="{StaticResource RowIcon}" Text="&#xE720;" />
                             <StackPanel Grid.Column="1" Margin="0,0,16,0">
                                 <TextBlock Style="{StaticResource RowTitle}" Text="{l:Tr general_lyrics}" />

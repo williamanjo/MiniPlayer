@@ -38,6 +38,7 @@ public partial class SettingsWindow : Window
         SelectByTag(TaskbarWheelBox, _app.Settings.Data.TaskbarWheelAction.ToString());
         SelectByTag(MiddleClickBox, _app.Settings.Data.MiddleClickAction.ToString());
         SelectByTag(VisualizerPositionBox, _app.Settings.Data.VisualizerPosition.ToString());
+        SelectByTag(SnapBox, _app.Settings.Data.Snap.ToString());
         OnVisualizerBarsChanged(this, new RoutedPropertyChangedEventArgs<double>(0, _app.Settings.Data.VisualizerBars));
         LoadAutomation();
         LoadHistoryAndStream();
@@ -256,6 +257,13 @@ public partial class SettingsWindow : Window
     {
         if (VisualizerBarsText is null) return; // fires during InitializeComponent
         VisualizerBarsText.Text = e.NewValue < 1 ? Loc.T("viz_bars_auto") : $"{e.NewValue:0}";
+    }
+
+    void OnSnapChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loading || !Enum.TryParse<SnapMode>(TagOf(SnapBox), out var snap)) return;
+        _app.Settings.Data.Snap = snap;
+        _app.Settings.Save();
     }
 
     void OnVisualizerPositionChanged(object sender, SelectionChangedEventArgs e)

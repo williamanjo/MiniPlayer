@@ -325,14 +325,18 @@ public partial class PlayerWindow : Window
     Rect ShadowArea()
     {
         var a = WorkArea();
-        return new Rect(a.Left - ExtraLeft, a.Top - ExtraTop, a.Width + ExtraLeft + ExtraRight, a.Height + ExtraTop + ExtraBottom);
+        // screen edges: flush with the edge (no 8px gap), so it really sits on the bottom of the screen
+        var flush = _settings.Data.Snap == SnapMode.Screen ? BaseMargin : 0;
+        double l = ExtraLeft + flush, t = ExtraTop + flush, r = ExtraRight + flush, b = ExtraBottom + flush;
+        return new Rect(a.Left - l, a.Top - t, a.Width + l + r, a.Height + t + b);
     }
 
     Rect WorkArea()
     {
         var hwnd = new WindowInteropHelper(this).Handle;
         if (hwnd == IntPtr.Zero) return SystemParameters.WorkArea;
-        var r = TaskbarHelper.GetWorkArea(hwnd);
+        // only "above the taskbar" keeps the player off it; the other modes allow the whole screen
+        var r = TaskbarHelper.GetWorkArea(hwnd, wholeMonitor: _settings.Data.Snap != SnapMode.WorkArea);
         var dpi = VisualTreeHelper.GetDpi(this);
         return new Rect(r.Left / dpi.DpiScaleX, r.Top / dpi.DpiScaleY, r.Width / dpi.DpiScaleX, r.Height / dpi.DpiScaleY);
     }
@@ -348,6 +352,11 @@ public partial class PlayerWindow : Window
     void SnapToEdges()
     {
         var a = ShadowArea();
+        if (_settings.Data.Snap == SnapMode.Off)
+        {
+            KeepInsideWorkArea();
+            return;
+        }
         if (Math.Abs(Left - a.Left) < SnapDistance) Left = a.Left;
         if (Math.Abs(Left + ActualWidth - a.Right) < SnapDistance) Left = a.Right - ActualWidth;
         if (Math.Abs(Top - a.Top) < SnapDistance) Top = a.Top;

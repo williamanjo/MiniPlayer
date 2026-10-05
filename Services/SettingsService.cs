@@ -7,6 +7,9 @@ namespace MiniPlayer.Services;
 
 public enum PlayerMode { Floating, Taskbar }
 
+/// <summary>WorkArea: edges, stopping above the taskbar. Screen: screen edges, over the taskbar. Off: no snapping.</summary>
+public enum SnapMode { WorkArea, Screen, Off }
+
 /// <summary>What the mouse wheel does over the player.</summary>
 public enum WheelAction { Volume, Track }
 
@@ -51,6 +54,9 @@ public sealed class AppSettings
     public bool HdCovers { get; set; } = true;
     /// <summary>Small "theme by …" credit in the player when the theme has an author.</summary>
     public bool ShowThemeAuthor { get; set; } = true;
+    /// <summary>Where the dragged floating player sticks: above the taskbar, the screen edges (over the taskbar) or nowhere.</summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public SnapMode Snap { get; set; } = SnapMode.WorkArea;
 
     /// <summary>Audio bars on the cover / taskbar.</summary>
     public bool ShowVisualizer { get; set; } = true;
