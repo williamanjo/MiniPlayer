@@ -192,6 +192,8 @@ public static class Strings
         ["theme_light"] = ["Light", "Claro"],
         ["theme_glass"] = ["Glass (cover)", "Vidro (capa)"],
         ["theme_vinyl"] = ["Vinyl", "Vinil"],
+        ["theme_paper"] = ["Paper", "Papel"],
+        ["theme_brutal"] = ["Brutalist", "Brutalista"],
         ["tray_taskbar_mode"] = ["Taskbar mode", "Modo barra de tarefas"],
         ["tray_themes"] = ["Themes", "Temas"],
         ["tray_update"] = ["Update", "Atualizar"],

@@ -487,6 +487,59 @@ public sealed class ThemeService
             Hover = "#2633FF66", CornerRadius = 0, CoverRadius = 0, ShadowOpacity = 0,
             FontFamily = "Cascadia Mono, Consolas",
         },
+        new()
+        {
+            // editorial: cream paper, serif type, square cover with a hairline
+            Id = "builtin:papel", BuiltIn = true, Name = Loc.T("theme_paper"),
+            Background = "#FFF4EEE1", Border = "#FF2B2118", BorderThickness = 1, Foreground = "#2B2118",
+            SecondaryForeground = "#995A4636", Accent = "#B3261E", Track = "#262B2118", Hover = "#142B2118",
+            IconColor = "#2B2118", CornerRadius = 3, CoverRadius = 0, CoverBorder = "#FF2B2118", CoverBorderThickness = 1,
+            FontFamily = "Georgia", TitleSize = 16, TitleWeight = "normal", ProgressHeight = 2,
+            LyricsColor = "#B3261E", LyricsDimColor = "#802B2118", ShadowOpacity = 0.18, ShadowBlur = 10,
+        },
+        new()
+        {
+            // synthwave: purple to pink sunset, yellow circle play
+            Id = "builtin:retrowave", BuiltIn = true, Name = "Retrowave",
+            BackgroundGradient = ["#FA2B1055", "#FA7A1F6B", "#FAD53369"], BackgroundAngle = 90,
+            Border = "#FFFF2BD6", BorderThickness = 1.5, Accent = "#FFD319", SecondaryForeground = "#FFFFB8E6",
+            Track = "#40FFFFFF", Hover = "#33FF2BD6", IconColor = "#FFFFB8E6", CornerRadius = 6, CoverRadius = 4,
+            CoverBorder = "#FFFF2BD6", CoverBorderThickness = 2, PlayButton = "circle", PlayIconColor = "#FF2B1055",
+            FontFamily = "Bahnschrift", TitleWeight = "bold", ProgressGradient = ["#FF2BD6", "#FFD319"],
+            VisualizerGradient = ["#FF2BD6", "#FFD319"], ShadowColor = "#FF2BD6", ShadowOpacity = 0.55, ShadowBlur = 24, ShadowDepth = 0,
+        },
+        new()
+        {
+            // soft pastel green, very round, round cover (no spin)
+            Id = "builtin:matcha", BuiltIn = true, Name = "Matcha",
+            BackgroundGradient = ["#FFEDF4E6", "#FFDCEBD2"], BackgroundAngle = 90, Border = "#00000000", BorderThickness = 0,
+            Foreground = "#1E3A2B", SecondaryForeground = "#A61E3A2B", Accent = "#4C8B5D", Track = "#264C8B5D", Hover = "#1F4C8B5D",
+            IconColor = "#2F5E3F", CornerRadius = 28, CoverShape = "circle", CoverShadowOpacity = 0.25,
+            PlayButton = "circle", PlayIconColor = "#FFFFFF", FontFamily = "Segoe UI Variable Display, Segoe UI",
+            TitleWeight = "semibold", ProgressHeight = 6, ShadowColor = "#2F5E3F", ShadowOpacity = 0.25, ShadowBlur = 26, ShadowDepth = 4,
+        },
+        new()
+        {
+            // deep glass: heavily blurred cover under a teal/violet tint
+            Id = "builtin:aurora", BuiltIn = true, Name = "Aurora",
+            Background = "#FF0B1026", Backdrop = "cover", BackdropBlur = 70, Overlay = "#B30B1026",
+            Border = "#407CF5D0", Accent = "#7CF5D0", SecondaryForeground = "#CCC9D6FF", Track = "#33FFFFFF", Hover = "#26FFFFFF",
+            CornerRadius = 20, CoverRadius = 16, CoverShadowOpacity = 0.6, TitleSize = 15,
+            ProgressGradient = ["#7CF5D0", "#8B7CFF"], VisualizerGradient = ["#8B7CFF", "#7CF5D0"], VisualizerOpacity = 0.7,
+            LyricsColor = "#7CF5D0", ShadowColor = "#8B7CFF", ShadowOpacity = 0.5, ShadowBlur = 30, ShadowDepth = 0,
+        },
+        new()
+        {
+            // neo-brutalism: flat yellow, thick black outlines, hard offset shadow
+            Id = "builtin:brutal", BuiltIn = true, Name = Loc.T("theme_brutal"),
+            Background = "#FFFFE600", Border = "#FF000000", BorderThickness = 3, Foreground = "#000000",
+            SecondaryForeground = "#CC000000", Accent = "#000000", Track = "#33000000", Hover = "#26000000", IconColor = "#000000",
+            CornerRadius = 0, CoverRadius = 0, CoverBorder = "#FF000000", CoverBorderThickness = 3,
+            PlayButton = "circle", PlayButtonColor = "#000000", PlayIconColor = "#FFE600",
+            FontFamily = "Segoe UI", TitleFont = "Segoe UI Black", TitleWeight = "bold", ProgressHeight = 6,
+            LyricsColor = "#000000", LyricsDimColor = "#80000000",
+            ShadowColor = "#000000", ShadowOpacity = 1, ShadowBlur = 0, ShadowDepth = 8,
+        },
     ];
 
     const string ExampleTheme = """
