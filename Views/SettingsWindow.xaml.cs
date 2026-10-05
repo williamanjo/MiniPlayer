@@ -463,6 +463,43 @@ public partial class SettingsWindow : Window
 
     void OnOpenThemes(object sender, RoutedEventArgs e) => ThemeService.OpenFolder();
 
+    void OnExportBackup(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Filter = Loc.T("backup_filter") + "|*.zip",
+            FileName = $"MiniPlayer-backup-{DateTime.Now:yyyy-MM-dd}.zip",
+        };
+        if (dialog.ShowDialog(this) != true) return;
+        try
+        {
+            BackupService.Export(_app.Settings, dialog.FileName);
+            MessageBox.Show(this, Loc.T("backup_exported"), Title, MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, ex.Message, Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    void OnImportBackup(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog { Filter = Loc.T("backup_filter") + "|*.zip" };
+        if (dialog.ShowDialog(this) != true) return;
+        if (MessageBox.Show(this, Loc.T("backup_confirm"), Title, MessageBoxButton.OKCancel, MessageBoxImage.Question) != MessageBoxResult.OK)
+            return;
+        try
+        {
+            BackupService.Import(_app.Settings, dialog.FileName);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, Loc.F("backup_import_failed", ex.Message), Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+        _app.Restart();
+    }
+
     ThemeDefinition SelectedTheme() => _app.Themes.Find((ThemeList.SelectedItem as ThemeItem)?.Id ?? _app.Themes.CurrentId);
 
     void OnCustomizeTheme(object sender, RoutedEventArgs e) =>

@@ -408,6 +408,24 @@ public partial class App : Application
         }
     }
 
+    /// <summary>Starts a fresh instance and closes this one (after a settings import).</summary>
+    public void Restart()
+    {
+        _tray?.Dispose();
+        _tray = null;
+        _mutex?.ReleaseMutex();
+        _mutex?.Dispose();
+        _mutex = null;
+#if STORE
+        // a packaged app must be started through its app id, not the exe
+        var family = global::Windows.ApplicationModel.Package.Current.Id.FamilyName;
+        System.Diagnostics.Process.Start("explorer.exe", $@"shell:AppsFolder\{family}!MiniPlayer");
+#else
+        System.Diagnostics.Process.Start(Environment.ProcessPath!);
+#endif
+        Shutdown();
+    }
+
     public void ExitApp()
     {
         Settings.Save();

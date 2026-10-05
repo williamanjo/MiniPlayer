@@ -126,12 +126,25 @@ public sealed class SettingsService
         return service;
     }
 
+    public string ToJson() => JsonSerializer.Serialize(Data, JsonOptions);
+
+    /// <summary>Settings from JSON (a backup); throws on invalid content.</summary>
+    public static AppSettings Parse(string json) =>
+        JsonSerializer.Deserialize<AppSettings>(json, JsonOptions) ?? throw new JsonException("empty");
+
+    /// <summary>Replaces all settings (backup import) and writes them; the app restarts after this.</summary>
+    public void Replace(AppSettings data)
+    {
+        Data = data;
+        Save();
+    }
+
     public void Save()
     {
         try
         {
             Directory.CreateDirectory(Dir);
-            File.WriteAllText(FilePath, JsonSerializer.Serialize(Data, JsonOptions));
+            File.WriteAllText(FilePath, ToJson());
         }
         catch
         {

@@ -646,6 +646,21 @@
                             </StackPanel>
                         </Grid>
                     </Border>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="{l:Tr backup_title}" />
+                    <Border Style="{StaticResource Card}">
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <TextBlock Style="{StaticResource RowIcon}" Text="&#xE777;" />
+                            <StackPanel Grid.Column="1" Margin="0,0,16,0">
+                                <TextBlock Style="{StaticResource RowTitle}" Text="{l:Tr backup_row}" />
+                                <TextBlock Style="{StaticResource Hint}" Text="{l:Tr backup_hint}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Button Content="{l:Tr backup_export}" Padding="12,5" Click="OnExportBackup" />
+                                <Button Content="{l:Tr backup_import}" Padding="12,5" Margin="8,0,0,0" Click="OnImportBackup" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
                     <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                         <Button Content="{l:Tr about_open_settings_folder}" Padding="12,5" Click="OnOpenSettingsFolder" />
                         <Button Content="{l:Tr themes_open_folder}" Padding="12,5" Margin="8,0,0,0" Click="OnOpenThemes" />
