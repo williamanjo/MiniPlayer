@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:l="clr-namespace:MiniPlayer.Localization"
         xmlns:s="clr-namespace:MiniPlayer.Services"
+        xmlns:local="clr-namespace:MiniPlayer.Views"
         Title="{l:Tr settings_window_title}" Width="900" Height="640" MinWidth="700" MinHeight="460"
         WindowStartupLocation="CenterScreen" ThemeMode="System">
     <Window.Resources>
@@ -263,77 +264,7 @@
                                 <Border x:Name="PreviewHost" Padding="16" CornerRadius="8" Background="#22808080" HorizontalAlignment="Stretch">
                                   <!-- Shrinks the preview when the window is narrow; never enlarges it -->
                                   <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left">
-                                    <Grid x:Name="Preview" Width="360" Height="129" IsHitTestVisible="False"
-                                          TextElement.Foreground="{DynamicResource ThemeForeground}"
-                                          TextElement.FontFamily="{DynamicResource ThemeFont}">
-                                        <Border CornerRadius="{DynamicResource ThemeCornerRadius}" Background="{DynamicResource ThemeBackground}"
-                                                Effect="{DynamicResource ThemeShadow}" />
-                                        <Border CornerRadius="{DynamicResource ThemeCornerRadius}" Visibility="{DynamicResource ThemeCoverBackdropVisibility}"
-                                                RenderOptions.BitmapScalingMode="HighQuality">
-                                            <Border.Background>
-                                                <ImageBrush ImageSource="{Binding CoverBackdrop}" Stretch="UniformToFill" />
-                                            </Border.Background>
-                                        </Border>
-                                        <Border CornerRadius="{DynamicResource ThemeCornerRadius}" Background="{DynamicResource ThemeImageBrush}" />
-                                        <Border CornerRadius="{DynamicResource ThemeCornerRadius}" Background="{DynamicResource ThemeOverlay}"
-                                                BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="{DynamicResource ThemeBorderThickness}" />
-
-                                        <Grid Margin="14,10,10,10">
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto" />
-                                                <RowDefinition Height="Auto" />
-                                            </Grid.RowDefinitions>
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="*" />
-                                                </Grid.ColumnDefinitions>
-                                                <Grid Width="84" Height="84" Margin="0,0,12,0">
-                                                    <Border CornerRadius="{DynamicResource ThemeCoverRadius}" Background="{DynamicResource ThemeTrack}">
-                                                        <TextBlock Text="&#xE8D6;" FontFamily="{StaticResource IconFont}" FontSize="28" Opacity="0.5"
-                                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                                    </Border>
-                                                    <Border CornerRadius="{DynamicResource ThemeCoverRadius}"
-                                                            Visibility="{Binding HasCover, Converter={StaticResource BoolToVis}}">
-                                                        <Border.Background>
-                                                            <ImageBrush ImageSource="{Binding Cover}" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality" />
-                                                        </Border.Background>
-                                                    </Border>
-                                                </Grid>
-                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                    <Grid>
-                                                        <StackPanel Margin="0,0,70,0">
-                                                            <TextBlock Text="{Binding Title}" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                                                            <TextBlock Text="{Binding Subtitle}" FontSize="12" Foreground="{DynamicResource ThemeSecondary}"
-                                                                       TextTrimming="CharacterEllipsis" />
-                                                        </StackPanel>
-                                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
-                                                            <Button Style="{StaticResource PinButton}" FontSize="12" Width="22" Height="22" />
-                                                            <Button Style="{StaticResource LyricsButton}" Content="&#xE720;" FontSize="12" Width="22" Height="22" />
-                                                            <Button Style="{StaticResource IconButton}" Content="&#xE8BB;" FontSize="10" Width="22" Height="22" />
-                                                        </StackPanel>
-                                                    </Grid>
-                                                    <StackPanel Orientation="Horizontal" Margin="-6,6,0,0">
-                                                        <Button Style="{StaticResource ShuffleButton}" Content="&#xE8B1;" />
-                                                        <Button Style="{StaticResource IconButton}" Content="&#xE892;" />
-                                                        <Button Style="{StaticResource IconButton}" Content="{Binding PlayGlyph}" FontSize="20" Width="44" Height="40" />
-                                                        <Button Style="{StaticResource IconButton}" Content="&#xE893;" />
-                                                        <Button Style="{StaticResource RepeatButton}" Content="{Binding RepeatGlyph}" />
-                                                    </StackPanel>
-                                                </StackPanel>
-                                            </Grid>
-                                            <Grid Grid.Row="1" Margin="0,10,4,0">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock Text="1:23" FontSize="11" Foreground="{DynamicResource ThemeSecondary}" MinWidth="34" />
-                                                <ProgressBar Grid.Column="1" Style="{StaticResource ThinProgress}" Height="4" Value="0.4" Margin="6,0" />
-                                                <TextBlock Grid.Column="2" Text="3:45" FontSize="11" Foreground="{DynamicResource ThemeSecondary}" />
-                                            </Grid>
-                                        </Grid>
-                                    </Grid>
+                                    <local:ThemePreview x:Name="Preview" />
                                   </Viewbox>
                                 </Border>
 
@@ -342,7 +273,12 @@
                                             Padding="14,6" Click="OnUseTheme" />
                                     <TextBlock x:Name="ThemeInUse" Text="{l:Tr theme_in_use}" VerticalAlignment="Center" Margin="12,0,0,0" Opacity="0.7" />
                                 </StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                <WrapPanel Margin="0,10,0,0">
+                                    <Button Content="{l:Tr theme_customize}" Padding="12,5" Margin="0,0,8,8" Click="OnCustomizeTheme" />
+                                    <Button Content="{l:Tr theme_import}" Padding="12,5" Margin="0,0,8,8" Click="OnImportTheme" />
+                                    <Button Content="{l:Tr theme_export}" Padding="12,5" Margin="0,0,8,8" Click="OnExportTheme" />
+                                </WrapPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
                                     <Button Content="{l:Tr themes_open_folder}" Padding="12,5" Click="OnOpenThemes" />
                                     <Button Content="{l:Tr common_reload}" Padding="12,5" Margin="8,0,0,0" Click="OnReloadThemes" />
                                 </StackPanel>

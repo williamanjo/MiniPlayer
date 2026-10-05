@@ -456,6 +456,42 @@ public partial class SettingsWindow : Window
 
     void OnOpenThemes(object sender, RoutedEventArgs e) => ThemeService.OpenFolder();
 
+    ThemeDefinition SelectedTheme() => _app.Themes.Find((ThemeList.SelectedItem as ThemeItem)?.Id ?? _app.Themes.CurrentId);
+
+    void OnCustomizeTheme(object sender, RoutedEventArgs e) =>
+        new ThemeEditorWindow(SelectedTheme(), id => LoadThemes(id)) { Owner = this }.Show();
+
+    void OnImportTheme(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog { Filter = Loc.T("theme_file_filter") + "|*.json" };
+        if (dialog.ShowDialog(this) != true) return;
+        try
+        {
+            var id = _app.Themes.Import(dialog.FileName);
+            LoadThemes(id);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, Loc.F("theme_import_failed", ex.Message), Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    void OnExportTheme(object sender, RoutedEventArgs e)
+    {
+        var theme = SelectedTheme();
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Filter = Loc.T("theme_file_filter") + "|*.json",
+            FileName = string.Concat(theme.Name.Select(c => System.IO.Path.GetInvalidFileNameChars().Contains(c) ? '-' : c)) + ".json",
+        };
+        if (dialog.ShowDialog(this) != true) return;
+        try { ThemeService.Export(theme, dialog.FileName); }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, ex.Message, Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
     void OnReloadThemes(object sender, RoutedEventArgs e)
     {
         _app.Themes.Load();
