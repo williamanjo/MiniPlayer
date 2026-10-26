@@ -22,28 +22,34 @@
                                          Visibility="{Binding VisualizerAroundCover, Converter={StaticResource BoolToVis}}" />
             <Grid RenderTransformOrigin="0.5,0.5">
                 <Grid.RenderTransform>
-                    <TransformGroup>
-                        <ScaleTransform ScaleX="{Binding CoverScale}" ScaleY="{Binding CoverScale}" />
-                        <RotateTransform Angle="{Binding CoverAngle}" />
-                    </TransformGroup>
+                    <ScaleTransform ScaleX="{Binding CoverScale}" ScaleY="{Binding CoverScale}" />
                 </Grid.RenderTransform>
-                <Border CornerRadius="{DynamicResource ThemeCoverRadius}" Background="{DynamicResource ThemeTrack}"
-                        Effect="{DynamicResource ThemeCoverShadow}">
-                    <Viewbox Margin="22" MaxWidth="48">
-                        <TextBlock Text="&#xE8D6;" FontFamily="{StaticResource IconFont}" Opacity="0.5" />
-                    </Viewbox>
-                </Border>
-                <Border CornerRadius="{DynamicResource ThemeCoverRadius}" Visibility="{Binding HasCover, Converter={StaticResource BoolToVis}}">
-                    <Border.Background>
-                        <ImageBrush ImageSource="{Binding Cover}" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality" />
-                    </Border.Background>
-                </Border>
-                <Border CornerRadius="{DynamicResource ThemeCoverRadius}" BorderBrush="{DynamicResource ThemeCoverBorder}"
-                        BorderThickness="{DynamicResource ThemeCoverBorderThickness}" />
-                <local:VisualizerControl VerticalAlignment="Bottom" Margin="6,0,6,5" BarCount="{Binding VisualizerBars}" Opacity="0.9"
-                                         Height="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=Grid}, Converter={StaticResource FractionConverter}, ConverterParameter=0.32}"
-                                         Fill="{DynamicResource ThemeVisualizer}"
-                                         Visibility="{Binding VisualizerOnCover, Converter={StaticResource BoolToVis}}" />
+                <!-- only the art turns (vinyl); bars and badge stay upright -->
+                <Grid RenderTransformOrigin="0.5,0.5">
+                    <Grid.RenderTransform>
+                        <RotateTransform Angle="{Binding CoverAngle}" />
+                    </Grid.RenderTransform>
+                    <Border CornerRadius="{DynamicResource ThemeCoverRadius}" Background="{DynamicResource ThemeTrack}"
+                            Effect="{DynamicResource ThemeCoverShadow}">
+                        <Viewbox Margin="22" MaxWidth="48">
+                            <TextBlock Text="&#xE8D6;" FontFamily="{StaticResource IconFont}" Opacity="0.5" />
+                        </Viewbox>
+                    </Border>
+                    <Border CornerRadius="{DynamicResource ThemeCoverRadius}" Visibility="{Binding HasCover, Converter={StaticResource BoolToVis}}">
+                        <Border.Background>
+                            <ImageBrush ImageSource="{Binding Cover}" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality" />
+                        </Border.Background>
+                    </Border>
+                    <Border CornerRadius="{DynamicResource ThemeCoverRadius}" BorderBrush="{DynamicResource ThemeCoverBorder}"
+                            BorderThickness="{DynamicResource ThemeCoverBorderThickness}" />
+                </Grid>
+                <!-- bars cut to the cover shape (rounded / circle), not spilling out of it -->
+                <Grid local:RoundedClip.CornerRadius="{DynamicResource ThemeCoverRadius}" IsHitTestVisible="False"
+                      Visibility="{Binding VisualizerOnCover, Converter={StaticResource BoolToVis}}">
+                    <local:VisualizerControl VerticalAlignment="Bottom" Margin="6,0,6,5" BarCount="{Binding VisualizerBars}" Opacity="0.9"
+                                             Height="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=Grid}, Converter={StaticResource FractionConverter}, ConverterParameter=0.32}"
+                                             Fill="{DynamicResource ThemeVisualizer}" />
+                </Grid>
                 <!-- authorPosition "cover": small badge on the cover -->
                 <Border Visibility="{DynamicResource ThemeCreditCoverVisibility}" VerticalAlignment="Bottom" HorizontalAlignment="Center"
                         Margin="0,0,0,4" IsHitTestVisible="False">
