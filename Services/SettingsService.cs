@@ -139,9 +139,12 @@ public sealed class SettingsService
 
     public AppSettings Data { get; private set; } = new();
 
+    /// <summary>A settings file was there when the app started (first-run welcome: keep or clear).</summary>
+    public bool Existed { get; private set; }
+
     public static SettingsService Load()
     {
-        var service = new SettingsService();
+        var service = new SettingsService { Existed = File.Exists(FilePath) };
         try
         {
             if (File.Exists(FilePath))

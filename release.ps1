@@ -41,11 +41,23 @@ if ($Notes) { $pack += @("--releaseNotes", $Notes) }
 vpk @pack
 if ($LASTEXITCODE) { throw "vpk pack failed" }
 
+# Our installer (choices, progress, theme) carries Velopack's Setup.exe inside and runs it silently;
+# it replaces Velopack's Setup.exe as the download. Updates still come from the Velopack packages.
+$installerOut = Join-Path $OutDir "installer"
+$velopackSetup = (Resolve-Path (Join-Path $OutDir "MiniPlayer-win-Setup.exe")).Path
+dotnet build Installer\MiniPlayerSetup.csproj -c Release "-p:Version=$Version" "-p:VelopackSetup=$velopackSetup" -o $installerOut
+if ($LASTEXITCODE) { throw "installer build failed" }
+$installer = Join-Path $installerOut "MiniPlayer-win-Setup.exe"
+
 if ($Upload) {
     vpk upload github --repoUrl $repo --token (gh auth token) --publish `
         --releaseName "MiniPlayer for Browser Music v$Version" --tag "v$Version" --outputDir $OutDir
     if ($LASTEXITCODE) { throw "vpk upload failed" }
+    gh release upload "v$Version" $installer --clobber
+    if ($LASTEXITCODE) { throw "installer upload failed" }
     if ($Notes) { gh release edit "v$Version" --notes-file $Notes }
 }
+
+Get-Item $installer | Select-Object @{ n = "Name"; e = { "installer\$($_.Name)" } }, @{ n = "MB"; e = { [math]::Round($_.Length / 1MB, 1) } }
 
 Get-ChildItem $OutDir -Filter "*$Version*" | Select-Object Name, @{ n = "MB"; e = { [math]::Round($_.Length / 1MB, 1) } }

@@ -19,6 +19,10 @@ public static class Program
             .SetAutoApplyOnStartup(true)
             .Run();
 
+        // Velopack's silent setup starts the app when it finishes; our installer opens it itself
+        // after the user picked a theme, so this start does nothing. (Set by Installer/, inherited.)
+        if (Environment.GetEnvironmentVariable("MINIPLAYER_FROM_INSTALLER") == "1") return;
+
         var app = new App();
         app.InitializeComponent();
         app.Run();

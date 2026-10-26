@@ -119,6 +119,12 @@ public partial class App : Application
         RestoreLeftVolume();
         ViewModel.TrackChanged += RestoreLeftVolume;
 
+        if (ShouldWelcome(e.Args))
+        {
+            new WelcomeWindow(this, Settings.Existed).ShowDialog();
+            MarkWelcomeShown();
+        }
+
         SetMode(Settings.Data.Mode);
 
         Updates.UpdateAvailable += OnUpdateAvailable;
@@ -145,6 +151,29 @@ public partial class App : Application
         AudioService.SetVolume(left.Process, left.Volume);
         _leftVolume = null;
         Settings.ForgetVolume(left.Process, left.Volume);
+    }
+
+    /// <summary>
+    /// The Store build has no installer of ours, so its first run asks what the installer asks.
+    /// "--welcome" shows it in any build (testing).
+    /// </summary>
+    static bool ShouldWelcome(string[] args)
+    {
+        if (args.Contains("--welcome")) return true;
+#if STORE
+        try { return global::Windows.Storage.ApplicationData.Current.LocalSettings.Values["WelcomeShown"] is null; }
+        catch { return false; }
+#else
+        return false;
+#endif
+    }
+
+    static void MarkWelcomeShown()
+    {
+#if STORE
+        try { global::Windows.Storage.ApplicationData.Current.LocalSettings.Values["WelcomeShown"] = true; }
+        catch { /* shown again next time */ }
+#endif
     }
 
     /// <summary>Appends to error.log in the data folder; never throws.</summary>

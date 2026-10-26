@@ -32,6 +32,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- the installer is a separate project (Installer/MiniPlayerSetup.csproj) -->
+    <Compile Remove="Installer\**" />
+    <Page Remove="Installer\**" />
+    <None Remove="Installer\**" />
+    <EmbeddedResource Remove="Installer\**" />
+    <Resource Remove="Installer\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Avoid WPF/WinForms type name clashes (Application, Button, ...) -->
     <Using Remove="System.Windows.Forms" />
     <Using Remove="System.Drawing" />
@@ -40,6 +49,7 @@
   <ItemGroup>
     <Resource Include="Assets\app.ico" />
     <Resource Include="Assets\update-hero-*.jpg" />
+    <Resource Include="Assets\theme-thumbs\*.png" />
   </ItemGroup>
 
   <ItemGroup>

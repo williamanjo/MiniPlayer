@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    MiniPlayer's installer: our own window (choices, progress, theme) in front of Velopack's
+    Setup.exe, which it carries inside and runs with silent. .NET Framework 4.8 ships with
+    Windows 10/11, so this exe needs no runtime and stays small apart from the embedded Setup.
+    Built by release.ps1 after `vpk pack`: -p:VelopackSetup=<path to Velopack's Setup.exe>.
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings> <!-- RoundedClip.cs (shared with the app) relies on them -->
+    <AssemblyName>MiniPlayer-win-Setup</AssemblyName>
+    <RootNamespace>MiniPlayerSetup</RootNamespace>
+    <ApplicationIcon>..\Assets\app.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Product>MiniPlayer for Browser Music</Product>
+    <AssemblyTitle>MiniPlayer for Browser Music Setup</AssemblyTitle>
+    <VelopackSetup Condition="'$(VelopackSetup)' == ''">..\releases\MiniPlayer-win-Setup.exe</VelopackSetup>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Views\RoundedClip.cs" Link="RoundedClip.cs" />
+    <EmbeddedResource Include="$(VelopackSetup)" LogicalName="VelopackSetup.exe" />
+    <EmbeddedResource Include="..\Localization\Languages\*.json" LogicalName="lang/%(Filename)%(Extension)" WithCulture="false" />
+    <Resource Include="..\Assets\update-hero-*.jpg" Link="Assets\%(Filename)%(Extension)" />
+    <Resource Include="..\Assets\app.ico" Link="Assets\app.ico" />
+    <Resource Include="..\Assets\theme-thumbs\*.png" Link="Themes\%(Filename)%(Extension)" />
+    <Page Include="..\Views\SetupStyles.xaml" Link="SetupStyles.xaml" />
+  </ItemGroup>
+
+</Project>
