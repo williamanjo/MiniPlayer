@@ -152,7 +152,7 @@ public partial class SettingsWindow : Window
     void RefreshSleepTimer()
     {
         var timer = _app.SleepTimer;
-        SleepStatus.Text = timer.IsActive ? Loc.F("sleep_status", timer.RemainingText) : Loc.T("sleep_none");
+        SleepStatus.Text = timer.IsActive ? timer.Text("sleep_status") : Loc.T("sleep_none");
         SleepCancel.Visibility = Vis(timer.IsActive);
     }
 

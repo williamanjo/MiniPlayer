@@ -56,7 +56,7 @@ public sealed class TrayIcon : IDisposable
             if (timer.IsActive)
             {
                 sleepItem.DropDownItems.Add(new ToolStripSeparator());
-                sleepItem.DropDownItems.Add(Loc.F("sleep_cancel", timer.RemainingText), null, (_, _) => timer.Cancel());
+                sleepItem.DropDownItems.Add(timer.Text("sleep_cancel"), null, (_, _) => timer.Cancel());
             }
         };
 

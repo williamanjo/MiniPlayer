@@ -424,5 +424,7 @@
   "editor_default_name": "Tema",
   "editor_image_filter": "Imagens",
   "language_russian": "Русский",
-  "language_korean": "한국어"
+  "language_korean": "한국어",
+  "sleep_status_end": "🌙 Pausa no fim da música",
+  "sleep_cancel_end": "Cancelar (fim da música)"
 }

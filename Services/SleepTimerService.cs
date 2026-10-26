@@ -41,6 +41,9 @@ public sealed class SleepTimerService
 
     public bool IsActive => _endsAt is not null || _endOfTrack;
 
+    /// <summary>A text key for the timer state: "…_end" when it waits for the end of the track.</summary>
+    public string Text(string key) => _endOfTrack ? Loc.T(key + "_end") : Loc.F(key, RemainingText);
+
     /// <summary>True while this timer is lowering the app volume (other features keep off it).</summary>
     public bool IsFading => _fadeProcess is not null;
 

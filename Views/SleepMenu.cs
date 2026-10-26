@@ -28,7 +28,7 @@ internal static class SleepMenu
 
         if (!timer.IsActive) return;
         menu.Items.Add(new Separator());
-        var cancel = new MenuItem { Header = Loc.F("sleep_cancel", timer.RemainingText) };
+        var cancel = new MenuItem { Header = timer.Text("sleep_cancel") };
         cancel.Click += (_, _) => timer.Cancel();
         menu.Items.Add(cancel);
     }
