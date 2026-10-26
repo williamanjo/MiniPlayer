@@ -14,7 +14,7 @@ namespace MiniPlayer.Localization;
 /// </summary>
 public sealed class Loc : INotifyPropertyChanged
 {
-    public static readonly string[] Languages = ["en", "pt-BR", "es", "fr", "de", "ja"];
+    public static readonly string[] Languages = ["en", "pt-BR", "es", "fr", "de", "ja", "ru", "ko"];
 
     // complete, and the fallback for keys a language file lacks; declared before Instance, which uses it
     static readonly Dictionary<string, string> English = Load("en");

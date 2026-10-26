@@ -422,5 +422,7 @@
   "duration_sec": "{0} s",
   "duration_hm": "{0} h {1} min",
   "editor_default_name": "Theme",
-  "editor_image_filter": "Images"
+  "editor_image_filter": "Images",
+  "language_russian": "Русский",
+  "language_korean": "한국어"
 }

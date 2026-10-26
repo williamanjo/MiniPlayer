@@ -49,7 +49,7 @@ publicam a Media Session.
 - **Histórico e estatísticas**: músicas ouvidas por dia (busca, copiar, buscar no YouTube/Spotify/Deezer) e mais ouvidos por período
 - **Transmissão (OBS)**: arquivos "tocando agora" (texto, capa e overlay.html) atualizados a cada troca
 
-- **Idiomas**: English, Português (Brasil), Español, Français, Deutsch e 日本語, troca ao vivo em Configurações → Geral
+- **Idiomas**: English, Português (Brasil), Español, Français, Deutsch, 日本語, Русский e 한국어, troca ao vivo em Configurações → Geral
   (padrão: idioma do Windows). Cada idioma é um arquivo em `Localization/Languages/<código>.json`
 
 ## Temas

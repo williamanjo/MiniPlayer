@@ -119,6 +119,8 @@
                                 <ComboBoxItem Tag="fr" Content="{l:Tr language_french}" />
                                 <ComboBoxItem Tag="de" Content="{l:Tr language_german}" />
                                 <ComboBoxItem Tag="ja" Content="{l:Tr language_japanese}" />
+                                <ComboBoxItem Tag="ru" Content="{l:Tr language_russian}" />
+                                <ComboBoxItem Tag="ko" Content="{l:Tr language_korean}" />
                             </ComboBox>
                         </Grid>
                     </Border>
