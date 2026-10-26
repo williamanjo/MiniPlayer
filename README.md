@@ -2,7 +2,8 @@
 
 Mini player para Windows 11 que mostra e controla a música tocando no navegador
 (YouTube, Spotify Web, SoundCloud, Deezer, ...). Sem extensão: lê os controles de mídia
-do Windows (SMTC), onde Chrome/Edge/Firefox/Brave/Opera publicam a Media Session.
+do Windows (SMTC), onde Chrome, Edge, Firefox, Brave, Opera, Vivaldi, Arc, Zen e LibreWolf
+publicam a Media Session.
 
 ## Recursos
 - Título, artista e navegador de origem
@@ -12,15 +13,18 @@ do Windows (SMTC), onde Chrome/Edge/Firefox/Brave/Opera publicam a Media Session
 - **Redimensionar** o player flutuante pelas bordas/cantos; o layout se adapta:
   achatado vira uma linha só (mini), alto e estreito vira cartão com capa grande,
   estreito esconde itens secundários (tudo segue no clique direito).
-  **Zoom**: Ctrl + roda do mouse ou clique direito → Zoom (70%–200%)
+  **Zoom**: Ctrl + roda do mouse (70%–200%); clique direito → "Redefinir tamanho" volta ao padrão
+- **Encaixe** ao arrastar o player: acima da barra de tarefas, nas bordas da tela ou desligado
+  (Configurações → Geral)
 - **Modo barra de tarefas**: player compacto sobre a taskbar, ao lado da bandeja
-  - arraste o texto para mover na horizontal; clique direito → menu
-  - clique duplo (fora dos botões) → volta ao modo normal
-  - várias telas: escolha a barra em clique direito → "Mover para a tela" ou na bandeja →
-    "Barra de tarefas da tela" (requer "Mostrar barra de tarefas em todas as telas" no Windows)
+  - arraste o texto para mover na horizontal; arraste as bordas para mudar a largura
+  - clique direito → menu; clique duplo (fora dos botões) → volta ao modo flutuante
+  - várias telas: arraste o player até a barra de tarefas de outra tela
+    (requer "Mostrar barra de tarefas em todas as telas" no Windows)
   - some sozinho em tela cheia e com taskbar auto-ocultável escondida
   - cor do texto segue tema claro/escuro do Windows
-- Ícone na bandeja: mostrar player, alternar modo, fixar no topo, iniciar com Windows, sair
+- **Bandeja**: mostrar player, modo barra de tarefas, fixar no topo, temas, timer para dormir,
+  histórico, configurações, atualizar (quando há versão nova) e sair
 - Prioriza sessão de navegador tocando; troca automaticamente ao tocar em outra aba
 - **Escolher aba/app**: clique no artista (▾) ou clique direito → "Tocando em"; "Automático" volta ao padrão
 - **Volume**: roda do mouse sobre o player muda o volume só do app que toca (Mixer de Volume);
@@ -29,11 +33,16 @@ do Windows (SMTC), onde Chrome/Edge/Firefox/Brave/Opera publicam a Media Session
 - **Letras sincronizadas** (botão 🎤 / "Mostrar letra na barra"): via [LRCLIB](https://lrclib.net).
   Desligado por padrão; quando ligado envia título/artista ao lrclib.net
 
-- **Configurações** (⚙ no player): janela com abas Geral, Aparência (temas com prévia), Atalhos e controles, Barra de tarefas, Atualizações
-- **Visualizador**: barras de áudio sobre a capa e mini equalizador na barra de tarefas
+- **Configurações** (⚙ no player ou na bandeja): Geral, Aparência (temas com prévia e editor),
+  Atalhos e controles, Automação, Histórico, Transmissão (OBS), Barra de tarefas, Atualizações e Sobre.
+  "Iniciar com o Windows" fica em Geral
+- **Visualizador**: barras de áudio junto aos controles, sobre a capa, embaixo ou em volta da capa,
+  e mini equalizador na barra de tarefas
 - **Atalhos globais** configuráveis (padrão: `Ctrl+Alt+Home` play/pause, `Ctrl+Alt+←/→` faixa, `Ctrl+Alt+↑/↓` volume, `Ctrl+Alt+M` mudo, `Ctrl+Alt+P` mostrar/ocultar)
 - **Timer para dormir**: minutos ou fim da música, com volume diminuindo aos poucos
 - **Gestos**: roda do mouse = volume ou trocar música; clique do meio = mudo ou play/pause
+- **Teclado no player** (com o player em foco): `Espaço` play/pause, `Ctrl+←/→` faixa anterior/próxima,
+  `Ctrl+↑/↓` volume, `M` mudo; `Tab` percorre os botões. Os botões têm nome para leitores de tela
 
 - **Automação**: pausa a música em ligações (microfone em uso) e abaixa quando outro app toca som
 
@@ -43,12 +52,16 @@ do Windows (SMTC), onde Chrome/Edge/Firefox/Brave/Opera publicam a Media Session
 - **Idiomas**: English e Português (Brasil), troca ao vivo em Configurações → Geral (padrão: idioma do Windows)
 
 ## Temas
-5 temas embutidos: **Escuro**, **Claro**, **Vidro (capa)** (capa desfocada no fundo), **Neon** e **Terminal**.
-Escolha em: bandeja → Temas, ou clique direito no player.
+11 temas embutidos: **Escuro**, **Claro**, **Vidro (capa)** (capa desfocada no fundo), **Neon**, **Vinil**
+(capa redonda girando), **Terminal**, **Papel**, **Retrowave**, **Matcha**, **Aurora** e **Brutalista**.
+Escolha em: bandeja → Temas, clique direito no player, ou Configurações → Aparência.
 
 ### Criar um tema
-Temas são arquivos `.json` em `%APPDATA%\MiniPlayer\themes` (ou numa pasta `themes` ao lado do exe).
-A pasta já vem com `exemplo-oceano.json` comentado. Copie, mude `name` e as cores — salvar recarrega na hora.
+O jeito mais fácil é o **editor de temas** (Configurações → Aparência), com prévia ao vivo.
+Também dá para editar à mão: temas são arquivos `.json` em `%APPDATA%\MiniPlayer\themes` (ou numa pasta
+`themes` ao lado do exe). A pasta já vem com `exemplo-oceano.json` comentado. Copie, mude `name` e as
+cores — salvar recarrega na hora. Se o arquivo ficar inválido enquanto você edita, o player mostra o tema
+padrão até você corrigir, sem perder a escolha.
 
 | Campo | Exemplo | Descrição |
 |---|---|---|
@@ -64,6 +77,17 @@ A pasta já vem com `exemplo-oceano.json` comentado. Copie, mude `name` e as cor
 | `backdrop` | `"none"` / `"cover"` / `"image"` | Fundo: nada, capa desfocada, ou imagem |
 | `backgroundImage` | `"fundo.png"` | Imagem na mesma pasta do tema (com `backdrop: "image"`) |
 | `overlay` | `"#99000000"` | Película sobre capa/imagem p/ legibilidade |
+| `authorPosition` | `"bottomRight"` | Crédito do autor: `bottom`, `bottomLeft`, `bottomRight`, `top`, `topLeft`, `topRight`, `cover` ou `none` |
+| `backgroundAngle` | `90` | Direção do degradê em graus (0 = esquerda→direita, 90 = cima→baixo) |
+| `backdropBlur`, `backgroundImageOpacity` | `30`, `1` | Desfoque da capa no fundo (0–80) e opacidade da imagem |
+| `titleFont`, `titleSize`, `titleWeight`, `subtitleSize` | `"Georgia"`, `14`, `"bold"`, `12` | Título (`normal`, `semibold`, `bold`) e subtítulo |
+| `lyricsColor`, `lyricsDimColor`, `iconColor` | `"#FFFFFF"` | Linha atual da letra, linhas vizinhas e ícones |
+| `playButton`, `playButtonColor`, `playIconColor` | `"circle"` | Play/pause simples (`plain`) ou num círculo preenchido |
+| `coverShape`, `coverSpin`, `coverSpinSeconds`, `coverSpinDirection` | `"circle"`, `true`, `12`, `"clockwise"` | Capa redonda girando (vinil); `counterclockwise` inverte |
+| `coverBorder`, `coverBorderThickness`, `coverShadowOpacity` | `"#FF0B0B0B"`, `6`, `0.55` | Borda e sombra da capa |
+| `progressGradient`, `progressHeight` | `["#FFB347", "#FF5E62"]`, `4` | Barra de progresso |
+| `visualizerGradient`, `visualizerOpacity` | `["#FF5E62", "#FFB347"]`, `0.85` | Barras de áudio (de baixo para cima) |
+| `shadowColor`, `shadowBlur`, `shadowDepth` | `"#000000"`, `14`, `2` | Sombra do player |
 
 Temas são só dados (JSON, não XAML), então um tema de terceiros não executa código.
 Arquivos inválidos aparecem com ⚠ no menu de temas.
@@ -80,7 +104,7 @@ O app instalado verifica novas versões ao abrir e a cada 6 h. Quando há uma, m
 Windows com **Atualizar agora** / **Depois** — ela fica na central de notificações mesmo com o app fechado,
 e o botão abre o MiniPlayer e atualiza. Também há o item **⬆ Atualizar para vX** na bandeja.
 
-**Manter atualizado** (bandeja): ao abrir, instala a nova versão sozinho; com o app aberto, só baixa
+**Manter atualizado** (Configurações → Atualizações): ao abrir, instala a nova versão sozinho; com o app aberto, só baixa
 em segundo plano (sem reiniciar no meio da música) e instala na próxima abertura.
 
 ### Microsoft Store
@@ -103,7 +127,9 @@ dotnet build
 Testar atualização sem publicar: gere duas versões numa pasta e rode o app instalado com
 `MINIPLAYER_UPDATE_SOURCE=<pasta>`.
 
-Configurações: `%APPDATA%\MiniPlayer\settings.json`.
+Configurações: `%APPDATA%\MiniPlayer\settings.json`. Na versão da Store o Windows guarda essa pasta em
+`%LOCALAPPDATA%\Packages\<app>\LocalCache\Roaming\MiniPlayer` (Configurações → Sobre → "Abrir pasta de configurações" leva
+até ela). Erros inesperados ficam em `error.log` na mesma pasta.
 
 ## Limitações
 - **Uma aba por navegador**: Chrome/Edge/Firefox publicam só uma aba de mídia por vez. Se a aba publicada for pausada enquanto outra aba do mesmo navegador toca, o player avisa — dê pause/play na outra aba para ela assumir.
