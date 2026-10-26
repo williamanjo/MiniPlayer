@@ -9,6 +9,7 @@ namespace MiniPlayer;
 
 public partial class App : Application
 {
+    const string MutexName = "MiniPlayer.SingleInstance.6E1F3C2A";
     Mutex? _mutex;
     TrayIcon? _tray;
     PlayerWindow? _player;
@@ -32,12 +33,26 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
-        _mutex = new Mutex(true, "MiniPlayer.SingleInstance.6E1F3C2A", out var isFirst);
+        _mutex = new Mutex(true, MutexName, out var isFirst);
         if (!isFirst)
         {
             Shutdown();
             return;
         }
+
+        DispatcherUnhandledException += (_, args) =>
+        {
+            LogError(args.Exception);
+            args.Handled = true; // a tray app should survive a failing click handler
+            ShowMessage(Loc.F("err_unexpected", args.Exception.Message), AppInfo.Name,
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+        };
+        AppDomain.CurrentDomain.UnhandledException += (_, args) => LogError(args.ExceptionObject as Exception);
+        TaskScheduler.UnobservedTaskException += (_, args) =>
+        {
+            LogError(args.Exception);
+            args.SetObserved();
+        };
 
         Settings = SettingsService.Load();
         Loc.SetLanguage(Settings.Data.Language);
@@ -97,7 +112,7 @@ public partial class App : Application
         Hotkeys.Pressed += OnHotkey;
         ApplyHotkeys();
         _tray = new TrayIcon(this);
-        ViewModel.TrackChanged += () => _tray.SetText(ViewModel.FullText);
+        ViewModel.TrackChanged += () => _tray?.SetText(ViewModel.FullText);
 
         SetMode(Settings.Data.Mode);
 
@@ -113,6 +128,21 @@ public partial class App : Application
         {
             ShowMessage(Loc.F("err_media", ex.Message),
                 AppInfo.Name, MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    /// <summary>Appends to error.log in the data folder; never throws.</summary>
+    static void LogError(Exception? ex)
+    {
+        try
+        {
+            System.IO.Directory.CreateDirectory(AppInfo.DataDir);
+            System.IO.File.AppendAllText(System.IO.Path.Combine(AppInfo.DataDir, "error.log"),
+                $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {typeof(App).Assembly.GetName().Version}\n{ex}\n\n");
+        }
+        catch
+        {
+            // logging must not crash the app
         }
     }
 
@@ -221,7 +251,7 @@ public partial class App : Application
         Settings.Save();
         Loc.SetLanguage(code);
         Themes.Load(); // built-in theme names are translated
-        Themes.Apply(Themes.CurrentId);
+        Themes.Reapply();
         ViewModel.RefreshTexts();
     }
 
@@ -381,12 +411,22 @@ public partial class App : Application
                 {
                     Settings.Save();
                     _tray?.Dispose();
+                    _tray = null;
                     _mutex?.ReleaseMutex();
+                    _mutex?.Dispose();
+                    _mutex = null;
                 });
         }
         catch (Exception ex)
         {
             _updating = false;
+            // the apply failed after the restart prep: this instance keeps running, so take tray and lock back
+            _mutex ??= new Mutex(true, MutexName, out _);
+            if (_tray is null)
+            {
+                _tray = new TrayIcon(this);
+                _tray.SetText(ViewModel.FullText);
+            }
             ShowMessage(Loc.F("update_failed", ex.Message), "MiniPlayer",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }

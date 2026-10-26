@@ -43,7 +43,7 @@ internal static class ThemeMenu
         reload.Click += (_, _) =>
         {
             themes.Load();
-            themes.Apply(themes.CurrentId);
+            themes.Reapply();
         };
         menu.Items.Add(reload);
     }

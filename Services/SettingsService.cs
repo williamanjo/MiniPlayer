@@ -103,6 +103,15 @@ public sealed class AppSettings
     /// <summary>Sleep timer lowers the volume during the last seconds before pausing.</summary>
     public bool SleepFade { get; set; } = true;
 
+    /// <summary>Fills collections a hand-edited or imported file left as null.</summary>
+    public AppSettings Normalize()
+    {
+        Hotkeys ??= [];
+        CallIgnore ??= [];
+        Overlay ??= new();
+        return this;
+    }
+
     /// <summary>Saved hotkeys merged over the defaults.</summary>
     public Dictionary<string, string> HotkeyBindings()
     {
@@ -127,11 +136,12 @@ public sealed class SettingsService
         try
         {
             if (File.Exists(FilePath))
-                service.Data = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath), JsonOptions) ?? new();
+                service.Data = (JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath), JsonOptions) ?? new()).Normalize();
         }
         catch
         {
-            // Corrupt file: fall back to defaults.
+            // Corrupt file: keep it aside (the next Save would overwrite it) and fall back to defaults.
+            try { File.Move(FilePath, Path.Combine(Dir, "settings.corrupt.json"), overwrite: true); } catch { }
         }
         return service;
     }
@@ -140,7 +150,7 @@ public sealed class SettingsService
 
     /// <summary>Settings from JSON (a backup); throws on invalid content.</summary>
     public static AppSettings Parse(string json) =>
-        JsonSerializer.Deserialize<AppSettings>(json, JsonOptions) ?? throw new JsonException("empty");
+        (JsonSerializer.Deserialize<AppSettings>(json, JsonOptions) ?? throw new JsonException("empty")).Normalize();
 
     /// <summary>Replaces all settings (backup import) and writes them; the app restarts after this.</summary>
     public void Replace(AppSettings data)
@@ -154,7 +164,10 @@ public sealed class SettingsService
         try
         {
             Directory.CreateDirectory(Dir);
-            File.WriteAllText(FilePath, ToJson());
+            // temp file + move: a crash mid-write never leaves a truncated settings.json
+            var tmp = FilePath + ".tmp";
+            File.WriteAllText(tmp, ToJson());
+            File.Move(tmp, FilePath, overwrite: true);
         }
         catch
         {

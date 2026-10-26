@@ -139,7 +139,7 @@ public sealed class ThemeService
         {
             _reloadDebounce.Stop();
             Load();
-            Apply(_settings.Data.Theme);
+            Reapply();
         };
     }
 
@@ -152,7 +152,7 @@ public sealed class ThemeService
     {
         EnsureUserDir();
         Load();
-        Apply(_settings.Data.Theme);
+        Reapply();
         Watch();
     }
 
@@ -229,9 +229,12 @@ public sealed class ThemeService
         EnsureUserDir();
         if (theme.BackgroundImage is { } image)
         {
-            var src = Path.Combine(Path.GetDirectoryName(sourcePath)!, image);
-            if (File.Exists(src)) File.Copy(src, Path.Combine(UserDir, Path.GetFileName(image)), overwrite: true);
-            theme.BackgroundImage = Path.GetFileName(image);
+            // only an image from the theme's own folder (no "..\" or absolute paths), copied without overwriting
+            var root = Path.GetFullPath(Path.GetDirectoryName(sourcePath)!) + Path.DirectorySeparatorChar;
+            var src = Path.GetFullPath(Path.Combine(root, image));
+            theme.BackgroundImage = src.StartsWith(root, StringComparison.OrdinalIgnoreCase) && File.Exists(src)
+                ? CopyImage(src)
+                : null;
         }
         var path = UniquePath(theme.Name);
         File.WriteAllText(path, ToJson(theme));
@@ -247,6 +250,29 @@ public sealed class ThemeService
             File.Copy(Path.Combine(dir, image), Path.Combine(Path.GetDirectoryName(targetPath)!, Path.GetFileName(image)), overwrite: true);
     }
 
+    static readonly string[] ImageExtensions = [".png", ".jpg", ".jpeg", ".bmp", ".webp", ".gif"];
+
+    /// <summary>
+    /// Copies an image into the themes folder and returns its file name, or null if it is not an image.
+    /// A different file with the same name gets a new name instead of being overwritten.
+    /// </summary>
+    public static string? CopyImage(string source)
+    {
+        var ext = Path.GetExtension(source).ToLowerInvariant();
+        if (!ImageExtensions.Contains(ext)) return null;
+        EnsureUserDir();
+        var baseName = Path.GetFileNameWithoutExtension(source);
+        var target = Path.Combine(UserDir, baseName + ext);
+        for (var i = 2; File.Exists(target) && !SameFile(source, target); i++)
+            target = Path.Combine(UserDir, $"{baseName} ({i}){ext}");
+        if (!File.Exists(target)) File.Copy(source, target);
+        return Path.GetFileName(target);
+    }
+
+    static bool SameFile(string a, string b) =>
+        string.Equals(Path.GetFullPath(a), Path.GetFullPath(b), StringComparison.OrdinalIgnoreCase)
+        || File.ReadAllBytes(a).AsSpan().SequenceEqual(File.ReadAllBytes(b));
+
     static string UniquePath(string name)
     {
         var safe = string.Concat((string.IsNullOrWhiteSpace(name) ? "tema" : name).Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '-' : c)).Trim();
@@ -261,7 +287,14 @@ public sealed class ThemeService
     public ThemeDefinition Find(string? id) =>
         Themes.FirstOrDefault(t => t.Id == id) ?? Themes.First(t => t.Id == DefaultId);
 
-    public void Apply(string? id)
+    /// <summary>
+    /// Applies the chosen theme again after a reload. A theme file that is missing or half-saved
+    /// shows the fallback without overwriting the choice, so the theme comes back once it is fixed.
+    /// </summary>
+    public void Reapply() => Apply(_settings.Data.Theme, persist: false);
+
+    /// <param name="persist">false for automatic reloads: a fallback must not overwrite the chosen theme.</param>
+    public void Apply(string? id, bool persist = true)
     {
         var theme = Find(id);
         var resources = BuildResources(theme);
@@ -270,7 +303,7 @@ public sealed class ThemeService
 
         CurrentId = theme.Id;
         Applied?.Invoke(theme);
-        if (_settings.Data.Theme != theme.Id)
+        if (persist && _settings.Data.Theme != theme.Id)
         {
             _settings.Data.Theme = theme.Id;
             _settings.Save();

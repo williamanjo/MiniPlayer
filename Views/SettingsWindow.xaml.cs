@@ -551,7 +551,7 @@ public partial class SettingsWindow : Window
     void OnReloadThemes(object sender, RoutedEventArgs e)
     {
         _app.Themes.Load();
-        _app.Themes.Apply(_app.Themes.CurrentId);
+        _app.Themes.Reapply();
     }
 
     void OnZoomChanged(object sender, RoutedPropertyChangedEventArgs<double> e)

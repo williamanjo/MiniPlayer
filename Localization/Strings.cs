@@ -321,6 +321,7 @@ public static class Strings
         ["updates_check_failed"] = ["Couldn't check: {0}", "Não foi possível verificar: {0}"],
         ["call_ended"] = ["📞 Call ended", "📞 Ligação encerrada"],
         ["call_started"] = ["📞 Call ({0}) — music paused", "📞 Ligação ({0}) — música pausada"],
+        ["err_unexpected"] = ["Something went wrong (details in error.log in the data folder).\n\n{0}", "Algo deu errado (detalhes no error.log da pasta de dados).\n\n{0}"],
         ["err_media"] = ["Couldn't access the Windows media controls.\n\n{0}", "Não foi possível acessar os controles de mídia do Windows.\n\n{0}"],
         ["balloon_downloaded_title"] = ["Update downloaded", "Atualização baixada"],
         ["balloon_downloaded_text"] = ["Version {0} will be installed on the next launch.", "A versão {0} será instalada na próxima abertura."],

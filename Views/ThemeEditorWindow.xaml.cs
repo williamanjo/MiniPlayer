@@ -172,11 +172,8 @@ public partial class ThemeEditorWindow : Window
             var dialog = new Microsoft.Win32.OpenFileDialog { Filter = "Imagens|*.png;*.jpg;*.jpeg;*.bmp;*.webp" };
             if (dialog.ShowDialog(this) != true) return;
             // images live next to the theme JSON (themes may only use files from their own folder)
-            ThemeService.EnsureUserDir();
-            var target = Path.Combine(ThemeService.UserDir, Path.GetFileName(dialog.FileName));
-            if (!string.Equals(Path.GetFullPath(dialog.FileName), Path.GetFullPath(target), StringComparison.OrdinalIgnoreCase))
-                File.Copy(dialog.FileName, target, overwrite: true);
-            _theme.BackgroundImage = Path.GetFileName(target);
+            if (ThemeService.CopyImage(dialog.FileName) is not { } file) return;
+            _theme.BackgroundImage = file;
             _theme.Directory = ThemeService.UserDir;
             name.Text = _theme.BackgroundImage;
             Changed();
