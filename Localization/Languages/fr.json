@@ -426,5 +426,7 @@
   "language_russian": "Русский",
   "language_korean": "한국어",
   "sleep_status_end": "🌙 Pause à la fin du titre",
-  "sleep_cancel_end": "Annuler (fin du titre)"
+  "sleep_cancel_end": "Annuler (fin du titre)",
+  "update_win_downloading": "Téléchargement de la version {0}…",
+  "update_win_installing": "Installation… l'app redémarre toute seule"
 }

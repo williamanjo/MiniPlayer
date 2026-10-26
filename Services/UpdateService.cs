@@ -93,7 +93,8 @@ public sealed class UpdateService
     }
 
     /// <summary>Downloads (if needed) the pending version, then restarts into it.</summary>
-    public async Task DownloadAndRestartAsync(Action<int> progress, Action beforeRestart)
+    /// <param name="beforeRestart">Awaited, so the UI can show its last state before the app exits.</param>
+    public async Task DownloadAndRestartAsync(Action<int> progress, Func<Task> beforeRestart)
     {
         if (_pending is not { } pending) return;
         if (DownloadedVersion != pending.TargetFullRelease.Version.ToString())
@@ -101,7 +102,7 @@ public sealed class UpdateService
             await _manager.DownloadUpdatesAsync(pending, progress);
             DownloadedVersion = pending.TargetFullRelease.Version.ToString();
         }
-        beforeRestart();
+        await beforeRestart();
         _manager.ApplyUpdatesAndRestart(pending.TargetFullRelease);
     }
 }

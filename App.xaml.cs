@@ -413,6 +413,7 @@ public partial class App : Application
     {
         if (_updating) return;
         _updating = true;
+        UpdateWindow? window = null;
         try
         {
             if (Updates.AvailableVersion is null && await Updates.CheckAsync(manual: true) is null)
@@ -421,10 +422,18 @@ public partial class App : Application
                 return; // already up to date
             }
             NotificationService.ClearUpdate();
+            window = new UpdateWindow(Updates.AvailableVersion!);
+            window.Show();
             await Updates.DownloadAndRestartAsync(
-                percent => _tray?.SetText(Loc.F("update_downloading", percent)),
-                () =>
+                percent =>
                 {
+                    window.SetProgress(percent);
+                    _tray?.SetText(Loc.F("update_downloading", percent));
+                },
+                async () =>
+                {
+                    window.SetInstalling();
+                    await Task.Delay(600); // let "Installing…" show before Velopack closes the app
                     Settings.Save();
                     _tray?.Dispose();
                     _tray = null;
@@ -436,6 +445,7 @@ public partial class App : Application
         catch (Exception ex)
         {
             _updating = false;
+            window?.Close();
             // the apply failed after the restart prep: this instance keeps running, so take tray and lock back
             _mutex ??= new Mutex(true, MutexName, out _);
             if (_tray is null)

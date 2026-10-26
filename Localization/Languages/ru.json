@@ -426,5 +426,7 @@
   "language_russian": "Русский",
   "language_korean": "한국어",
   "sleep_status_end": "🌙 Пауза в конце песни",
-  "sleep_cancel_end": "Отменить (конец песни)"
+  "sleep_cancel_end": "Отменить (конец песни)",
+  "update_win_downloading": "Загрузка версии {0}…",
+  "update_win_installing": "Установка… приложение перезапустится само"
 }

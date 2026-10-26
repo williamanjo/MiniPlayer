@@ -426,5 +426,7 @@
   "language_russian": "Русский",
   "language_korean": "한국어",
   "sleep_status_end": "🌙 Pausa no fim da música",
-  "sleep_cancel_end": "Cancelar (fim da música)"
+  "sleep_cancel_end": "Cancelar (fim da música)",
+  "update_win_downloading": "Baixando a versão {0}…",
+  "update_win_installing": "Instalando… o app reabre sozinho"
 }

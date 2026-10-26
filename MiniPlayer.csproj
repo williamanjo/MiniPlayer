@@ -39,6 +39,7 @@
 
   <ItemGroup>
     <Resource Include="Assets\app.ico" />
+    <Resource Include="Assets\update-hero-*.jpg" />
   </ItemGroup>
 
   <ItemGroup>

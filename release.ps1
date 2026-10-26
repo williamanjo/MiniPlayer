@@ -33,7 +33,9 @@ if ($LASTEXITCODE) { throw "dotnet publish failed" }
 $pack = @(
     "pack", "--packId", "MiniPlayer", "--packVersion", $Version, "--packDir", "publish",
     "--mainExe", "MiniPlayer.exe", "--packTitle", "MiniPlayer for Browser Music", "--packAuthors", "williamanjo",
-    "--icon", "Assets\app.ico", "--outputDir", $OutDir
+    "--icon", "Assets\app.ico", "--outputDir", $OutDir,
+    # Setup.exe shows the hero art with a progress bar while it installs
+    "--splashImage", "Assets\installer-splash.png", "--splashProgressColor", "#F472B6"
 )
 if ($Notes) { $pack += @("--releaseNotes", $Notes) }
 vpk @pack

@@ -426,5 +426,7 @@
   "language_russian": "Русский",
   "language_korean": "한국어",
   "sleep_status_end": "🌙 曲の終わりで一時停止",
-  "sleep_cancel_end": "キャンセル (曲の終わり)"
+  "sleep_cancel_end": "キャンセル (曲の終わり)",
+  "update_win_downloading": "バージョン {0} をダウンロードしています…",
+  "update_win_installing": "インストールしています… アプリは自動で再起動します"
 }

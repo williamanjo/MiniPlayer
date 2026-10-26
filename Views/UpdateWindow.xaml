@@ -1,0 +1,62 @@
+<!-- Shown while an update downloads and installs: the hero art centred on a dimmed screen,
+     with a progress bar under it. Closes by itself when the app restarts into the new version. -->
+<Window x:Class="MiniPlayer.Views.UpdateWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:MiniPlayer.Views"
+        xmlns:s="clr-namespace:MiniPlayer.Services"
+        Title="{x:Static s:AppInfo.Name}"
+        WindowStyle="None" AllowsTransparency="True" Background="#59000000"
+        WindowState="Maximized" WindowStartupLocation="CenterScreen"
+        Topmost="True" ResizeMode="NoResize" ShowActivated="True"
+        FontFamily="Segoe UI Variable Text, Segoe UI">
+    <Grid>
+        <Grid x:Name="Card" Width="820" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="40">
+            <!-- shadow on its own layer: the card below is clipped to its rounded corners -->
+            <Border CornerRadius="16" Background="#FBF7FE">
+                <Border.Effect>
+                    <DropShadowEffect Color="#000000" BlurRadius="48" ShadowDepth="6" Direction="270" Opacity="0.55" />
+                </Border.Effect>
+            </Border>
+            <Grid local:RoundedClip.CornerRadius="16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Image x:Name="Hero" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality" />
+                <Border Grid.Row="1" Padding="26,18,26,22">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#F6F1FD" Offset="0" />
+                            <GradientStop Color="#FDF2F8" Offset="1" />
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <StackPanel>
+                        <DockPanel Margin="0,0,0,10">
+                            <TextBlock x:Name="Detail" DockPanel.Dock="Right" FontSize="13" Foreground="#5B6070" VerticalAlignment="Bottom" />
+                            <TextBlock x:Name="Status" FontSize="16" FontWeight="SemiBold" Foreground="#16141E" TextTrimming="CharacterEllipsis" />
+                        </DockPanel>
+                        <ProgressBar x:Name="Bar" Height="8" Minimum="0" Maximum="100">
+                            <ProgressBar.Template>
+                                <ControlTemplate TargetType="ProgressBar">
+                                    <Grid>
+                                        <Border x:Name="PART_Track" CornerRadius="4" Background="#247C3AED" />
+                                        <Border x:Name="PART_Indicator" CornerRadius="4" HorizontalAlignment="Left">
+                                            <Border.Background>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                                    <GradientStop Color="#F472B6" Offset="0" />
+                                                    <GradientStop Color="#A78BFA" Offset="0.5" />
+                                                    <GradientStop Color="#38BDF8" Offset="1" />
+                                                </LinearGradientBrush>
+                                            </Border.Background>
+                                        </Border>
+                                    </Grid>
+                                </ControlTemplate>
+                            </ProgressBar.Template>
+                        </ProgressBar>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>
