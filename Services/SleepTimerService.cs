@@ -52,7 +52,9 @@ public sealed class SleepTimerService
             if (_endOfTrack) return Loc.T("sleep_end_short");
             if (_endsAt is not { } end) return null;
             var left = end - DateTime.Now;
-            return left.TotalSeconds < 60 ? $"{Math.Max(0, (int)left.TotalSeconds)} s" : $"{(int)Math.Ceiling(left.TotalMinutes)} min";
+            return left.TotalSeconds < 60
+                ? Loc.F("duration_sec", Math.Max(0, (int)left.TotalSeconds))
+                : Loc.F("duration_min", (int)Math.Ceiling(left.TotalMinutes));
         }
     }
 

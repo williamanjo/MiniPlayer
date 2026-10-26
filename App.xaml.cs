@@ -443,7 +443,7 @@ public partial class App : Application
                 _tray = new TrayIcon(this);
                 _tray.SetText(ViewModel.FullText);
             }
-            ShowMessage(Loc.F("update_failed", ex.Message), "MiniPlayer",
+            ShowMessage(Loc.F("update_failed", ex.Message), AppInfo.Name,
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
@@ -453,14 +453,14 @@ public partial class App : Application
         try
         {
             if (await Updates.CheckAsync(manual: true) is null)
-                ShowMessage(Loc.F("update_latest", Updates.CurrentVersion), "MiniPlayer",
+                ShowMessage(Loc.F("update_latest", Updates.CurrentVersion), AppInfo.Name,
                     MessageBoxButton.OK, MessageBoxImage.Information);
             else
                 InstallUpdate();
         }
         catch (Exception ex)
         {
-            ShowMessage(Loc.F("update_check_failed", ex.Message), "MiniPlayer",
+            ShowMessage(Loc.F("update_check_failed", ex.Message), AppInfo.Name,
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
@@ -488,7 +488,7 @@ public partial class App : Application
         catch (Exception ex)
         {
             // tray and mutex are already gone: close anyway, the settings are saved
-            ShowMessage(ex.Message, "MiniPlayer", MessageBoxButton.OK, MessageBoxImage.Warning);
+            ShowMessage(ex.Message, AppInfo.Name, MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         Shutdown();
     }

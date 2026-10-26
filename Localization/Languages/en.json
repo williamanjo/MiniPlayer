@@ -417,5 +417,10 @@
   "language_spanish": "Español",
   "language_french": "Français",
   "language_german": "Deutsch",
-  "language_japanese": "日本語"
+  "language_japanese": "日本語",
+  "duration_min": "{0} min",
+  "duration_sec": "{0} s",
+  "duration_hm": "{0} h {1} min",
+  "editor_default_name": "Theme",
+  "editor_image_filter": "Images"
 }

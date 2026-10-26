@@ -138,7 +138,7 @@ public partial class SettingsWindow : Window
     {
         foreach (var minutes in SleepMenu.Minutes)
         {
-            var button = new Button { Content = $"{minutes} min", Padding = new Thickness(12, 5, 12, 5), Margin = new Thickness(0, 0, 8, 6) };
+            var button = new Button { Content = Loc.F("duration_min", minutes), Padding = new Thickness(12, 5, 12, 5), Margin = new Thickness(0, 0, 8, 6) };
             button.Click += (_, _) => _app.SleepTimer.Start(TimeSpan.FromMinutes(minutes));
             SleepButtons.Children.Add(button);
         }

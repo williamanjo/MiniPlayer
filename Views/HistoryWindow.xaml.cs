@@ -215,7 +215,7 @@ public partial class HistoryWindow : Window
     static string Duration(int seconds)
     {
         var t = TimeSpan.FromSeconds(seconds);
-        return t.TotalHours >= 1 ? $"{(int)t.TotalHours} h {t.Minutes} min" : $"{t.Minutes} min";
+        return t.TotalHours >= 1 ? Loc.F("duration_hm", (int)t.TotalHours, t.Minutes) : Loc.F("duration_min", t.Minutes);
     }
 
     #endregion

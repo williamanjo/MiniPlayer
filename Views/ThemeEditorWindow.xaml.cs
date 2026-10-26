@@ -64,7 +64,7 @@ public partial class ThemeEditorWindow : Window
         var t = _theme;
 
         Section("editor_sec_general");
-        Row("editor_name", Text(() => t.Name, v => t.Name = string.IsNullOrWhiteSpace(v) ? "Tema" : v));
+        Row("editor_name", Text(() => t.Name, v => t.Name = string.IsNullOrWhiteSpace(v) ? Loc.T("editor_default_name") : v));
         Row("editor_author", Text(() => t.Author, v => t.Author = string.IsNullOrWhiteSpace(v) ? null : v));
         Row("editor_author_position", Combo([("bottom", "editor_pos_bottom"), ("bottomLeft", "editor_pos_bottom_left"),
                 ("bottomRight", "editor_pos_bottom_right"), ("top", "editor_pos_top"), ("topLeft", "editor_pos_top_left"), ("topRight", "editor_pos_top_right"), ("cover", "editor_pos_cover"),
@@ -169,7 +169,7 @@ public partial class ThemeEditorWindow : Window
         var button = new Button { Content = Loc.T("editor_image_choose"), Padding = new Thickness(12, 4, 12, 4) };
         button.Click += (_, _) =>
         {
-            var dialog = new Microsoft.Win32.OpenFileDialog { Filter = "Imagens|*.png;*.jpg;*.jpeg;*.bmp;*.webp" };
+            var dialog = new Microsoft.Win32.OpenFileDialog { Filter = Loc.T("editor_image_filter") + "|*.png;*.jpg;*.jpeg;*.bmp;*.webp" };
             if (dialog.ShowDialog(this) != true) return;
             // images live next to the theme JSON (themes may only use files from their own folder)
             if (ThemeService.CopyImage(dialog.FileName) is not { } file) return;
