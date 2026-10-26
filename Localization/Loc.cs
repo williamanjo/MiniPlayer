@@ -1,22 +1,27 @@
 using System.ComponentModel;
 using System.Globalization;
+using System.Text.Json;
 using System.Windows.Data;
 using System.Windows.Markup;
 
 namespace MiniPlayer.Localization;
 
 /// <summary>
-/// UI language. Texts live in <see cref="Strings"/> (one row per key: English, Portuguese).
+/// UI language. Texts live in Localization/Languages/&lt;code&gt;.json, one file per language,
+/// embedded in the exe. To add a language: add its file, its code to <see cref="Languages"/> and
+/// an entry in the settings language list.
 /// XAML binds through <see cref="TrExtension"/>, so switching language updates open windows live.
 /// </summary>
 public sealed class Loc : INotifyPropertyChanged
 {
+    public static readonly string[] Languages = ["en", "pt-BR", "es", "fr", "de", "ja"];
+
+    // complete, and the fallback for keys a language file lacks; declared before Instance, which uses it
+    static readonly Dictionary<string, string> English = Load("en");
+
     public static Loc Instance { get; } = new();
 
-    /// <summary>Supported languages, in the column order of <see cref="Strings.Table"/>.</summary>
-    public static readonly string[] Languages = ["en", "pt-BR"];
-
-    int _column;
+    Dictionary<string, string> _texts = English;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -27,17 +32,20 @@ public sealed class Loc : INotifyPropertyChanged
 
     /// <summary>Text for a key in the current language (falls back to English, then the key).</summary>
     public string this[string key] =>
-        Strings.Table.TryGetValue(key, out var row) ? row[_column] ?? row[0] ?? key : key;
+        _texts.TryGetValue(key, out var text) || English.TryGetValue(key, out text) ? text : key;
 
-    /// <summary>"auto"/null = Windows language (Portuguese → pt-BR, anything else → English).</summary>
+    /// <summary>"auto"/null = Windows language when supported (any Portuguese → pt-BR), else English.</summary>
     public static void SetLanguage(string? code)
     {
         if (string.IsNullOrEmpty(code) || code == "auto")
-            code = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "pt" ? "pt-BR" : "en";
-        var column = Math.Max(0, Array.IndexOf(Languages, code));
+        {
+            var windows = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+            code = windows == "pt" ? "pt-BR" : windows;
+        }
+        if (!Languages.Contains(code)) code = "en";
 
-        Instance._column = column;
-        Instance.Culture = CultureInfo.GetCultureInfo(Languages[column]);
+        Instance._texts = code == "en" ? English : Load(code);
+        Instance.Culture = CultureInfo.GetCultureInfo(code);
         Instance.PropertyChanged?.Invoke(Instance, new PropertyChangedEventArgs("Item[]"));
         Changed?.Invoke();
     }
@@ -45,6 +53,13 @@ public sealed class Loc : INotifyPropertyChanged
     public static string T(string key) => Instance[key];
 
     public static string F(string key, params object?[] args) => string.Format(Instance.Culture, Instance[key], args);
+
+    static Dictionary<string, string> Load(string code)
+    {
+        using var stream = typeof(Loc).Assembly.GetManifestResourceStream($"lang/{code}.json")
+            ?? throw new InvalidOperationException($"language file {code}.json is not embedded");
+        return JsonSerializer.Deserialize<Dictionary<string, string>>(stream) ?? [];
+    }
 }
 
 /// <summary>XAML: <c>Text="{l:Tr settings_title}"</c> — a live binding to the translated text.</summary>

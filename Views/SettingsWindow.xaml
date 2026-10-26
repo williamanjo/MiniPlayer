@@ -146,6 +146,10 @@
                                 <ComboBoxItem Tag="auto" Content="{l:Tr language_auto}" />
                                 <ComboBoxItem Tag="en" Content="{l:Tr language_english}" />
                                 <ComboBoxItem Tag="pt-BR" Content="{l:Tr language_portuguese}" />
+                                <ComboBoxItem Tag="es" Content="{l:Tr language_spanish}" />
+                                <ComboBoxItem Tag="fr" Content="{l:Tr language_french}" />
+                                <ComboBoxItem Tag="de" Content="{l:Tr language_german}" />
+                                <ComboBoxItem Tag="ja" Content="{l:Tr language_japanese}" />
                             </ComboBox>
                         </Grid>
                     </Border>

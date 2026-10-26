@@ -27,7 +27,7 @@ public sealed class AppSettings
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public PlayerMode Mode { get; set; } = PlayerMode.Floating;
     public bool PinOnTop { get; set; } = true;
-    /// <summary>UI language: null/"auto" = Windows language, "en" or "pt-BR".</summary>
+    /// <summary>UI language: null/"auto" = Windows language, or a code from Loc.Languages ("en", "pt-BR", "es", "fr", "de", "ja").</summary>
     public string? Language { get; set; }
     public double? Left { get; set; }
     public double? Top { get; set; }

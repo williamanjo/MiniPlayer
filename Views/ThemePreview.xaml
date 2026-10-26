@@ -5,7 +5,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:l="clr-namespace:MiniPlayer.Localization"
              Width="360" Height="160" IsHitTestVisible="False"
-             Focusable="False" KeyboardNavigation.TabNavigation="None" AutomationProperties.Name="{l:Tr theme_preview}"
+             Focusable="False" KeyboardNavigation.TabNavigation="None" AutomationProperties.Name="{l:Tr theme_preview_a11y}"
              TextElement.Foreground="{DynamicResource ThemeForeground}"
              TextElement.FontFamily="{DynamicResource ThemeFont}">
     <Grid>

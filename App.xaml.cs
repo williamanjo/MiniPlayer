@@ -259,7 +259,7 @@ public partial class App : Application
         _historyWindow.Activate();
     }
 
-    /// <summary>Switches the UI language live ("auto", "en", "pt-BR").</summary>
+    /// <summary>Switches the UI language live ("auto" or a code from Loc.Languages).</summary>
     public void SetLanguage(string code)
     {
         Settings.Data.Language = code;
