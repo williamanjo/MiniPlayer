@@ -468,6 +468,8 @@ public partial class App : Application
     /// <summary>Starts a fresh instance and closes this one (after a settings import).</summary>
     public void Restart()
     {
+        // free the global hotkeys first, or the new instance finds them taken and marks them failed
+        Hotkeys?.Dispose();
         _tray?.Dispose();
         _tray = null;
         _mutex?.ReleaseMutex();

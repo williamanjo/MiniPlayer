@@ -143,6 +143,7 @@ public sealed class HotkeyService : IDisposable
     public void Dispose()
     {
         foreach (var action in _registered) UnregisterHotKey(_window.Handle, (int)action + 1);
+        _registered.Clear(); // Restart disposes early; OnExit then calls this again
         _window.Dispose();
     }
 }

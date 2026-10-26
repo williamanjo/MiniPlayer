@@ -14,13 +14,7 @@ public static class AudioService
     public static string? ProcessNameFor(string? aumid)
     {
         if (string.IsNullOrEmpty(aumid)) return null;
-        var id = aumid.ToLowerInvariant();
-        if (id.Contains("msedge")) return "msedge";
-        if (id.Contains("chrome")) return "chrome";
-        if (id.Contains("firefox") || id.Contains("308046b0af4a39cb")) return "firefox";
-        if (id.Contains("brave")) return "brave";
-        if (id.Contains("opera")) return "opera";
-        if (id.Contains("vivaldi")) return "vivaldi";
+        if (Browsers.Find(aumid) is { } browser) return browser.Process;
         // Desktop apps: "Spotify.exe", "C:\...\foo.exe", "Company.App_xyz!App"
         var name = aumid.Split('!')[0].Split('\\', '/').Last();
         if (name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) name = name[..^4];

@@ -17,15 +17,27 @@ public static class BackupService
     public static void Export(SettingsService settings, string zipPath)
     {
         settings.Save();
-        if (File.Exists(zipPath)) File.Delete(zipPath);
-        using var zip = ZipFile.Open(zipPath, ZipArchiveMode.Create);
+        // build next to the target, then swap: a failure midway keeps the previous backup
+        var tmp = zipPath + ".tmp";
+        File.Delete(tmp); // a leftover from a failed export (Create mode refuses an existing file)
+        try
+        {
+            using (var zip = ZipFile.Open(tmp, ZipArchiveMode.Create))
+            {
+                using (var writer = new StreamWriter(zip.CreateEntry(SettingsEntry).Open()))
+                    writer.Write(settings.ToJson());
 
-        using (var writer = new StreamWriter(zip.CreateEntry(SettingsEntry).Open()))
-            writer.Write(settings.ToJson());
-
-        if (Directory.Exists(AppInfo.ThemesDir))
-            foreach (var file in Directory.GetFiles(AppInfo.ThemesDir))
-                zip.CreateEntryFromFile(file, ThemesPrefix + Path.GetFileName(file));
+                if (Directory.Exists(AppInfo.ThemesDir))
+                    foreach (var file in Directory.GetFiles(AppInfo.ThemesDir))
+                        zip.CreateEntryFromFile(file, ThemesPrefix + Path.GetFileName(file));
+            }
+            File.Move(tmp, zipPath, overwrite: true);
+        }
+        catch
+        {
+            try { File.Delete(tmp); } catch { }
+            throw;
+        }
     }
 
     /// <summary>Restores the backup: themes are added (same names replaced), settings replaced.</summary>

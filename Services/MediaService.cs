@@ -41,9 +41,6 @@ public sealed record MediaSessionInfo(object Key, string Title, string Artist, s
 /// </summary>
 public sealed class MediaService
 {
-    static readonly string[] BrowserIds =
-        ["msedge", "chrome", "firefox", "308046b0af4a39cb", "brave", "opera", "vivaldi", "arc", "zen", "librewolf"];
-
     readonly object _lock = new();
     SessionManager? _manager;
     List<Session> _watched = [];
@@ -176,22 +173,12 @@ public sealed class MediaService
         catch { return null; }
     }
 
-    static bool IsBrowser(string aumid)
-    {
-        var id = aumid.ToLowerInvariant();
-        return BrowserIds.Any(id.Contains);
-    }
+    static bool IsBrowser(string aumid) => Browsers.Find(aumid) is not null;
 
     static string FriendlySource(string aumid)
     {
-        var id = aumid.ToLowerInvariant();
-        if (id.Contains("msedge")) return "Edge";
-        if (id.Contains("chrome")) return "Chrome";
-        if (id.Contains("firefox") || id.Contains("308046b0af4a39cb")) return "Firefox";
-        if (id.Contains("brave")) return "Brave";
-        if (id.Contains("opera")) return "Opera";
-        if (id.Contains("vivaldi")) return "Vivaldi";
-        if (id.Contains("spotify")) return "Spotify";
+        if (Browsers.Find(aumid) is { } browser) return browser.Name;
+        if (aumid.Contains("spotify", StringComparison.OrdinalIgnoreCase)) return "Spotify";
         var name = aumid.Split('!')[0].Split('\\', '/').Last();
         return name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ? name[..^4] : name;
     }
@@ -256,7 +243,9 @@ public sealed class MediaService
     public Task PreviousAsync() => Run(s => s.TrySkipPreviousAsync());
     public Task SetShuffleAsync(bool on) => Run(s => s.TryChangeShuffleActiveAsync(on));
     public Task SetRepeatAsync(MediaPlaybackAutoRepeatMode mode) => Run(s => s.TryChangeAutoRepeatModeAsync(mode));
-    public Task SeekAsync(TimeSpan position) => Run(s => s.TryChangePlaybackPositionAsync(position.Ticks));
+    // the snapshot shows Position - StartTime, so the absolute target adds StartTime back
+    public Task SeekAsync(TimeSpan position) =>
+        Run(s => s.TryChangePlaybackPositionAsync((s.GetTimelineProperties().StartTime + position).Ticks));
 
     async Task Run(Func<Session, IAsyncOperation<bool>> op)
     {
