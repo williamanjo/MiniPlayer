@@ -62,6 +62,7 @@ public partial class PlayerWindow : Window
         {
             if (IsVisible) _topmostTimer.Start();
             else _topmostTimer.Stop();
+            viewModel.CoverVisible = IsVisible;
         };
         SizeChanged += OnSizeChanged;
     }

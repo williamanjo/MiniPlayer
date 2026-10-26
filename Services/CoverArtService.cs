@@ -13,7 +13,10 @@ namespace MiniPlayer.Services;
 public static class CoverArtService
 {
     static readonly HttpClient Http = CreateClient();
+    // shortcut: FIFO, not LRU; a replayed old track is just fetched again
+    const int CacheSize = 20;
     static readonly Dictionary<string, byte[]?> Cache = [];
+    static readonly Queue<string> CacheOrder = new();
 
     static HttpClient CreateClient()
     {
@@ -42,7 +45,12 @@ public static class CoverArtService
         {
             return null; // offline or timeout: don't cache, try again next time
         }
-        Cache[key] = image;
+        if (Cache.TryAdd(key, image))
+        {
+            CacheOrder.Enqueue(key);
+            // HD covers are 100–400 KB each: keep only the last few tracks in memory
+            if (CacheOrder.Count > CacheSize) Cache.Remove(CacheOrder.Dequeue());
+        }
         return image;
     }
 

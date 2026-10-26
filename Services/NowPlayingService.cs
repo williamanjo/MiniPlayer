@@ -61,14 +61,13 @@ public sealed class NowPlayingService
                 _written = state;
             }
 
-            // overlay.html only changes with its style; the song goes to nowplaying.js
-            var page = OverlayHtml.Build(_settings.Data.Overlay);
-            var pageState = page + "|" + Folder;
-            if (pageState != _writtenPage)
+            // overlay.html only changes with its style (editor/settings call Invalidate) or the folder;
+            // the song goes to nowplaying.js. Building the page every tick was wasted work.
+            if (Folder != _writtenPage)
             {
                 Directory.CreateDirectory(Folder);
-                WriteText("overlay.html", page);
-                _writtenPage = pageState;
+                WriteText("overlay.html", OverlayHtml.Build(_settings.Data.Overlay));
+                _writtenPage = Folder;
             }
 
             // position is sent with its timestamp; the page moves the bar on its own in between

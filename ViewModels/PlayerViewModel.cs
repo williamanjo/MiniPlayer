@@ -50,9 +50,8 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
 
         _media.Changed += () => _dispatcher.InvokeAsync(RefreshAsync);
 
-        var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
-        timer.Tick += (_, _) => UpdateProgress();
-        timer.Start();
+        _timer.Tick += (_, _) => UpdateProgress();
+        _timer.Start();
 
         UpdateOverlayTheme();
         SystemEvents.UserPreferenceChanged += (_, _) => _dispatcher.BeginInvoke(UpdateOverlayTheme);
@@ -269,10 +268,22 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
     /// <summary>The vinyl turns only while the music plays (it stops where it is when paused).</summary>
     public bool CoverSpinning => _coverSpin && _snap.IsPlaying;
 
+    bool _coverVisible;
+    /// <summary>Set by the floating player: no per-frame work while nobody can see the cover.</summary>
+    public bool CoverVisible
+    {
+        get => _coverVisible;
+        set
+        {
+            _coverVisible = value;
+            UpdateSpin();
+        }
+    }
+
     /// <summary>Turns per-frame updates on only while spinning, so idle players cost nothing.</summary>
     void UpdateSpin()
     {
-        var on = CoverSpinning;
+        var on = CoverSpinning && _coverVisible;
         if (on == _spinHooked) return;
         _spinHooked = on;
         _lastFrame = null;
@@ -510,6 +521,8 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(IsPlaying));
         OnPropertyChanged(nameof(CoverSpinning));
         UpdateSpin();
+        var interval = s.IsPlaying ? PlayingInterval : IdleInterval;
+        if (_timer.Interval != interval) _timer.Interval = interval;
         TrackChanged?.Invoke();
         UpdateProgress();
         _ = UpdateCoverAsync(s);
@@ -707,12 +720,16 @@ public sealed class PlayerViewModel : INotifyPropertyChanged
         }
     }
 
+    static readonly TimeSpan PlayingInterval = TimeSpan.FromMilliseconds(250);
+    static readonly TimeSpan IdleInterval = TimeSpan.FromSeconds(1);
+    // 4×/s only while the bar moves; paused or idle the app wakes once a second
+    readonly DispatcherTimer _timer = new() { Interval = PlayingInterval };
     int _ticks;
 
     void UpdateProgress()
     {
         Ticked?.Invoke();
-        if (++_ticks % 4 == 0) CheckOtherTab(); // ~1 s
+        if (!_snap.IsPlaying || ++_ticks % 4 == 0) CheckOtherTab(); // ~1 s
         if (_status is not null && DateTime.Now > _statusUntil) Status = null;
         if (_snap.IsPlaying) _activeAt = DateTime.Now;
 

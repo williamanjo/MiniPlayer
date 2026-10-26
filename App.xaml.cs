@@ -267,6 +267,7 @@ public partial class App : Application
         Loc.SetLanguage(code);
         Themes.Load(); // built-in theme names are translated
         Themes.Reapply();
+        NowPlaying.Invalidate(); // overlay.html has a translated default label
         ViewModel.RefreshTexts();
     }
 

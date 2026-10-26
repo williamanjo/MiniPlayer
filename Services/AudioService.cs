@@ -31,9 +31,10 @@ public static class AudioService
     static readonly Dictionary<string, float> MutedLevels = [];
 
     /// <summary>Current volume (0..1) and mute of the app, or null if it has no audio session.</summary>
-    public static (float Volume, bool Muted)? Get(string processName)
+    public static (float Volume, bool Muted)? Get(string processName) => Read(processName, Sessions(processName));
+
+    static (float Volume, bool Muted)? Read(string processName, List<SessionVolume> sessions)
     {
-        var sessions = Sessions(processName);
         if (sessions.Count == 0) return null;
         var volume = sessions.Max(s => s.Volume);
         var muted = sessions.All(s => s.Muted) || (volume <= 0.001f && MutedLevels.ContainsKey(processName));
@@ -43,11 +44,12 @@ public static class AudioService
     /// <summary>Changes the app volume by <paramref name="delta"/>; returns the new level.</summary>
     public static (float Volume, bool Muted)? Change(string processName, float delta)
     {
-        var current = Get(processName);
+        var sessions = Sessions(processName);
+        var current = Read(processName, sessions);
         if (current is null) return null;
         var target = Math.Clamp(current.Value.Volume + delta, 0f, 1f);
         MutedLevels.Remove(processName);
-        foreach (var s in Sessions(processName))
+        foreach (var s in sessions)
         {
             s.Volume = target;
             s.Muted = false;
@@ -90,10 +92,11 @@ public static class AudioService
 
     public static (float Volume, bool Muted)? ToggleMute(string processName)
     {
-        var current = Get(processName);
+        var sessions = Sessions(processName);
+        var current = Read(processName, sessions);
         if (current is null) return null;
         var mute = !current.Value.Muted;
-        foreach (var s in Sessions(processName))
+        foreach (var s in sessions)
         {
             if (s.SupportsMute)
             {
@@ -177,76 +180,61 @@ public static class AudioService
     public sealed record AudioApp(string ProcessName, uint ProcessId, IAudioMeterInformation Meter);
 
     /// <summary>Every audio session on all output devices, with its process ("system" for Windows sounds).</summary>
-    public static List<AudioApp> AllSessions()
-    {
-        var result = new List<AudioApp>();
-        try
-        {
-            var enumerator = (IMMDeviceEnumerator)new MMDeviceEnumerator();
-            enumerator.EnumAudioEndpoints(EDataFlow.Render, DEVICE_STATE_ACTIVE, out var devices);
-            devices.GetCount(out var deviceCount);
-            for (var d = 0; d < deviceCount; d++)
-            {
-                devices.Item(d, out var device);
-                var iid = typeof(IAudioSessionManager2).GUID;
-                device.Activate(ref iid, CLSCTX_ALL, IntPtr.Zero, out var managerObj);
-                ((IAudioSessionManager2)managerObj).GetSessionEnumerator(out var sessions);
-                sessions.GetCount(out var count);
-                for (var i = 0; i < count; i++)
-                {
-                    sessions.GetSession(i, out var control);
-                    if (control is not IAudioSessionControl2 control2 || control is not IAudioMeterInformation meter) continue;
-                    control2.GetProcessId(out var pid);
-                    var name = control2.IsSystemSoundsSession() == 0 ? "system" : ProcessName(pid);
-                    if (name is not null) result.Add(new AudioApp(name, pid, meter));
-                }
-            }
-        }
-        catch
-        {
-            // Devices changed mid-enumeration; the caller refreshes again soon.
-        }
-        return result;
-    }
-
-    static string? ProcessName(uint pid)
-    {
-        if (pid == 0) return null;
-        try
-        {
-            using var p = Process.GetProcessById((int)pid);
-            return p.ProcessName.ToLowerInvariant();
-        }
-        catch
-        {
-            return null;
-        }
-    }
+    public static List<AudioApp> AllSessions() =>
+        [.. EnumerateSessions()
+            .Select(s => (s, name: s.IsSystem ? "system" : ProcessName(s.Pid)))
+            .Where(x => x.name is not null && x.s.Control is IAudioMeterInformation)
+            .Select(x => new AudioApp(x.name!, x.s.Pid, (IAudioMeterInformation)x.s.Control))];
 
     /// <summary>Audio session objects (all render devices) owned by the process.</summary>
-    static List<object> SessionControls(string processName)
+    static List<object> SessionControls(string processName) =>
+        [.. EnumerateSessions()
+            .Where(s => s.Pid != 0 && string.Equals(ProcessName(s.Pid), processName, StringComparison.OrdinalIgnoreCase))
+            .Select(s => s.Control)];
+
+    // One enumerator for the app's lifetime instead of a COM activation per call (the sleep fade
+    // sets the volume every 200 ms, ducking re-reads sessions every 2 s). UI thread only.
+    static IMMDeviceEnumerator? _enumerator;
+
+    /// <summary>
+    /// Every render session with its owner PID. Devices, managers and session enumerators are
+    /// released right away; session controls are not, since callers keep meters from them and a
+    /// later enumeration can hand back the same RCW.
+    /// </summary>
+    static List<(object Control, uint Pid, bool IsSystem)> EnumerateSessions()
     {
-        var result = new List<object>();
+        var result = new List<(object, uint, bool)>();
+        IMMDeviceCollection? devices = null;
         try
         {
-            var enumerator = (IMMDeviceEnumerator)new MMDeviceEnumerator();
-            enumerator.EnumAudioEndpoints(EDataFlow.Render, DEVICE_STATE_ACTIVE, out var devices);
+            _enumerator ??= (IMMDeviceEnumerator)new MMDeviceEnumerator();
+            _enumerator.EnumAudioEndpoints(EDataFlow.Render, DEVICE_STATE_ACTIVE, out devices);
             devices.GetCount(out var deviceCount);
             for (var d = 0; d < deviceCount; d++)
             {
-                devices.Item(d, out var device);
-                var iid = typeof(IAudioSessionManager2).GUID;
-                device.Activate(ref iid, CLSCTX_ALL, IntPtr.Zero, out var managerObj);
-                var manager = (IAudioSessionManager2)managerObj;
-                manager.GetSessionEnumerator(out var sessions);
-                sessions.GetCount(out var count);
-                for (var i = 0; i < count; i++)
+                IMMDevice? device = null;
+                object? managerObj = null;
+                IAudioSessionEnumerator? sessions = null;
+                try
                 {
-                    sessions.GetSession(i, out var control);
-                    if (control is not IAudioSessionControl2 control2) continue;
-                    control2.GetProcessId(out var pid);
-                    if (pid == 0 || !MatchesProcess(pid, processName)) continue;
-                    result.Add(control);
+                    devices.Item(d, out device);
+                    var iid = typeof(IAudioSessionManager2).GUID;
+                    device.Activate(ref iid, CLSCTX_ALL, IntPtr.Zero, out managerObj);
+                    ((IAudioSessionManager2)managerObj).GetSessionEnumerator(out sessions);
+                    sessions.GetCount(out var count);
+                    for (var i = 0; i < count; i++)
+                    {
+                        sessions.GetSession(i, out var control);
+                        if (control is not IAudioSessionControl2 control2) continue;
+                        control2.GetProcessId(out var pid);
+                        result.Add((control, pid, control2.IsSystemSoundsSession() == 0));
+                    }
+                }
+                finally
+                {
+                    Release(sessions);
+                    Release(managerObj);
+                    Release(device);
                 }
             }
         }
@@ -254,20 +242,39 @@ public static class AudioService
         {
             // Audio devices can disappear at any time; treat as "no session".
         }
+        finally
+        {
+            Release(devices);
+        }
         return result;
     }
 
-    static bool MatchesProcess(uint pid, string processName)
+    static void Release(object? com)
     {
+        if (com is not null && Marshal.IsComObject(com)) Marshal.ReleaseComObject(com);
+    }
+
+    // PID → process name, short-lived: every enumeration used to open each session's process.
+    static readonly Dictionary<uint, (string? Name, DateTime At)> ProcessNames = [];
+    static readonly TimeSpan ProcessNameTtl = TimeSpan.FromSeconds(10); // PIDs get reused
+
+    static string? ProcessName(uint pid)
+    {
+        if (pid == 0) return null;
+        if (ProcessNames.TryGetValue(pid, out var cached) && DateTime.Now - cached.At < ProcessNameTtl) return cached.Name;
+        string? name;
         try
         {
             using var p = Process.GetProcessById((int)pid);
-            return p.ProcessName.Equals(processName, StringComparison.OrdinalIgnoreCase);
+            name = p.ProcessName.ToLowerInvariant();
         }
         catch
         {
-            return false;
+            name = null;
         }
+        if (ProcessNames.Count > 200) ProcessNames.Clear();
+        ProcessNames[pid] = (name, DateTime.Now);
+        return name;
     }
 
     #region Core Audio COM interop
