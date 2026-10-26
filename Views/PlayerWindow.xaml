@@ -9,7 +9,7 @@
         ResizeMode="NoResize" ShowInTaskbar="False"
         Topmost="{Binding PinOnTop}"
         Foreground="{DynamicResource ThemeForeground}" FontFamily="{DynamicResource ThemeFont}"
-        MouseWheel="OnWheel" MouseDown="OnMouseDown">
+        MouseWheel="OnWheel" MouseDown="OnMouseDown" KeyDown="OnKeyDown">
     <Window.Resources>
         <!-- Parts shared by the three layouts. "Tag" carries a Visibility for optional bits,
              set from code-behind depending on the available space. -->

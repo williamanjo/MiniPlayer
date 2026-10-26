@@ -3,7 +3,9 @@
 <UserControl x:Class="MiniPlayer.Views.ThemePreview"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l="clr-namespace:MiniPlayer.Localization"
              Width="360" Height="160" IsHitTestVisible="False"
+             Focusable="False" KeyboardNavigation.TabNavigation="None" AutomationProperties.Name="{l:Tr theme_preview}"
              TextElement.Foreground="{DynamicResource ThemeForeground}"
              TextElement.FontFamily="{DynamicResource ThemeFont}">
     <Grid>

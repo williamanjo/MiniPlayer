@@ -154,8 +154,8 @@ public partial class OverlayEditorWindow : Window
             var item = items[i];
             var index = i;
             var controls = new StackPanel { Orientation = Orientation.Horizontal };
-            controls.Children.Add(Arrow("", index > 0, () => Move(index, -1)));
-            controls.Children.Add(Arrow("", index < items.Count - 1, () => Move(index, 1)));
+            controls.Children.Add(Arrow("", Loc.T("ov_move_up"), index > 0, () => Move(index, -1)));
+            controls.Children.Add(Arrow("", Loc.T("ov_move_down"), index < items.Count - 1, () => Move(index, 1)));
             var toggle = new CheckBox { IsChecked = item.Visible, Margin = new Thickness(12, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
             toggle.Click += (_, _) => { item.Visible = toggle.IsChecked == true; _form.Changed(); };
             controls.Children.Add(toggle);
@@ -164,14 +164,16 @@ public partial class OverlayEditorWindow : Window
         _form.Target = previous;
     }
 
-    Button Arrow(string glyph, bool enabled, Action click)
+    Button Arrow(string glyph, string name, bool enabled, Action click)
     {
         var button = new Button
         {
             Content = glyph, FontFamily = (System.Windows.Media.FontFamily)Application.Current.Resources["IconFont"],
+            ToolTip = name,
             Padding = new Thickness(8, 4, 8, 4), Margin = new Thickness(4, 0, 0, 0), IsEnabled = enabled,
         };
         button.Click += (_, _) => click();
+        System.Windows.Automation.AutomationProperties.SetName(button, name);
         return button;
     }
 

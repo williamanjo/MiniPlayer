@@ -52,6 +52,18 @@
         <HorizontalAlignment x:Key="ThemeCreditHorizontal">Center</HorizontalAlignment>
         <Thickness x:Key="ThemeCreditMargin">0,0,0,1</Thickness>
 
+        <!-- Keyboard focus ring (Tab only; mouse clicks don't show it) -->
+        <Style x:Key="IconFocusVisual">
+            <Setter Property="Control.Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <Rectangle Margin="-1" RadiusX="6" RadiusY="6" StrokeThickness="1.5" SnapsToDevicePixels="True"
+                                   Stroke="{DynamicResource AccentBrush}" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="IconButton" TargetType="Button">
             <Setter Property="FontFamily" Value="{StaticResource IconFont}" />
             <Setter Property="FontSize" Value="14" />
@@ -60,7 +72,9 @@
             <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Window}}" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Focusable" Value="False" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource IconFocusVisual}" />
+            <!-- icon-only: screen readers would read the glyph, so name the button after its tooltip -->
+            <Setter Property="AutomationProperties.Name" Value="{Binding ToolTip, RelativeSource={RelativeSource Self}}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">

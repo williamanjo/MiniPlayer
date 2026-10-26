@@ -395,6 +395,29 @@ public partial class PlayerWindow : Window
 
     PlayerViewModel ViewModel => (PlayerViewModel)DataContext;
 
+    /// <summary>
+    /// Keys while the player has focus: Space play/pause, Ctrl+Left/Right previous/next,
+    /// Ctrl+Up/Down volume, M mute. Tab moves between the buttons; a focused button takes Space itself.
+    /// </summary>
+    void OnKeyDown(object sender, KeyEventArgs e)
+    {
+        var none = Keyboard.Modifiers == ModifierKeys.None;
+        var ctrl = Keyboard.Modifiers == ModifierKeys.Control;
+        ICommand? command = null;
+        switch (e.Key)
+        {
+            case Key.Space when none: command = ViewModel.PlayPauseCommand; break;
+            case Key.Left when ctrl: command = ViewModel.PreviousCommand; break;
+            case Key.Right when ctrl: command = ViewModel.NextCommand; break;
+            case Key.Up when ctrl: ViewModel.ChangeVolume(120); break;
+            case Key.Down when ctrl: ViewModel.ChangeVolume(-120); break;
+            case Key.M when none: ViewModel.ToggleMute(); break;
+            default: return;
+        }
+        if (command?.CanExecute(null) == true) command.Execute(null);
+        e.Handled = true;
+    }
+
     void OnWheel(object sender, MouseWheelEventArgs e)
     {
         if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
