@@ -390,12 +390,35 @@ public partial class App : Application
         var current = Updates.CurrentVersion;
         if (Settings.Data.LastVersion is { } last && last != current)
         {
+            RefreshShellIcon();
             NotificationService.ClearUpdate();
             try { NotificationService.ShowUpdated(current); }
             catch { /* notifications unavailable */ }
         }
         Settings.Data.LastVersion = current;
         Settings.Save();
+    }
+
+    [System.Runtime.InteropServices.DllImport("shell32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+    static extern void SHChangeNotify(int eventId, uint flags, string? item1, IntPtr item2);
+
+    /// <summary>
+    /// Windows caches icons by file path, and an update keeps the path: without this the taskbar,
+    /// Start menu and shortcuts go on showing the previous version's icon.
+    /// </summary>
+    static void RefreshShellIcon()
+    {
+        const int SHCNE_UPDATEITEM = 0x2000, SHCNE_ASSOCCHANGED = 0x08000000;
+        const uint SHCNF_PATHW = 0x0005;
+        try
+        {
+            if (Environment.ProcessPath is { } exe) SHChangeNotify(SHCNE_UPDATEITEM, SHCNF_PATHW, exe, IntPtr.Zero);
+            SHChangeNotify(SHCNE_ASSOCCHANGED, 0, null, IntPtr.Zero);
+        }
+        catch
+        {
+            // cosmetic only
+        }
     }
 
     /// <summary>Asks, then updates (tray item / balloon / toast body).</summary>

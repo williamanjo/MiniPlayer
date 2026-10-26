@@ -25,7 +25,9 @@ public partial class UpdateWindow : Window
     {
         if (_installing) return; // a late progress report must not undo "Installing…"
         Status.Text = Loc.F("update_win_downloading", _version);
-        Detail.Text = $"{percent}%";
+        // Velopack may report nothing until the end (small delta packages): animate instead of a stuck 0%
+        Bar.IsIndeterminate = percent <= 0;
+        Detail.Text = percent > 0 ? $"{percent}%" : "";
         Bar.Value = percent;
         AutomationProperties.SetName(Bar, Status.Text);
     });
@@ -51,6 +53,7 @@ public partial class UpdateWindow : Window
         _installing = true;
         Status.Text = Loc.T("update_win_installing");
         Detail.Text = "";
+        Bar.IsIndeterminate = false;
         Bar.Value = 100;
     });
 }

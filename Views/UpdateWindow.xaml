@@ -10,6 +10,13 @@
         WindowState="Maximized" WindowStartupLocation="CenterScreen"
         Topmost="True" ResizeMode="NoResize" ShowActivated="True"
         FontFamily="Segoe UI Variable Text, Segoe UI">
+    <Window.Resources>
+        <LinearGradientBrush x:Key="UpdateFill" StartPoint="0,0" EndPoint="1,0">
+            <GradientStop Color="#F472B6" Offset="0" />
+            <GradientStop Color="#A78BFA" Offset="0.5" />
+            <GradientStop Color="#38BDF8" Offset="1" />
+        </LinearGradientBrush>
+    </Window.Resources>
     <Grid>
         <Grid x:Name="Card" Width="820" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="40">
             <!-- shadow on its own layer: the card below is clipped to its rounded corners -->
@@ -39,18 +46,38 @@
                         <ProgressBar x:Name="Bar" Height="8" Minimum="0" Maximum="100">
                             <ProgressBar.Template>
                                 <ControlTemplate TargetType="ProgressBar">
-                                    <Grid>
+                                    <Grid local:RoundedClip.CornerRadius="4">
                                         <Border x:Name="PART_Track" CornerRadius="4" Background="#247C3AED" />
-                                        <Border x:Name="PART_Indicator" CornerRadius="4" HorizontalAlignment="Left">
-                                            <Border.Background>
-                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                                    <GradientStop Color="#F472B6" Offset="0" />
-                                                    <GradientStop Color="#A78BFA" Offset="0.5" />
-                                                    <GradientStop Color="#38BDF8" Offset="1" />
-                                                </LinearGradientBrush>
-                                            </Border.Background>
+                                        <Border x:Name="PART_Indicator" CornerRadius="4" HorizontalAlignment="Left" Background="{StaticResource UpdateFill}" />
+                                        <!-- no percentage yet: a segment slides along the track -->
+                                        <Border x:Name="Slider" Width="190" CornerRadius="4" HorizontalAlignment="Left" Visibility="Collapsed"
+                                                Background="{StaticResource UpdateFill}">
+                                            <Border.RenderTransform>
+                                                <TranslateTransform x:Name="SliderX" X="-190" />
+                                            </Border.RenderTransform>
                                         </Border>
                                     </Grid>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsIndeterminate" Value="True">
+                                            <Setter TargetName="PART_Indicator" Property="Visibility" Value="Collapsed" />
+                                            <Setter TargetName="Slider" Property="Visibility" Value="Visible" />
+                                            <Trigger.EnterActions>
+                                                <BeginStoryboard x:Name="Slide">
+                                                    <Storyboard RepeatBehavior="Forever">
+                                                        <DoubleAnimation Storyboard.TargetName="SliderX" Storyboard.TargetProperty="X"
+                                                                         From="-190" To="780" Duration="0:0:1.4">
+                                                            <DoubleAnimation.EasingFunction>
+                                                                <SineEase EasingMode="EaseInOut" />
+                                                            </DoubleAnimation.EasingFunction>
+                                                        </DoubleAnimation>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </Trigger.EnterActions>
+                                            <Trigger.ExitActions>
+                                                <StopStoryboard BeginStoryboardName="Slide" />
+                                            </Trigger.ExitActions>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
                                 </ControlTemplate>
                             </ProgressBar.Template>
                         </ProgressBar>
