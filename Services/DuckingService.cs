@@ -23,6 +23,7 @@ public sealed class DuckingService
     string? _musicProcess;
     string? _duckedProcess;
     float _originalVolume;
+    float _duckedVolume;
     DateTime _lastLoud;
 
     public DuckingService(MediaService media, SettingsService settings, Func<bool> isPlaying, Func<bool> otherFeatureOwnsVolume)
@@ -85,7 +86,9 @@ public sealed class DuckingService
             {
                 _duckedProcess = music;
                 _originalVolume = current.Volume;
-                AudioService.SetVolume(music, _originalVolume * (float)Math.Clamp(_settings.Data.DuckLevel, 0, 1));
+                _duckedVolume = _originalVolume * (float)Math.Clamp(_settings.Data.DuckLevel, 0, 1);
+                _settings.RememberVolume(music, _originalVolume);
+                AudioService.SetVolume(music, _duckedVolume);
             }
         }
         else if (_duckedProcess is not null && DateTime.Now - _lastLoud > RestoreAfter)
@@ -97,7 +100,13 @@ public sealed class DuckingService
     /// <summary>Puts the music volume back (also on exit / when turned off).</summary>
     public void Restore()
     {
-        if (_duckedProcess is { } process) AudioService.SetVolume(process, _originalVolume);
+        if (_duckedProcess is { } process)
+        {
+            // the user changed the volume while ducked: keep their choice
+            if (AudioService.Get(process) is not { } now || Math.Abs(now.Volume - _duckedVolume) < 0.01f)
+                AudioService.SetVolume(process, _originalVolume);
+            _settings.ForgetVolume(process, _originalVolume);
+        }
         _duckedProcess = null;
     }
 }

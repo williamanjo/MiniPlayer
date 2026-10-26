@@ -113,6 +113,10 @@ public partial class App : Application
         ApplyHotkeys();
         _tray = new TrayIcon(this);
         ViewModel.TrackChanged += () => _tray?.SetText(ViewModel.FullText);
+        // volume left lowered by a crash during ducking / sleep fade; retried until the browser plays
+        _leftVolume = Settings.Data.VolumeToRestore;
+        RestoreLeftVolume();
+        ViewModel.TrackChanged += RestoreLeftVolume;
 
         SetMode(Settings.Data.Mode);
 
@@ -129,6 +133,17 @@ public partial class App : Application
             ShowMessage(Loc.F("err_media", ex.Message),
                 AppInfo.Name, MessageBoxButton.OK, MessageBoxImage.Error);
         }
+    }
+
+    /// <summary>Volume a previous run left lowered (only that one: ducking now may be legit).</summary>
+    AlteredVolume? _leftVolume;
+
+    void RestoreLeftVolume()
+    {
+        if (_leftVolume is not { } left || AudioService.Get(left.Process) is null) return;
+        AudioService.SetVolume(left.Process, left.Volume);
+        _leftVolume = null;
+        Settings.ForgetVolume(left.Process, left.Volume);
     }
 
     /// <summary>Appends to error.log in the data folder; never throws.</summary>

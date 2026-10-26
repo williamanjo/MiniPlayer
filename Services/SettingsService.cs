@@ -19,6 +19,9 @@ public enum VisualizerPosition { Controls, Cover, Bottom, AroundCover }
 /// <summary>What the middle mouse button does over the player.</summary>
 public enum MiddleClickAction { Mute, PlayPause }
 
+/// <summary>An app volume the player lowered (ducking / sleep fade) and must put back.</summary>
+public sealed record AlteredVolume(string Process, float Volume);
+
 public sealed class AppSettings
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
@@ -103,6 +106,12 @@ public sealed class AppSettings
     /// <summary>Sleep timer lowers the volume during the last seconds before pausing.</summary>
     public bool SleepFade { get; set; } = true;
 
+    /// <summary>
+    /// Original volume while ducking or the sleep fade has it lowered. Saved so a crash or kill
+    /// cannot leave the browser quiet: Windows keeps per-app volume, so it would stay that way.
+    /// </summary>
+    public AlteredVolume? VolumeToRestore { get; set; }
+
     /// <summary>Fills collections a hand-edited or imported file left as null.</summary>
     public AppSettings Normalize()
     {
@@ -156,6 +165,22 @@ public sealed class SettingsService
     public void Replace(AppSettings data)
     {
         Data = data;
+        Save();
+    }
+
+    /// <summary>Remembers the volume an app had before it is lowered; the first (true original) wins.</summary>
+    public void RememberVolume(string process, float volume)
+    {
+        if (Data.VolumeToRestore is not null) return;
+        Data.VolumeToRestore = new(process, volume);
+        Save();
+    }
+
+    /// <summary>Clears the remembered volume once it is back (only the entry this caller wrote).</summary>
+    public void ForgetVolume(string process, float volume)
+    {
+        if (Data.VolumeToRestore != new AlteredVolume(process, volume)) return;
+        Data.VolumeToRestore = null;
         Save();
     }
 

@@ -93,6 +93,7 @@ public sealed class SleepTimerService
             {
                 // The next track already started (position estimate was late): stop it right
                 // away and rewind it, so it waits at 0:00 instead of having played a bit.
+                _tick.Stop(); // no re-entry while the awaits below run
                 await _media.PauseAsync();
                 await _media.SeekAsync(TimeSpan.Zero);
                 await Task.Delay(400);
@@ -109,6 +110,7 @@ public sealed class SleepTimerService
 
         if (left <= TimeSpan.Zero)
         {
+            _tick.Stop(); // no re-entry while the awaits below run
             await _media.PauseAsync();
             await Task.Delay(400); // let the pause land before the volume comes back
             Cancel();
@@ -137,6 +139,7 @@ public sealed class SleepTimerService
             RestoreVolume();
             _fadeProcess = process;
             _fadeStartVolume = AudioService.Get(process)?.Volume;
+            if (_fadeStartVolume is { } original) _settings.RememberVolume(process, original);
         }
         if (_fadeStartVolume is { } start)
             AudioService.SetVolume(process, start * (float)Math.Clamp(left / window, 0, 1));
@@ -144,7 +147,11 @@ public sealed class SleepTimerService
 
     void RestoreVolume()
     {
-        if (_fadeProcess is { } process && _fadeStartVolume is { } volume) AudioService.SetVolume(process, volume);
+        if (_fadeProcess is { } process && _fadeStartVolume is { } volume)
+        {
+            AudioService.SetVolume(process, volume);
+            _settings.ForgetVolume(process, volume);
+        }
         _fadeProcess = null;
         _fadeStartVolume = null;
     }

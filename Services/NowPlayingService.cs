@@ -54,9 +54,9 @@ public sealed class NowPlayingService
             if (state != _written)
             {
                 Directory.CreateDirectory(Folder);
-                File.WriteAllText(Path.Combine(Folder, "nowplaying.txt"), text, Utf8);
-                File.WriteAllText(Path.Combine(Folder, "title.txt"), title, Utf8);
-                File.WriteAllText(Path.Combine(Folder, "artist.txt"), artist, Utf8);
+                WriteText("nowplaying.txt", text);
+                WriteText("title.txt", title);
+                WriteText("artist.txt", artist);
                 WriteCover(show ? _cover : null);
                 _written = state;
             }
@@ -67,7 +67,7 @@ public sealed class NowPlayingService
             if (pageState != _writtenPage)
             {
                 Directory.CreateDirectory(Folder);
-                File.WriteAllText(Path.Combine(Folder, "overlay.html"), page, Utf8);
+                WriteText("overlay.html", page);
                 _writtenPage = pageState;
             }
 
@@ -78,7 +78,7 @@ public sealed class NowPlayingService
                 show && s.IsPlaying, s.Position.TotalSeconds, s.Duration.TotalSeconds, at.ToUnixTimeMilliseconds()));
             if (script + Folder != _writtenScript)
             {
-                File.WriteAllText(Path.Combine(Folder, "nowplaying.js"), script, Utf8);
+                WriteText("nowplaying.js", script);
                 _writtenScript = script + Folder;
             }
         }
@@ -111,7 +111,21 @@ public sealed class NowPlayingService
         }
         var encoder = new PngBitmapEncoder();
         encoder.Frames.Add(BitmapFrame.Create(image));
-        using var file = File.Create(Path.Combine(Folder, "cover.png"));
-        encoder.Save(file);
+        Replace("cover.png", tmp =>
+        {
+            using var file = File.Create(tmp);
+            encoder.Save(file);
+        });
+    }
+
+    void WriteText(string name, string text) => Replace(name, tmp => File.WriteAllText(tmp, text, Utf8));
+
+    /// <summary>Writes a temp file, then swaps it in: OBS polls these and must never read half a file.</summary>
+    void Replace(string name, Action<string> write)
+    {
+        var path = Path.Combine(Folder, name);
+        var tmp = path + ".tmp";
+        write(tmp);
+        File.Move(tmp, path, overwrite: true);
     }
 }

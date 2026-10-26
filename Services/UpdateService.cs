@@ -86,17 +86,22 @@ public sealed class UpdateService
     /// <summary>Downloads the pending version without installing it.</summary>
     public async Task DownloadAsync(Action<int>? progress = null)
     {
-        if (_pending is null) return;
-        await _manager.DownloadUpdatesAsync(_pending, progress);
-        DownloadedVersion = AvailableVersion;
+        // a check during the download may replace _pending: mark only what was really downloaded
+        if (_pending is not { } pending) return;
+        await _manager.DownloadUpdatesAsync(pending, progress);
+        DownloadedVersion = pending.TargetFullRelease.Version.ToString();
     }
 
     /// <summary>Downloads (if needed) the pending version, then restarts into it.</summary>
     public async Task DownloadAndRestartAsync(Action<int> progress, Action beforeRestart)
     {
-        if (_pending is null) return;
-        if (DownloadedVersion != AvailableVersion) await DownloadAsync(progress);
+        if (_pending is not { } pending) return;
+        if (DownloadedVersion != pending.TargetFullRelease.Version.ToString())
+        {
+            await _manager.DownloadUpdatesAsync(pending, progress);
+            DownloadedVersion = pending.TargetFullRelease.Version.ToString();
+        }
         beforeRestart();
-        _manager.ApplyUpdatesAndRestart(_pending.TargetFullRelease);
+        _manager.ApplyUpdatesAndRestart(pending.TargetFullRelease);
     }
 }
