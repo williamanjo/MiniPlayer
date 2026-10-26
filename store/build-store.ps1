@@ -35,7 +35,8 @@ $makepri = Join-Path $sdk.FullName "x64\makepri.exe"
 # Store versions have 4 parts and the last one must be 0.
 $msixVersion = "$Version.0"
 
-Remove-Item -Recurse -Force $out -ErrorAction SilentlyContinue
+# only the build's own files: store/out also holds listing material (screenshots, art, texts)
+Remove-Item -Recurse -Force $staging -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force $staging | Out-Null
 
 Write-Host "1/4 publish (Store flavor)"
