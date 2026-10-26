@@ -33,7 +33,7 @@ public partial class OverlayEditorWindow : Window
             _previewDebounce.Stop();
             RenderPreview();
         };
-        _form = new FormBuilder(Form, (Style)Resources["SectionTitle"], (Style)Resources["Card"], () =>
+        _form = new FormBuilder(Form, (Style)FindResource("SectionTitle"), (Style)FindResource("EditorCard"), () =>
         {
             _previewDebounce.Stop();
             _previewDebounce.Start();

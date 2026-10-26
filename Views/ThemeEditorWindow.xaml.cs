@@ -45,7 +45,7 @@ public partial class ThemeEditorWindow : Window
             _previewDebounce.Stop();
             Preview.Show(_theme);
         };
-        _form = new FormBuilder(Form, (Style)Resources["SectionTitle"], (Style)Resources["Card"], () =>
+        _form = new FormBuilder(Form, (Style)FindResource("SectionTitle"), (Style)FindResource("EditorCard"), () =>
         {
             _previewDebounce.Stop();
             _previewDebounce.Start();

@@ -181,5 +181,80 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- ===== Settings and editor windows (system theme, not the player theme) ===== -->
+        <Style x:Key="CardBase" TargetType="Border">
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Background" Value="#14808080" />
+            <Setter Property="BorderBrush" Value="#22808080" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <!-- Settings rows sit in cards with a small gap, like Windows 11 Settings -->
+        <Style x:Key="Card" TargetType="Border" BasedOn="{StaticResource CardBase}">
+            <Setter Property="Padding" Value="16,14" />
+            <Setter Property="Margin" Value="0,0,0,3" />
+        </Style>
+        <!-- Denser cards of the theme and overlay editors -->
+        <Style x:Key="EditorCard" TargetType="Border" BasedOn="{StaticResource CardBase}">
+            <Setter Property="Padding" Value="16,10" />
+            <Setter Property="Margin" Value="0,0,0,3" />
+        </Style>
+        <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="2,22,0,8" />
+        </Style>
+        <Style x:Key="Hint" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Opacity" Value="0.72" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Margin" Value="0,2,0,0" />
+        </Style>
+        <Style x:Key="RowTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style x:Key="RowIcon" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource IconFont}" />
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="Width" Value="40" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Opacity" Value="0.85" />
+        </Style>
+
+        <Style TargetType="views:SettingsCard">
+            <!-- a layout element, not a Tab stop: focus goes to the control inside -->
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="IsTabStop" Value="False" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="views:SettingsCard">
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                    <TextBlock Style="{StaticResource RowIcon}" Text="{TemplateBinding Icon}" />
+                                    <StackPanel x:Name="TextPart" Grid.Column="1" Margin="0,0,16,0">
+                                        <TextBlock Style="{StaticResource RowTitle}" Text="{TemplateBinding Title}" />
+                                        <TextBlock x:Name="HintText" Style="{StaticResource Hint}" Text="{TemplateBinding Hint}" />
+                                    </StackPanel>
+                                    <ContentPresenter Grid.Column="2" />
+                                </Grid>
+                                <ContentPresenter Content="{TemplateBinding Details}" />
+                            </StackPanel>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="Hint" Value="{x:Null}">
+                                <Setter TargetName="HintText" Property="Visibility" Value="Collapsed" />
+                            </Trigger>
+                            <!-- nothing on the right: the text may use the full width -->
+                            <Trigger Property="Content" Value="{x:Null}">
+                                <Setter TargetName="TextPart" Property="Margin" Value="0" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Application.Resources>
 </Application>

@@ -5,21 +5,6 @@
         xmlns:local="clr-namespace:MiniPlayer.Views"
         Title="{l:Tr editor_window_title}" Width="1040" Height="720" MinWidth="820" MinHeight="480"
         WindowStartupLocation="CenterScreen" ThemeMode="System">
-    <Window.Resources>
-        <Style x:Key="SectionTitle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="14" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Margin" Value="2,20,0,8" />
-        </Style>
-        <Style x:Key="Card" TargetType="Border">
-            <Setter Property="CornerRadius" Value="6" />
-            <Setter Property="Padding" Value="16,10" />
-            <Setter Property="Margin" Value="0,0,0,3" />
-            <Setter Property="Background" Value="#14808080" />
-            <Setter Property="BorderBrush" Value="#22808080" />
-            <Setter Property="BorderThickness" Value="1" />
-        </Style>
-    </Window.Resources>
 
     <Grid>
         <Grid.ColumnDefinitions>

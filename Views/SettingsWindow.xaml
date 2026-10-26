@@ -12,37 +12,6 @@
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Margin" Value="0,0,0,8" />
         </Style>
-        <Style x:Key="SectionTitle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="14" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Margin" Value="2,22,0,8" />
-        </Style>
-        <Style x:Key="Hint" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="Opacity" Value="0.72" />
-            <Setter Property="TextWrapping" Value="Wrap" />
-            <Setter Property="Margin" Value="0,2,0,0" />
-        </Style>
-        <Style x:Key="RowTitle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="14" />
-            <Setter Property="TextWrapping" Value="Wrap" />
-        </Style>
-        <Style x:Key="RowIcon" TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="{StaticResource IconFont}" />
-            <Setter Property="FontSize" Value="18" />
-            <Setter Property="Width" Value="40" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="Opacity" Value="0.85" />
-        </Style>
-        <!-- Settings "card": rows sit in cards with a small gap, like Windows 11 Settings -->
-        <Style x:Key="Card" TargetType="Border">
-            <Setter Property="CornerRadius" Value="6" />
-            <Setter Property="Padding" Value="16,14" />
-            <Setter Property="Margin" Value="0,0,0,3" />
-            <Setter Property="Background" Value="#14808080" />
-            <Setter Property="BorderBrush" Value="#22808080" />
-            <Setter Property="BorderThickness" Value="1" />
-        </Style>
         <!-- Indented area for sub-options, shown only when the main option is on -->
         <Style x:Key="Details" TargetType="StackPanel">
             <Setter Property="Margin" Value="40,12,0,0" />
@@ -155,59 +124,27 @@
                     </Border>
 
                     <TextBlock Style="{StaticResource SectionTitle}" Text="{l:Tr sec_player}" />
-                    <Border Style="{StaticResource Card}">
-                        <StackPanel>
-                            <Grid>
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                                <TextBlock Style="{StaticResource RowIcon}" Text="&#xE7F4;" />
-                                <StackPanel Grid.Column="1">
-                                    <TextBlock Style="{StaticResource RowTitle}" Text="{l:Tr general_mode_title}" />
-                                    <TextBlock Style="{StaticResource Hint}" Text="{l:Tr general_mode_hint}" />
-                                </StackPanel>
-                            </Grid>
+                    <local:SettingsCard Icon="&#xE7F4;" Title="{l:Tr general_mode_title}" Hint="{l:Tr general_mode_hint}">
+                        <local:SettingsCard.Details>
                             <StackPanel Style="{StaticResource Details}" Orientation="Horizontal">
                                 <RadioButton x:Name="ModeFloating" Content="{l:Tr general_mode_floating}" Checked="OnModeChecked" Margin="0,0,24,0" />
                                 <RadioButton x:Name="ModeTaskbar" Content="{l:Tr general_mode_taskbar}" Checked="OnModeChecked" />
                             </StackPanel>
-                        </StackPanel>
-                    </Border>
-                    <Border Style="{StaticResource Card}">
-                        <Grid>
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <TextBlock Style="{StaticResource RowIcon}" Text="&#xE718;" />
-                            <StackPanel Grid.Column="1" Margin="0,0,16,0">
-                                <TextBlock Style="{StaticResource RowTitle}" Text="{l:Tr general_pin}" />
-                                <TextBlock Style="{StaticResource Hint}" Text="{l:Tr general_pin_hint}" />
-                            </StackPanel>
-                            <CheckBox Grid.Column="2" Style="{StaticResource Switch}" IsChecked="{Binding PinOnTop}" />
-                        </Grid>
-                    </Border>
-                    <Border Style="{StaticResource Card}">
-                        <Grid>
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <TextBlock Style="{StaticResource RowIcon}" Text="&#xE7C4;" />
-                            <StackPanel Grid.Column="1" Margin="0,0,16,0">
-                                <TextBlock Style="{StaticResource RowTitle}" Text="{l:Tr general_snap}" />
-                                <TextBlock Style="{StaticResource Hint}" Text="{l:Tr general_snap_hint}" />
-                            </StackPanel>
-                            <ComboBox x:Name="SnapBox" Grid.Column="2" MinWidth="220" VerticalAlignment="Center" SelectionChanged="OnSnapChanged">
-                                <ComboBoxItem Tag="WorkArea" Content="{l:Tr snap_workarea}" />
-                                <ComboBoxItem Tag="Screen" Content="{l:Tr snap_screen}" />
-                                <ComboBoxItem Tag="Off" Content="{l:Tr snap_off}" />
-                            </ComboBox>
-                        </Grid>
-                    </Border>
-                    <Border Style="{StaticResource Card}">
-                        <Grid>
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <TextBlock Style="{StaticResource RowIcon}" Text="&#xE720;" />
-                            <StackPanel Grid.Column="1" Margin="0,0,16,0">
-                                <TextBlock Style="{StaticResource RowTitle}" Text="{l:Tr general_lyrics}" />
-                                <TextBlock Style="{StaticResource Hint}" Text="{l:Tr lyrics_hint}" />
-                            </StackPanel>
-                            <CheckBox Grid.Column="2" Style="{StaticResource Switch}" IsChecked="{Binding ShowLyrics}" />
-                        </Grid>
-                    </Border>
+                        </local:SettingsCard.Details>
+                    </local:SettingsCard>
+                    <local:SettingsCard Icon="&#xE718;" Title="{l:Tr general_pin}" Hint="{l:Tr general_pin_hint}">
+                        <CheckBox Style="{StaticResource Switch}" IsChecked="{Binding PinOnTop}" />
+                    </local:SettingsCard>
+                    <local:SettingsCard Icon="&#xE7C4;" Title="{l:Tr general_snap}" Hint="{l:Tr general_snap_hint}">
+                        <ComboBox x:Name="SnapBox" MinWidth="220" VerticalAlignment="Center" SelectionChanged="OnSnapChanged">
+                            <ComboBoxItem Tag="WorkArea" Content="{l:Tr snap_workarea}" />
+                            <ComboBoxItem Tag="Screen" Content="{l:Tr snap_screen}" />
+                            <ComboBoxItem Tag="Off" Content="{l:Tr snap_off}" />
+                        </ComboBox>
+                    </local:SettingsCard>
+                    <local:SettingsCard Icon="&#xE720;" Title="{l:Tr general_lyrics}" Hint="{l:Tr lyrics_hint}">
+                        <CheckBox Style="{StaticResource Switch}" IsChecked="{Binding ShowLyrics}" />
+                    </local:SettingsCard>
 
                     <TextBlock Style="{StaticResource SectionTitle}" Text="{l:Tr sleep_title}" />
                     <Border Style="{StaticResource Card}">
@@ -233,17 +170,9 @@
                     </Border>
 
                     <TextBlock Style="{StaticResource SectionTitle}" Text="{l:Tr sec_startup}" />
-                    <Border Style="{StaticResource Card}">
-                        <Grid>
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <TextBlock Style="{StaticResource RowIcon}" Text="&#xE7E8;" />
-                            <StackPanel Grid.Column="1" Margin="0,0,16,0">
-                                <TextBlock Style="{StaticResource RowTitle}" Text="{l:Tr general_autostart}" />
-                                <TextBlock Style="{StaticResource Hint}" Text="{l:Tr autostart_hint}" />
-                            </StackPanel>
-                            <CheckBox x:Name="AutoStartBox" Grid.Column="2" Style="{StaticResource Switch}" Click="OnAutoStartClick" />
-                        </Grid>
-                    </Border>
+                    <local:SettingsCard Icon="&#xE7E8;" Title="{l:Tr general_autostart}" Hint="{l:Tr autostart_hint}">
+                        <CheckBox x:Name="AutoStartBox" Style="{StaticResource Switch}" Click="OnAutoStartClick" />
+                    </local:SettingsCard>
                 </StackPanel>
 
                 <!-- ===================== APARÊNCIA ===================== -->
@@ -314,30 +243,14 @@
                     </Border>
 
                     <TextBlock Style="{StaticResource SectionTitle}" Text="{l:Tr sec_cover}" />
-                    <Border Style="{StaticResource Card}">
-                        <Grid>
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <TextBlock Style="{StaticResource RowIcon}" Text="&#xE8B9;" />
-                            <StackPanel Grid.Column="1" Margin="0,0,16,0">
-                                <TextBlock Style="{StaticResource RowTitle}" Text="{l:Tr hdcover_title}" />
-                                <TextBlock Style="{StaticResource Hint}" Text="{l:Tr hdcover_hint}" />
-                            </StackPanel>
-                            <CheckBox Grid.Column="2" Style="{StaticResource Switch}" IsChecked="{Binding HdCovers}" />
-                        </Grid>
-                    </Border>
+                    <local:SettingsCard Icon="&#xE8B9;" Title="{l:Tr hdcover_title}" Hint="{l:Tr hdcover_hint}">
+                        <CheckBox Style="{StaticResource Switch}" IsChecked="{Binding HdCovers}" />
+                    </local:SettingsCard>
 
                     <TextBlock Style="{StaticResource SectionTitle}" Text="{l:Tr viz_title}" />
-                    <Border Style="{StaticResource Card}">
-                        <StackPanel>
-                            <Grid>
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                <TextBlock Style="{StaticResource RowIcon}" Text="&#xE9D9;" />
-                                <StackPanel Grid.Column="1" Margin="0,0,16,0">
-                                    <TextBlock Style="{StaticResource RowTitle}" Text="{l:Tr viz_show}" />
-                                    <TextBlock Style="{StaticResource Hint}" Text="{l:Tr viz_hint}" />
-                                </StackPanel>
-                                <CheckBox Grid.Column="2" Style="{StaticResource Switch}" IsChecked="{Binding ShowVisualizer}" />
-                            </Grid>
+                    <local:SettingsCard Icon="&#xE9D9;" Title="{l:Tr viz_show}" Hint="{l:Tr viz_hint}">
+                        <CheckBox Style="{StaticResource Switch}" IsChecked="{Binding ShowVisualizer}" />
+                        <local:SettingsCard.Details>
                             <StackPanel Style="{StaticResource Details}" Visibility="{Binding ShowVisualizer, Converter={StaticResource BoolToVis}}">
                                 <Border Style="{StaticResource DetailsSeparator}" />
                                 <Grid>
@@ -362,8 +275,8 @@
                                     <TextBlock x:Name="VisualizerBarsText" Grid.Column="2" MinWidth="80" TextAlignment="Right" VerticalAlignment="Center" />
                                 </Grid>
                             </StackPanel>
-                        </StackPanel>
-                    </Border>
+                        </local:SettingsCard.Details>
+                    </local:SettingsCard>
 
                     <TextBlock Style="{StaticResource SectionTitle}" Text="{l:Tr size_title}" />
                     <Border Style="{StaticResource Card}">
@@ -441,17 +354,9 @@
                     <TextBlock Style="{StaticResource PageTitle}" Text="{l:Tr nav_automation}" />
 
                     <TextBlock Style="{StaticResource SectionTitle}" Text="{l:Tr calls_title}" />
-                    <Border Style="{StaticResource Card}">
-                        <StackPanel>
-                            <Grid>
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                <TextBlock Style="{StaticResource RowIcon}" Text="&#xE717;" />
-                                <StackPanel Grid.Column="1" Margin="0,0,16,0">
-                                    <TextBlock Style="{StaticResource RowTitle}" Text="{l:Tr calls_enable}" />
-                                    <TextBlock Style="{StaticResource Hint}" Text="{l:Tr calls_hint}" />
-                                </StackPanel>
-                                <CheckBox x:Name="PauseOnCallBox" Grid.Column="2" Style="{StaticResource Switch}" Click="OnAutomationClick" />
-                            </Grid>
+                    <local:SettingsCard Icon="&#xE717;" Title="{l:Tr calls_enable}" Hint="{l:Tr calls_hint}">
+                        <CheckBox x:Name="PauseOnCallBox" Style="{StaticResource Switch}" Click="OnAutomationClick" />
+                        <local:SettingsCard.Details>
                             <StackPanel Style="{StaticResource Details}" Visibility="{Binding IsChecked, ElementName=PauseOnCallBox, Converter={StaticResource BoolToVis}}">
                                 <Border Style="{StaticResource DetailsSeparator}" />
                                 <Grid>
@@ -464,21 +369,13 @@
                                 <StackPanel x:Name="MicAppsPanel" Margin="0,8,0,0" />
                                 <Button Content="{l:Tr common_refresh_list}" Padding="12,4" Margin="0,8,0,0" HorizontalAlignment="Left" Click="OnRefreshMicApps" />
                             </StackPanel>
-                        </StackPanel>
-                    </Border>
+                        </local:SettingsCard.Details>
+                    </local:SettingsCard>
 
                     <TextBlock Style="{StaticResource SectionTitle}" Text="{l:Tr duck_title}" />
-                    <Border Style="{StaticResource Card}">
-                        <StackPanel>
-                            <Grid>
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                <TextBlock Style="{StaticResource RowIcon}" Text="&#xE993;" />
-                                <StackPanel Grid.Column="1" Margin="0,0,16,0">
-                                    <TextBlock Style="{StaticResource RowTitle}" Text="{l:Tr duck_enable}" />
-                                    <TextBlock Style="{StaticResource Hint}" Text="{l:Tr duck_hint}" />
-                                </StackPanel>
-                                <CheckBox x:Name="DuckBox" Grid.Column="2" Style="{StaticResource Switch}" Click="OnAutomationClick" />
-                            </Grid>
+                    <local:SettingsCard Icon="&#xE993;" Title="{l:Tr duck_enable}" Hint="{l:Tr duck_hint}">
+                        <CheckBox x:Name="DuckBox" Style="{StaticResource Switch}" Click="OnAutomationClick" />
+                        <local:SettingsCard.Details>
                             <StackPanel Style="{StaticResource Details}" Visibility="{Binding IsChecked, ElementName=DuckBox, Converter={StaticResource BoolToVis}}">
                                 <Border Style="{StaticResource DetailsSeparator}" />
                                 <Grid>
@@ -491,54 +388,30 @@
                                     </StackPanel>
                                 </Grid>
                             </StackPanel>
-                        </StackPanel>
-                    </Border>
+                        </local:SettingsCard.Details>
+                    </local:SettingsCard>
                 </StackPanel>
 
                 <!-- ===================== HISTÓRICO ===================== -->
                 <StackPanel x:Name="PageHistory" Visibility="Collapsed">
                     <TextBlock Style="{StaticResource PageTitle}" Text="{l:Tr nav_history}" />
-                    <Border Style="{StaticResource Card}">
-                        <Grid>
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <TextBlock Style="{StaticResource RowIcon}" Text="&#xE81C;" />
-                            <StackPanel Grid.Column="1" Margin="0,0,16,0">
-                                <TextBlock Style="{StaticResource RowTitle}" Text="{l:Tr history_record}" />
-                                <TextBlock Style="{StaticResource Hint}" Text="{l:Tr history_record_hint}" />
-                            </StackPanel>
-                            <CheckBox x:Name="RecordHistoryBox" Grid.Column="2" Style="{StaticResource Switch}" Click="OnRecordHistoryClick" />
-                        </Grid>
-                    </Border>
-                    <Border Style="{StaticResource Card}">
-                        <Grid>
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <TextBlock Style="{StaticResource RowIcon}" Text="&#xE9D2;" />
-                            <StackPanel Grid.Column="1" Margin="0,0,16,0">
-                                <TextBlock Style="{StaticResource RowTitle}" Text="{l:Tr history_view_title}" />
-                                <TextBlock Style="{StaticResource Hint}" Text="{l:Tr history_view_hint}" />
-                            </StackPanel>
-                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                                <Button Content="{l:Tr history_open}" Padding="12,4" Style="{DynamicResource AccentButtonStyle}" Click="OnOpenHistory" />
-                                <Button Content="{l:Tr history_open_stats}" Padding="12,4" Margin="8,0,0,0" Click="OnOpenStatistics" />
-                            </StackPanel>
-                        </Grid>
-                    </Border>
+                    <local:SettingsCard Icon="&#xE81C;" Title="{l:Tr history_record}" Hint="{l:Tr history_record_hint}">
+                        <CheckBox x:Name="RecordHistoryBox" Style="{StaticResource Switch}" Click="OnRecordHistoryClick" />
+                    </local:SettingsCard>
+                    <local:SettingsCard Icon="&#xE9D2;" Title="{l:Tr history_view_title}" Hint="{l:Tr history_view_hint}">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Content="{l:Tr history_open}" Padding="12,4" Style="{DynamicResource AccentButtonStyle}" Click="OnOpenHistory" />
+                            <Button Content="{l:Tr history_open_stats}" Padding="12,4" Margin="8,0,0,0" Click="OnOpenStatistics" />
+                        </StackPanel>
+                    </local:SettingsCard>
                 </StackPanel>
 
                 <!-- ===================== TRANSMISSÃO (OBS) ===================== -->
                 <StackPanel x:Name="PageStream" Visibility="Collapsed">
                     <TextBlock Style="{StaticResource PageTitle}" Text="{l:Tr nav_stream}" />
-                    <Border Style="{StaticResource Card}">
-                        <Grid>
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <TextBlock Style="{StaticResource RowIcon}" Text="&#xE93E;" />
-                            <StackPanel Grid.Column="1" Margin="0,0,16,0">
-                                <TextBlock Style="{StaticResource RowTitle}" Text="{l:Tr np_enable}" />
-                                <TextBlock Style="{StaticResource Hint}" Text="{l:Tr np_hint}" />
-                            </StackPanel>
-                            <CheckBox x:Name="NowPlayingBox" Grid.Column="2" Style="{StaticResource Switch}" Click="OnNowPlayingChanged" />
-                        </Grid>
-                    </Border>
+                    <local:SettingsCard Icon="&#xE93E;" Title="{l:Tr np_enable}" Hint="{l:Tr np_hint}">
+                        <CheckBox x:Name="NowPlayingBox" Style="{StaticResource Switch}" Click="OnNowPlayingChanged" />
+                    </local:SettingsCard>
 
                     <!-- Everything below only matters while the files are being written -->
                     <StackPanel Visibility="{Binding IsChecked, ElementName=NowPlayingBox, Converter={StaticResource BoolToVis}}">
@@ -561,17 +434,9 @@
                                 <TextBlock Style="{StaticResource Hint}" Text="{l:Tr np_placeholders}" />
                             </StackPanel>
                         </Border>
-                        <Border Style="{StaticResource Card}">
-                            <Grid>
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                <TextBlock Style="{StaticResource RowIcon}" Text="&#xE790;" />
-                                <StackPanel Grid.Column="1" Margin="0,0,16,0">
-                                    <TextBlock Style="{StaticResource RowTitle}" Text="{l:Tr ov_row}" />
-                                    <TextBlock Style="{StaticResource Hint}" Text="{l:Tr ov_row_hint}" />
-                                </StackPanel>
-                                <Button Grid.Column="2" Content="{l:Tr ov_edit}" Padding="12,5" VerticalAlignment="Center" Click="OnEditOverlay" />
-                            </Grid>
-                        </Border>
+                        <local:SettingsCard Icon="&#xE790;" Title="{l:Tr ov_row}" Hint="{l:Tr ov_row_hint}">
+                            <Button Content="{l:Tr ov_edit}" Padding="12,5" VerticalAlignment="Center" Click="OnEditOverlay" />
+                        </local:SettingsCard>
                         <Border Style="{StaticResource Card}">
                             <Grid>
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
@@ -592,39 +457,15 @@
                     <TextBlock Style="{StaticResource PageTitle}" Text="{l:Tr nav_taskbar}" />
                     <TextBlock x:Name="TaskbarModeHint" Style="{StaticResource Hint}" Text="{l:Tr taskbar_only_hint}" Margin="2,0,0,12" />
 
-                    <Border Style="{StaticResource Card}">
-                        <Grid>
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <TextBlock Style="{StaticResource RowIcon}" Text="&#xE7F4;" />
-                            <StackPanel Grid.Column="1" Margin="0,0,16,0">
-                                <TextBlock Style="{StaticResource RowTitle}" Text="{l:Tr taskbar_screen}" />
-                                <TextBlock Style="{StaticResource Hint}" Text="{l:Tr taskbar_screen_hint}" />
-                            </StackPanel>
-                            <ComboBox x:Name="ScreenBox" Grid.Column="2" MinWidth="200" DisplayMemberPath="Label" SelectionChanged="OnScreenChanged" />
-                        </Grid>
-                    </Border>
-                    <Border Style="{StaticResource Card}">
-                        <Grid>
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <TextBlock Style="{StaticResource RowIcon}" Text="&#xED1A;" />
-                            <StackPanel Grid.Column="1" Margin="0,0,16,0">
-                                <TextBlock Style="{StaticResource RowTitle}" Text="{l:Tr taskbar_autohide}" />
-                                <TextBlock Style="{StaticResource Hint}" Text="{l:Tr taskbar_autohide_hint}" />
-                            </StackPanel>
-                            <CheckBox Grid.Column="2" Style="{StaticResource Switch}" IsChecked="{Binding AutoHideWhenIdle}" />
-                        </Grid>
-                    </Border>
-                    <Border Style="{StaticResource Card}">
-                        <Grid>
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <TextBlock Style="{StaticResource RowIcon}" Text="&#xE759;" />
-                            <StackPanel Grid.Column="1" Margin="0,0,16,0">
-                                <TextBlock Style="{StaticResource RowTitle}" Text="{l:Tr taskbar_position}" />
-                                <TextBlock Style="{StaticResource Hint}" Text="{l:Tr taskbar_position_hint}" />
-                            </StackPanel>
-                            <Button Grid.Column="2" Content="{l:Tr taskbar_reset_position}" Padding="12,4" Click="OnResetTaskbarPosition" />
-                        </Grid>
-                    </Border>
+                    <local:SettingsCard Icon="&#xE7F4;" Title="{l:Tr taskbar_screen}" Hint="{l:Tr taskbar_screen_hint}">
+                        <ComboBox x:Name="ScreenBox" MinWidth="200" DisplayMemberPath="Label" SelectionChanged="OnScreenChanged" />
+                    </local:SettingsCard>
+                    <local:SettingsCard Icon="&#xED1A;" Title="{l:Tr taskbar_autohide}" Hint="{l:Tr taskbar_autohide_hint}">
+                        <CheckBox Style="{StaticResource Switch}" IsChecked="{Binding AutoHideWhenIdle}" />
+                    </local:SettingsCard>
+                    <local:SettingsCard Icon="&#xE759;" Title="{l:Tr taskbar_position}" Hint="{l:Tr taskbar_position_hint}">
+                        <Button Content="{l:Tr taskbar_reset_position}" Padding="12,4" Click="OnResetTaskbarPosition" />
+                    </local:SettingsCard>
                 </StackPanel>
 
                 <!-- ===================== ATUALIZAÇÕES ===================== -->
@@ -677,20 +518,12 @@
                         </Grid>
                     </Border>
                     <TextBlock Style="{StaticResource SectionTitle}" Text="{l:Tr backup_title}" />
-                    <Border Style="{StaticResource Card}">
-                        <Grid>
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <TextBlock Style="{StaticResource RowIcon}" Text="&#xE777;" />
-                            <StackPanel Grid.Column="1" Margin="0,0,16,0">
-                                <TextBlock Style="{StaticResource RowTitle}" Text="{l:Tr backup_row}" />
-                                <TextBlock Style="{StaticResource Hint}" Text="{l:Tr backup_hint}" />
-                            </StackPanel>
-                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                                <Button Content="{l:Tr backup_export}" Padding="12,5" Click="OnExportBackup" />
-                                <Button Content="{l:Tr backup_import}" Padding="12,5" Margin="8,0,0,0" Click="OnImportBackup" />
-                            </StackPanel>
-                        </Grid>
-                    </Border>
+                    <local:SettingsCard Icon="&#xE777;" Title="{l:Tr backup_row}" Hint="{l:Tr backup_hint}">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Content="{l:Tr backup_export}" Padding="12,5" Click="OnExportBackup" />
+                            <Button Content="{l:Tr backup_import}" Padding="12,5" Margin="8,0,0,0" Click="OnImportBackup" />
+                        </StackPanel>
+                    </local:SettingsCard>
                     <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                         <Button Content="{l:Tr about_open_settings_folder}" Padding="12,5" Click="OnOpenSettingsFolder" />
                         <Button Content="{l:Tr themes_open_folder}" Padding="12,5" Margin="8,0,0,0" Click="OnOpenThemes" />
