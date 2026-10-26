@@ -126,6 +126,12 @@ public sealed class TrayIcon : IDisposable
     {
         try
         {
+            // the .ico has hand-tuned small frames; ExtractAssociatedIcon would shrink the 32 px one
+            if (System.Windows.Application.GetResourceStream(new Uri("pack://application:,,,/Assets/app.ico")) is { } res)
+            {
+                using var stream = res.Stream;
+                return new Icon(stream, SystemInformation.SmallIconSize);
+            }
             if (Environment.ProcessPath is { } path && Icon.ExtractAssociatedIcon(path) is { } icon)
                 return icon;
         }

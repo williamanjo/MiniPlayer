@@ -1,43 +1,34 @@
 <#
 .SYNOPSIS
-  Generates the MSIX visual assets (tiles, taskbar icons, store logo) from the app's logo drawing.
+  Generates the MSIX visual assets (tiles, taskbar icons, store logo) from Assets/app.ico.
   Output: store/Assets (scale-qualified PNGs; build-store.ps1 indexes them with MakePri).
 #>
 param([string]$OutDir = "$PSScriptRoot\Assets")
 
 Add-Type -AssemblyName System.Drawing
 New-Item -ItemType Directory -Force $OutDir | Out-Null
+$ico = Join-Path (Split-Path $PSScriptRoot) "Assets\app.ico"
 
-# Rounded gradient square with a music note: same look as Assets/app.ico.
-function Draw-Logo([System.Drawing.Graphics]$g, [float]$x, [float]$y, [float]$size) {
-    $r = [Math]::Max(2, $size * 0.22)
-    $d = 2 * $r
-    $path = New-Object System.Drawing.Drawing2D.GraphicsPath
-    $path.AddArc($x, $y, $d, $d, 180, 90)
-    $path.AddArc($x + $size - $d, $y, $d, $d, 270, 90)
-    $path.AddArc($x + $size - $d, $y + $size - $d, $d, $d, 0, 90)
-    $path.AddArc($x, $y + $size - $d, $d, $d, 90, 90)
-    $path.CloseFigure()
-    $rect = New-Object System.Drawing.RectangleF $x, $y, $size, $size
-    $brush = New-Object System.Drawing.Drawing2D.LinearGradientBrush $rect, ([System.Drawing.Color]::FromArgb(255, 124, 77, 255)), ([System.Drawing.Color]::FromArgb(255, 0, 184, 212)), 45.0
-    $g.FillPath($brush, $path)
-    $font = New-Object System.Drawing.Font 'Segoe UI Symbol', ([single]($size * 0.58)), ([System.Drawing.FontStyle]::Bold), ([System.Drawing.GraphicsUnit]::Pixel)
-    $fmt = New-Object System.Drawing.StringFormat
-    $fmt.Alignment = 'Center'; $fmt.LineAlignment = 'Center'
-    $text = New-Object System.Drawing.RectangleF $x, ($y + $size * 0.03), $size, $size
-    $g.DrawString([string][char]0x266B, $font, [System.Drawing.Brushes]::White, $text, $fmt)
+# The .ico has frames drawn for each size (16…256): take the closest one at or above the target.
+function Get-Logo([int]$size) {
+    $frame = (16, 20, 24, 32, 40, 48, 64, 128, 256 | Where-Object { $_ -ge $size } | Select-Object -First 1)
+    if (-not $frame) { $frame = 256 }
+    $icon = New-Object System.Drawing.Icon $ico, $frame, $frame
+    $bmp = $icon.ToBitmap(); $icon.Dispose()
+    return $bmp
 }
 
 # $logoFraction: logo size relative to the image height (tiles have padding, icons are full-bleed).
 function New-Asset([string]$name, [int]$w, [int]$h, [double]$logoFraction) {
     $bmp = New-Object System.Drawing.Bitmap $w, $h
     $g = [System.Drawing.Graphics]::FromImage($bmp)
-    $g.SmoothingMode = 'AntiAlias'
-    $g.TextRenderingHint = 'AntiAliasGridFit'
+    $g.InterpolationMode = 'HighQualityBicubic'
+    $g.PixelOffsetMode = 'HighQuality'
     $g.Clear([System.Drawing.Color]::Transparent)
-    $size = [Math]::Round([Math]::Min($w, $h) * $logoFraction)
-    Draw-Logo $g (($w - $size) / 2) (($h - $size) / 2) $size
-    $g.Dispose()
+    $size = [int][Math]::Round([Math]::Min($w, $h) * $logoFraction)
+    $logo = Get-Logo $size
+    $g.DrawImage($logo, [int](($w - $size) / 2), [int](($h - $size) / 2), $size, $size)
+    $logo.Dispose(); $g.Dispose()
     $bmp.Save((Join-Path $OutDir $name), [System.Drawing.Imaging.ImageFormat]::Png)
     $bmp.Dispose()
 }
