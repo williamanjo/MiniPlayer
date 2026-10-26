@@ -1,3 +1,4 @@
+using System.IO;
 using Microsoft.Toolkit.Uwp.Notifications;
 using MiniPlayer.Localization;
 
@@ -54,6 +55,47 @@ public static class NotificationService
     {
         try { ToastNotificationManagerCompat.Uninstall(); }
         catch { /* best effort */ }
+    }
+
+    /// <summary>
+    /// The toast library registers the app id with an Icon.png it extracts at each start, and that
+    /// came out as the previous icon after an update (shell icon cache). The taskbar groups the
+    /// app's windows under that id and shows this picture, so write it from app.ico ourselves.
+    /// </summary>
+    public static void WriteRegisteredIcon()
+    {
+        try
+        {
+            var apps = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ToastNotificationManagerCompat", "Apps");
+            if (!Directory.Exists(apps)) return;
+            var res = System.Windows.Application.GetResourceStream(new Uri("pack://application:,,,/MiniPlayer;component/Assets/app.ico"));
+            if (res is null) return;
+            using var stream = res.Stream;
+            using var icon = new System.Drawing.Icon(stream, 256, 256);
+            using var bitmap = icon.ToBitmap();
+            foreach (var dir in Directory.GetDirectories(apps, "*MiniPlayer*"))
+            {
+                var png = Path.Combine(dir, "Icon.png");
+                bitmap.Save(png, System.Drawing.Imaging.ImageFormat.Png);
+                ShellRefresh(png);
+            }
+        }
+        catch
+        {
+            // cosmetic only
+        }
+    }
+
+    [System.Runtime.InteropServices.DllImport("shell32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+    static extern void SHChangeNotify(int eventId, uint flags, string? item1, IntPtr item2);
+
+    /// <summary>Tells the shell a file's icon changed (it caches icons by path); null = all associations.</summary>
+    public static void ShellRefresh(string? path)
+    {
+        const int SHCNE_UPDATEITEM = 0x2000, SHCNE_ASSOCCHANGED = 0x08000000;
+        const uint SHCNF_PATHW = 0x0005;
+        if (path is not null) SHChangeNotify(SHCNE_UPDATEITEM, SHCNF_PATHW, path, IntPtr.Zero);
+        else SHChangeNotify(SHCNE_ASSOCCHANGED, 0, null, IntPtr.Zero);
     }
 
     static void Show(ToastContentBuilder builder, string? tag)

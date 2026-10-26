@@ -64,6 +64,7 @@ public partial class App : Application
             // Toast buttons: fires in this process, or starts the app when it is closed.
             ToastNotificationManagerCompat.OnActivated += args =>
                 Dispatcher.BeginInvoke(() => OnToastActivated(args.Argument));
+            NotificationService.WriteRegisteredIcon(); // after the registration above rewrote it
             AnnounceIfJustUpdated();
         }
         var media = new MediaService();
@@ -399,21 +400,16 @@ public partial class App : Application
         Settings.Save();
     }
 
-    [System.Runtime.InteropServices.DllImport("shell32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
-    static extern void SHChangeNotify(int eventId, uint flags, string? item1, IntPtr item2);
-
     /// <summary>
     /// Windows caches icons by file path, and an update keeps the path: without this the taskbar,
     /// Start menu and shortcuts go on showing the previous version's icon.
     /// </summary>
     static void RefreshShellIcon()
     {
-        const int SHCNE_UPDATEITEM = 0x2000, SHCNE_ASSOCCHANGED = 0x08000000;
-        const uint SHCNF_PATHW = 0x0005;
         try
         {
-            if (Environment.ProcessPath is { } exe) SHChangeNotify(SHCNE_UPDATEITEM, SHCNF_PATHW, exe, IntPtr.Zero);
-            SHChangeNotify(SHCNE_ASSOCCHANGED, 0, null, IntPtr.Zero);
+            NotificationService.ShellRefresh(Environment.ProcessPath);
+            NotificationService.ShellRefresh(null);
         }
         catch
         {
