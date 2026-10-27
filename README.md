@@ -105,6 +105,12 @@ Pela [Microsoft Store](https://apps.microsoft.com/detail/9p1lq9m6qtj9) (atualiza
 e execute. Instala na pasta do usuário (sem administrador), cria atalhos no Iniciar e na Área de Trabalho
 e aparece em "Aplicativos instalados" para desinstalar. Não precisa de .NET instalado.
 
+Pelo terminal, com o [winget](https://learn.microsoft.com/windows/package-manager/winget/) (instala a versão da Store):
+
+```powershell
+winget install 9P1LQ9M6QTJ9 -s msstore
+```
+
 Prefere sem instalar? Use `MiniPlayer-win-Portable.zip` (sem atualização automática).
 
 ### Atualizações
