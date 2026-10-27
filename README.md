@@ -8,6 +8,9 @@ publicam a Media Session.
 <a href="https://get.microsoft.com/installer/download/9p1lq9m6qtj9?referrer=appbadge&cid=github" target="_self" >
 	<img src="https://get.microsoft.com/images/en-us%20dark.svg" width="200"/>
 </a>
+<a href="https://github.com/williamanjo/MiniPlayer/releases/latest/download/MiniPlayer-win-Setup.exe">
+	<img src="Assets/badge-download.svg" width="200" alt="Download the .exe installer"/>
+</a>
 
 ## Recursos
 - Título, artista e navegador de origem
