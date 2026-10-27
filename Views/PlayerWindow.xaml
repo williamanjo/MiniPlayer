@@ -144,13 +144,16 @@
         <!-- Theme layers. Shadow on its own layer so the text stays crisp. -->
         <Border CornerRadius="{DynamicResource ThemeCornerRadius}" Background="{DynamicResource ThemeBackground}"
                 Effect="{DynamicResource ThemeShadow}" />
-        <!-- Backdrop "cover": tiny album art upscaled = cheap blur -->
-        <Border CornerRadius="{DynamicResource ThemeCornerRadius}" Visibility="{DynamicResource ThemeCoverBackdropVisibility}"
-                RenderOptions.BitmapScalingMode="HighQuality" Effect="{DynamicResource ThemeBackdropEffect}" ClipToBounds="True">
-            <Border.Background>
-                <ImageBrush ImageSource="{Binding CoverBackdrop}" Stretch="UniformToFill" />
-            </Border.Background>
-        </Border>
+        <!-- Backdrop "cover": tiny album art upscaled = cheap blur. The blur spreads past the border's
+             rounded shape, so the parent clips it to the card's corners. -->
+        <Grid local:RoundedClip.CornerRadius="{DynamicResource ThemeCornerRadius}" Visibility="{DynamicResource ThemeCoverBackdropVisibility}">
+            <Border CornerRadius="{DynamicResource ThemeCornerRadius}"
+                    RenderOptions.BitmapScalingMode="HighQuality" Effect="{DynamicResource ThemeBackdropEffect}">
+                <Border.Background>
+                    <ImageBrush ImageSource="{Binding CoverBackdrop}" Stretch="UniformToFill" />
+                </Border.Background>
+            </Border>
+        </Grid>
         <Border CornerRadius="{DynamicResource ThemeCornerRadius}" Background="{DynamicResource ThemeImageBrush}"
                 Opacity="{DynamicResource ThemeImageOpacity}" />
         <Border CornerRadius="{DynamicResource ThemeCornerRadius}" Background="{DynamicResource ThemeOverlay}"

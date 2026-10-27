@@ -4,6 +4,7 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:l="clr-namespace:MiniPlayer.Localization"
+             xmlns:local="clr-namespace:MiniPlayer.Views"
              Width="360" Height="160" IsHitTestVisible="False"
              Focusable="False" KeyboardNavigation.TabNavigation="None" AutomationProperties.Name="{l:Tr theme_preview_a11y}"
              TextElement.Foreground="{DynamicResource ThemeForeground}"
@@ -11,12 +12,14 @@
     <Grid>
         <Border CornerRadius="{DynamicResource ThemeCornerRadius}" Background="{DynamicResource ThemeBackground}"
                 Effect="{DynamicResource ThemeShadow}" />
-        <Border CornerRadius="{DynamicResource ThemeCornerRadius}" Visibility="{DynamicResource ThemeCoverBackdropVisibility}"
-                RenderOptions.BitmapScalingMode="HighQuality" Effect="{DynamicResource ThemeBackdropEffect}" ClipToBounds="True">
-            <Border.Background>
-                <ImageBrush ImageSource="{Binding CoverBackdrop}" Stretch="UniformToFill" />
-            </Border.Background>
-        </Border>
+        <Grid local:RoundedClip.CornerRadius="{DynamicResource ThemeCornerRadius}" Visibility="{DynamicResource ThemeCoverBackdropVisibility}">
+            <Border CornerRadius="{DynamicResource ThemeCornerRadius}"
+                    RenderOptions.BitmapScalingMode="HighQuality" Effect="{DynamicResource ThemeBackdropEffect}">
+                <Border.Background>
+                    <ImageBrush ImageSource="{Binding CoverBackdrop}" Stretch="UniformToFill" />
+                </Border.Background>
+            </Border>
+        </Grid>
         <Border CornerRadius="{DynamicResource ThemeCornerRadius}" Background="{DynamicResource ThemeImageBrush}"
                 Opacity="{DynamicResource ThemeImageOpacity}" />
         <Border CornerRadius="{DynamicResource ThemeCornerRadius}" Background="{DynamicResource ThemeOverlay}"

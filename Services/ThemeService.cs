@@ -340,7 +340,7 @@ public sealed class ThemeService
                 Color = Color(theme.ShadowColor, fallback.ShadowColor),
                 Opacity = Math.Min(theme.ShadowOpacity, 1),
             })
-            : null;
+            : NoShadow; // not null: a null resource counts as missing and falls back to App.xaml's default shadow
 
         // text
         r["ThemeTitleFont"] = Font(theme.TitleFont ?? theme.FontFamily, fallback.FontFamily);
@@ -487,6 +487,8 @@ public sealed class ThemeService
 
     static FontFamily Font(string? value, string fallback) =>
         new(string.IsNullOrWhiteSpace(value) ? fallback : $"{value}, {fallback}");
+
+    static readonly DropShadowEffect NoShadow = Frozen(new DropShadowEffect { Opacity = 0, BlurRadius = 0, ShadowDepth = 0 });
 
     static T Frozen<T>(T freezable) where T : Freezable
     {
