@@ -64,6 +64,13 @@ publicam a Media Session.
 (capa redonda girando), **Terminal**, **Papel**, **Retrowave**, **Matcha**, **Aurora** e **Brutalista**.
 Escolha em: bandeja → Temas, clique direito no player, ou Configurações → Aparência.
 
+<table>
+<tr><td align="center"><img src="Assets/theme-thumbs/escuro.png" width="260" alt="Tema Escuro"/><br/><b>Escuro</b></td><td align="center"><img src="Assets/theme-thumbs/claro.png" width="260" alt="Tema Claro"/><br/><b>Claro</b></td><td align="center"><img src="Assets/theme-thumbs/vidro.png" width="260" alt="Tema Vidro (capa)"/><br/><b>Vidro (capa)</b></td></tr>
+<tr><td align="center"><img src="Assets/theme-thumbs/neon.png" width="260" alt="Tema Neon"/><br/><b>Neon</b></td><td align="center"><img src="Assets/theme-thumbs/vinil.png" width="260" alt="Tema Vinil"/><br/><b>Vinil</b></td><td align="center"><img src="Assets/theme-thumbs/terminal.png" width="260" alt="Tema Terminal"/><br/><b>Terminal</b></td></tr>
+<tr><td align="center"><img src="Assets/theme-thumbs/papel.png" width="260" alt="Tema Papel"/><br/><b>Papel</b></td><td align="center"><img src="Assets/theme-thumbs/retrowave.png" width="260" alt="Tema Retrowave"/><br/><b>Retrowave</b></td><td align="center"><img src="Assets/theme-thumbs/matcha.png" width="260" alt="Tema Matcha"/><br/><b>Matcha</b></td></tr>
+<tr><td align="center"><img src="Assets/theme-thumbs/aurora.png" width="260" alt="Tema Aurora"/><br/><b>Aurora</b></td><td align="center"><img src="Assets/theme-thumbs/brutal.png" width="260" alt="Tema Brutalista"/><br/><b>Brutalista</b></td></tr>
+</table>
+
 ### Criar um tema
 O jeito mais fácil é o **editor de temas** (Configurações → Aparência), com prévia ao vivo.
 Também dá para editar à mão: temas são arquivos `.json` em `%APPDATA%\MiniPlayer\themes` (ou numa pasta
