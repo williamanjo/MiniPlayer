@@ -5,6 +5,10 @@ Mini player para Windows 11 que mostra e controla a música tocando no navegador
 do Windows (SMTC), onde Chrome, Edge, Firefox, Brave, Opera, Vivaldi, Arc, Zen e LibreWolf
 publicam a Media Session.
 
+<a href="https://get.microsoft.com/installer/download/9p1lq9m6qtj9?referrer=appbadge&cid=github" target="_self" >
+	<img src="https://get.microsoft.com/images/en-us%20dark.svg" width="200"/>
+</a>
+
 ## Recursos
 - Título, artista e navegador de origem
 - Play/Pause, anterior, próxima, aleatório, repetir (lista → faixa → off)
@@ -94,7 +98,7 @@ Temas são só dados (JSON, não XAML), então um tema de terceiros não executa
 Arquivos inválidos aparecem com ⚠ no menu de temas.
 
 ## Instalação
-Baixe `MiniPlayer-win-Setup.exe` no [último release](https://github.com/williamanjo/MiniPlayer/releases/latest)
+Pela [Microsoft Store](https://apps.microsoft.com/detail/9p1lq9m6qtj9) (atualiza pela Store), ou baixe `MiniPlayer-win-Setup.exe` no [último release](https://github.com/williamanjo/MiniPlayer/releases/latest)
 e execute. Instala na pasta do usuário (sem administrador), cria atalhos no Iniciar e na Área de Trabalho
 e aparece em "Aplicativos instalados" para desinstalar. Não precisa de .NET instalado.
 
