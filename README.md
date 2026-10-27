@@ -1,5 +1,7 @@
 # MiniPlayer for Browser Music
 
+<img src="Assets/update-hero-pt.jpg" alt="MiniPlayer for Browser Music: a música do navegador, sempre à vista" width="100%"/>
+
 Mini player para Windows 11 que mostra e controla a música tocando no navegador
 (YouTube, Spotify Web, SoundCloud, Deezer, ...). Sem extensão: lê os controles de mídia
 do Windows (SMTC), onde Chrome, Edge, Firefox, Brave, Opera, Vivaldi, Arc, Zen e LibreWolf
